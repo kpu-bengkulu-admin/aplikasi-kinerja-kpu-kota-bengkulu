@@ -3,21 +3,30 @@ import pandas as pd
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
+# --- CONFIG ---
 st.set_page_config(page_title="Aplikasi Kinerja KPU", layout="wide")
-
 st.title("📊 Aplikasi Kinerja Harian KPU")
 
 # --- KONEKSI GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# ⚠️ PAKAI FORMAT CSV (WAJIB)
-url = "https://docs.google.com/spreadsheets/d/16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM/export?format=csv"
+# ✅ PAKAI URL ASLI (BUKAN CSV)
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"
+WORKSHEET_NAME = "Sheet1"  # ganti kalau nama sheet beda
 
-# --- AMBIL DATA LAMA (ANTI ERROR) ---
-try:
-    existing_data = conn.read(spreadsheet=url)
-except:
-    existing_data = pd.DataFrame()
+# --- FUNGSI LOAD DATA ---
+@st.cache_data(ttl=60)
+def load_data():
+    try:
+        df = conn.read(
+            spreadsheet=SPREADSHEET_URL,
+            worksheet=WORKSHEET_NAME
+        )
+        return df
+    except Exception as e:
+        return pd.DataFrame()
+
+existing_data = load_data()
 
 # --- FORM INPUT ---
 with st.form("form_kinerja"):
@@ -31,8 +40,8 @@ with st.form("form_kinerja"):
 
     with col2:
         tanggal = st.date_input("Tanggal", datetime.today())
-        jam_masuk = st.time_input("Jam Masuk")
-        jam_keluar = st.time_input("Jam Keluar")
+        jam_masuk = st.time_input("Jam Masuk", value=time(8, 0))
+        jam_keluar = st.time_input("Jam Keluar", value=time(17, 0))
 
     st.markdown("### 📝 Uraian Pekerjaan")
     uraian = st.text_area(
@@ -58,31 +67,41 @@ with st.form("form_kinerja"):
 # --- SIMPAN DATA ---
 if submit:
 
-    if nama == "" or nip == "":
-        st.warning("Nama dan NIP wajib diisi!")
+    if nama.strip() == "" or nip.strip() == "":
+        st.warning("⚠️ Nama dan NIP wajib diisi!")
     else:
         new_data = pd.DataFrame([{
             "Nama": nama,
             "NIP": nip,
             "Jabatan": jabatan,
             "Tanggal": tanggal.strftime("%Y-%m-%d"),
-            "Jam Masuk": str(jam_masuk),
-            "Jam Keluar": str(jam_keluar),
+            "Jam Masuk": jam_masuk,
+            "Jam Keluar": jam_keluar,
             "Uraian Pekerjaan": uraian,
             "Output Pekerjaan": output,
             "Lokasi Bekerja": lokasi
         }])
 
-        # Gabungkan dengan data lama
-        if existing_data.empty:
-            updated_df = new_data
-        else:
-            updated_df = pd.concat([existing_data, new_data], ignore_index=True)
+        try:
+            # Gabungkan data
+            if existing_data.empty:
+                updated_df = new_data
+            else:
+                updated_df = pd.concat([existing_data, new_data], ignore_index=True)
 
-        # Simpan ke Google Sheets
-        conn.update(spreadsheet=url, data=updated_df)
+            # ✅ UPDATE KE GOOGLE SHEETS
+            conn.update(
+                spreadsheet=SPREADSHEET_URL,
+                worksheet=WORKSHEET_NAME,
+                data=updated_df
+            )
 
-        st.success("✅ Data berhasil disimpan!")
+            st.success("✅ Data berhasil disimpan!")
+            st.cache_data.clear()  # refresh cache
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"❌ Gagal menyimpan data: {e}")
 
 # --- TAMPILKAN DATA ---
 st.markdown("## 📋 Data Kinerja")
