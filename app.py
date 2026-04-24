@@ -3,153 +3,260 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-from io import BytesIO
 
 # ================= CONFIG =================
-st.set_page_config(
-    page_title="Aplikasi E-Kinerja KPU Kota Bengkulu",
-    layout="wide"
+st.set_page_config(page_title="Aplikasi Kinerja KPU", layout="wide")
+st.title("📊 Aplikasi Kinerja KPU")
+
+# ================= GOOGLE SHEETS =================
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+
+creds = Credentials.from_service_account_info(
+    st.secrets["connections"]["gsheets"]["service_account"],
+    scopes=scope
 )
 
-# ================= HEADER =================
-col1, col2 = st.columns([1, 5])
+client = gspread.authorize(creds)
 
-with col1:
-    st.image("logo_kpu.png", width=80)
+SPREADSHEET_ID = "16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"
 
-with col2:
-    st.title("📊 Aplikasi E-Kinerja KPU Kota Bengkulu")
-    st.caption("Transparan • Akuntabel • Profesional")
+spreadsheet = client.open_by_key(SPREADSHEET_ID)
+sheet = spreadsheet.sheet1
+user_sheet = spreadsheet.worksheet("users")
 
-st.markdown("---")
-
-# ================= GOOGLE SHEETS AUTH =================
-SCOPE = ["https://www.googleapis.com/auth/spreadsheets",
-         "https://www.googleapis.com/auth/drive"]
-
-CREDS_FILE = "credentials.json"
-
-@st.cache_resource
-def connect_gsheet():
-    creds = Credentials.from_service_account_file(CREDS_FILE, scopes=SCOPE)
-    client = gspread.authorize(creds)
-    sheet = client.open("E-Kinerja").worksheet("data")
-    users = client.open("E-Kinerja").worksheet("users")
-    return sheet, users
-
-sheet, users_sheet = connect_gsheet()
-
-# ================= LOAD USERS =================
+# ================= LOAD DATA =================
 def load_users():
-    data = users_sheet.get_all_records()
-    return pd.DataFrame(data)
+    try:
+        return pd.DataFrame(user_sheet.get_all_records())
+    except:
+        return pd.DataFrame()
 
-users_df = load_users()
+def load_data():
+    try:
+        return pd.DataFrame(sheet.get_all_records())
+    except:
+        return pd.DataFrame()
 
-# ================= LOGIN =================
-st.sidebar.header("🔐 Login")
-
-username = st.sidebar.text_input("Username")
-password = st.sidebar.text_input("Password", type="password")
-
-login_btn = st.sidebar.button("Login")
-
+# ================= SESSION =================
 if "login" not in st.session_state:
     st.session_state.login = False
 
-if login_btn:
-    user = users_df[
-        (users_df["username"] == username) &
-        (users_df["password"] == password)
-    ]
+users_df = load_users()
+data = load_data()
 
-    if not user.empty:
-        st.session_state.login = True
-        st.session_state.user = user.iloc[0].to_dict()
-        st.success("Login berhasil!")
-    else:
-        st.error("Username atau password salah")
-
-# ================= IF NOT LOGIN =================
+# ================= LOGIN =================
 if not st.session_state.login:
-    st.warning("Silakan login terlebih dahulu")
+
+    st.subheader("🔐 Login")
+
+    nip = st.text_input("NIP")
+    pw = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+
+        user = users_df[
+            (users_df["NIP"].astype(str) == str(nip)) &
+            (users_df["Password"].astype(str) == str(pw))
+        ]
+
+        if not user.empty:
+            u = user.iloc[0]
+
+            st.session_state.update({
+                "login": True,
+                "nama": u["Nama"],
+                "nip": u["NIP"],
+                "jabatan": u["Jabatan"],
+                "role": u["Role"]
+            })
+
+            st.rerun()
+
+        else:
+            st.error("Login gagal")
+
     st.stop()
 
-user = st.session_state.user
-role = user["role"]
-nama = user["nama"]
+# ================= HEADER =================
+st.success(f"Login sebagai: {st.session_state.nama} ({st.session_state.role})")
 
-st.sidebar.success(f"Login sebagai: {nama} ({role})")
+if st.button("🚪 Logout"):
+    st.session_state.clear()
+    st.rerun()
 
-# ================= LOAD DATA =================
-def load_data():
-    data = sheet.get_all_records()
-    return pd.DataFrame(data)
-
-df = load_data()
-
-# convert tanggal
-if not df.empty:
-    df["tanggal"] = pd.to_datetime(df["tanggal"])
-
-# ================= FILTER USER =================
-if role == "pegawai":
-    df = df[df["nama"] == nama]
-
-# ================= DASHBOARD =================
-st.subheader(f"👋 Selamat datang, {nama}")
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("Total Kegiatan", len(df))
-col2.metric("Selesai", len(df[df["status"] == "Selesai"]) if not df.empty else 0)
-col3.metric("Proses", len(df[df["status"] == "Proses"]) if not df.empty else 0)
-col4.metric("Bulan Data", datetime.now().strftime("%B %Y"))
-
-st.markdown("---")
-
-# ================= FILTER TANGGAL =================
-st.subheader("📅 Filter Periode")
-
-col1, col2 = st.columns(2)
-
-start_date = col1.date_input("Tanggal Mulai")
-end_date = col2.date_input("Tanggal Akhir")
-
-if not df.empty:
-    mask = (df["tanggal"].dt.date >= start_date) & (df["tanggal"].dt.date <= end_date)
-    filtered = df.loc[mask]
-else:
-    filtered = df
-
-# ================= TABEL DATA =================
-st.subheader("📋 Data Kinerja")
-
-st.dataframe(filtered, use_container_width=True)
-
-# ================= DOWNLOAD EXCEL =================
-def to_excel(dataframe):
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        dataframe.to_excel(writer, index=False, sheet_name="Rekap")
-    return output.getvalue()
-
-st.download_button(
-    "📥 Download Rekap Excel",
-    data=to_excel(filtered),
-    file_name=f"rekap_kinerja_{nama}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+# ================= MENU =================
+menu = st.sidebar.selectbox(
+    "Menu",
+    ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
 )
 
-# ================= ADMIN PANEL =================
-if role == "admin":
-    st.markdown("---")
+# ================= PARSER JAM AMAN =================
+def parse_jam(jam_str):
+    try:
+        jam_str = str(jam_str).strip().replace(".", ":")
+        parts = jam_str.split(":")
+
+        if len(parts) != 2:
+            return None
+
+        jam = int(parts[0])
+        menit = int(parts[1])
+
+        if jam < 0 or jam > 23 or menit < 0 or menit > 59:
+            return None
+
+        return jam * 60 + menit
+
+    except:
+        return None
+
+# ================= SAFE FUNCTION =================
+def safe(val):
+    if val is None:
+        return ""
+    return str(val)
+
+# ================= DASHBOARD =================
+if menu == "Dashboard":
+
+    st.subheader("📊 Dashboard")
+
+    if not data.empty:
+        data["Durasi (Jam)"] = pd.to_numeric(data["Durasi (Jam)"], errors="coerce").fillna(0)
+        st.bar_chart(data.groupby("Nama")["Durasi (Jam)"].sum())
+
+# ================= INPUT =================
+elif menu == "Input Kinerja":
+
+    st.subheader("📝 Input Kinerja")
+
+    with st.form("form"):
+
+        tanggal = st.date_input("Tanggal", datetime.today())
+        jam_masuk = st.text_input("Jam Masuk (07:21 / 07.21 / 8:00)")
+        jam_keluar = st.text_input("Jam Keluar")
+
+        uraian = st.text_area("Uraian")
+        output = st.text_area("Output")
+        lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas"])
+
+        submit = st.form_submit_button("Simpan")
+
+    if submit:
+
+        jm = parse_jam(jam_masuk)
+        jk = parse_jam(jam_keluar)
+
+        if jm is None or jk is None:
+            st.error("Format jam tidak valid")
+            st.stop()
+
+        if jk <= jm:
+            st.error("Jam keluar harus lebih besar dari jam masuk")
+            st.stop()
+
+        durasi = round((jk - jm) / 60, 2)
+
+        # ================= FIX FINAL APPEND =================
+        sheet.append_row([
+            safe(st.session_state.nama),
+            safe(st.session_state.nip),
+            safe(st.session_state.jabatan),
+            tanggal.strftime("%Y-%m-%d"),
+            safe(jam_masuk),
+            safe(jam_keluar),
+            safe(durasi),
+            safe(uraian),
+            safe(output),
+            safe(lokasi)
+        ])
+
+        st.success("Data tersimpan")
+
+# ================= DATA =================
+elif menu == "Data Kinerja":
+
+    st.subheader("📋 Data Kinerja")
+    st.dataframe(data, use_container_width=True)
+
+# ================= ADMIN =================
+elif menu == "Admin":
+
+    if st.session_state.role != "admin":
+        st.error("Akses ditolak")
+        st.stop()
+
     st.subheader("⚙️ Admin Panel")
 
-    st.info("Menu admin aktif")
+    tab1, tab2, tab3 = st.tabs(["Tambah", "Edit", "Hapus"])
 
-    st.dataframe(users_df)
+    users_df = load_users()
 
-# ================= FOOTER =================
-st.markdown("---")
-st.caption("© 2026 Aplikasi E-Kinerja KPU Kota Bengkulu")
+    # ===== TAMBAH USER =====
+    with tab1:
+
+        nip_b = st.text_input("NIP")
+        nama_b = st.text_input("Nama")
+        jabatan_b = st.text_input("Jabatan")
+        pw_b = st.text_input("Password")
+        role_b = st.selectbox("Role", ["pegawai", "admin", "pimpinan"])
+
+        if st.button("Tambah User"):
+
+            user_sheet.append_row([
+                nip_b,
+                nama_b,
+                jabatan_b,
+                pw_b,
+                role_b
+            ])
+
+            st.success("User ditambahkan")
+
+    # ===== EDIT USER =====
+    with tab2:
+
+        if not users_df.empty:
+
+            pilih = st.selectbox("Pilih NIP", users_df["NIP"].astype(str))
+            row = users_df[users_df["NIP"].astype(str) == pilih].iloc[0]
+
+            nama_e = st.text_input("Nama", row["Nama"])
+            jabatan_e = st.text_input("Jabatan", row["Jabatan"])
+            pw_e = st.text_input("Password baru (kosong = tidak ubah)")
+            role_e = st.selectbox("Role", ["pegawai","admin","pimpinan"])
+
+            if st.button("Update User"):
+
+                all_data = user_sheet.get_all_values()
+
+                for i, r in enumerate(all_data):
+                    if r[0] == pilih:
+
+                        pw_final = r[3] if pw_e == "" else pw_e
+
+                        user_sheet.update(
+                            f"A{i+1}:E{i+1}",
+                            [[pilih, nama_e, jabatan_e, pw_final, role_e]]
+                        )
+
+                        st.success("User diupdate")
+                        st.rerun()
+
+    # ===== HAPUS USER =====
+    with tab3:
+
+        hapus = st.selectbox("Hapus NIP", users_df["NIP"].astype(str))
+
+        if st.button("Hapus User"):
+
+            all_data = user_sheet.get_all_values()
+
+            for i, r in enumerate(all_data):
+                if r[0] == hapus:
+                    user_sheet.delete_rows(i+1)
+                    st.success("User dihapus")
+                    st.rerun()
