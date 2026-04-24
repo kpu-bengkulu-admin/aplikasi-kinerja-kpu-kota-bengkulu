@@ -29,8 +29,8 @@ st.write("Service Account:", creds.service_account_email)
 client = gspread.authorize(creds)
 
 # Ambil spreadsheet & sheet
-spreadsheet = client.open_by_url(SPREADSHEET_URL)
-sheet = spreadsheet.sheet1  # lebih aman daripada worksheet("Sheet1")
+spreadsheet = client.open_by_key("16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM")
+sheet = spreadsheet.sheet1
 
 # --- LOAD DATA ---
 @st.cache_data(ttl=60)
