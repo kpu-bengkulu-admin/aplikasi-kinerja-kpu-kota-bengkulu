@@ -3,21 +3,10 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-import hashlib
 
 # ================= CONFIG =================
 st.set_page_config(page_title="KPU Kinerja", layout="wide")
-
 st.title("📊 Aplikasi Kinerja KPU")
-
-# ================= DEFAULT ADMIN =================
-DEFAULT_ADMIN = {
-    "NIP": "admin",
-    "Nama": "Super Admin",
-    "Jabatan": "Administrator",
-    "Password": hashlib.sha256("admin123".encode()).hexdigest(),
-    "Role": "admin"
-}
 
 # ================= GOOGLE SHEETS =================
 scope = [
@@ -38,18 +27,13 @@ spreadsheet = client.open_by_key(SPREADSHEET_ID)
 sheet = spreadsheet.sheet1
 user_sheet = spreadsheet.worksheet("users")
 
-# ================= FUNCTIONS =================
-def hash_password(p):
-    return hashlib.sha256(p.encode()).hexdigest()
-
+# ================= LOAD DATA =================
 def load_users():
     try:
         df = pd.DataFrame(user_sheet.get_all_records())
-        if df.empty:
-            return pd.DataFrame([DEFAULT_ADMIN])
         return df
     except:
-        return pd.DataFrame([DEFAULT_ADMIN])
+        return pd.DataFrame()
 
 def load_data():
     try:
@@ -76,7 +60,7 @@ if not st.session_state.login:
 
         user = users_df[
             (users_df["NIP"].astype(str) == str(nip)) &
-            (users_df["Password"] == hash_password(pw))
+            (users_df["Password"].astype(str) == str(pw))
         ]
 
         if not user.empty:
@@ -98,13 +82,13 @@ if not st.session_state.login:
     st.stop()
 
 # ================= HEADER =================
-st.success(f"Login: {st.session_state.nama} ({st.session_state.role})")
+st.success(f"Login sebagai: {st.session_state.nama} ({st.session_state.role})")
 
-if st.button("Logout"):
+if st.button("🚪 Logout"):
     st.session_state.clear()
     st.rerun()
 
-# ================= MENU NAVIGATION =================
+# ================= MENU =================
 menu = st.sidebar.selectbox(
     "Menu",
     ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
@@ -171,37 +155,60 @@ elif menu == "Admin":
 
     users_df = load_users()
 
-    # ===== TAMBAH =====
+    # ===== TAMBAH USER =====
     with tab1:
         nip_b = st.text_input("NIP")
         nama_b = st.text_input("Nama")
         jabatan_b = st.text_input("Jabatan")
-        pw_b = st.text_input("Password", type="password")
+        pw_b = st.text_input("Password")
         role_b = st.selectbox("Role", ["pegawai", "admin", "pimpinan"])
 
-        if st.button("Tambah"):
+        if st.button("Tambah User"):
             user_sheet.append_row([
-                nip_b, nama_b, jabatan_b,
-                hash_password(pw_b),
+                nip_b,
+                nama_b,
+                jabatan_b,
+                pw_b,
                 role_b
             ])
-            st.success("User ditambah")
+            st.success("User ditambahkan")
 
-    # ===== EDIT =====
+    # ===== EDIT USER =====
     with tab2:
         if not users_df.empty:
             pilih = st.selectbox("Pilih NIP", users_df["NIP"].astype(str))
             row = users_df[users_df["NIP"].astype(str) == pilih].iloc[0]
 
             nama_e = st.text_input("Nama", row["Nama"])
+            jabatan_e = st.text_input("Jabatan", row["Jabatan"])
+            pw_e = st.text_input("Password baru (kosong = tidak ubah)")
             role_e = st.selectbox("Role", ["pegawai","admin","pimpinan"])
 
             if st.button("Update"):
-                st.success("Updated (logic bisa dikembangkan lebih lanjut)")
+                all_data = user_sheet.get_all_values()
 
-    # ===== HAPUS =====
+                for i, r in enumerate(all_data):
+                    if r[0] == pilih:
+
+                        pw_final = r[3] if pw_e == "" else pw_e
+
+                        user_sheet.update(
+                            f"A{i+1}:E{i+1}",
+                            [[pilih, nama_e, jabatan_e, pw_final, role_e]]
+                        )
+
+                        st.success("User diupdate")
+                        st.rerun()
+
+    # ===== HAPUS USER =====
     with tab3:
         hapus = st.selectbox("Hapus NIP", users_df["NIP"].astype(str))
 
         if st.button("Hapus"):
-            st.success("Deleted (logic bisa disambungkan ke sheet)")
+            all_data = user_sheet.get_all_values()
+
+            for i, r in enumerate(all_data):
+                if r[0] == hapus:
+                    user_sheet.delete_rows(i+1)
+                    st.success("User dihapus")
+                    st.rerun()
