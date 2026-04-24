@@ -5,7 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 # ================= CONFIG =================
-st.set_page_config(page_title="KPU Kinerja", layout="wide")
+st.set_page_config(page_title="Aplikasi Kinerja KPU", layout="wide")
 st.title("📊 Aplikasi Kinerja KPU")
 
 # ================= GOOGLE SHEETS =================
@@ -30,8 +30,7 @@ user_sheet = spreadsheet.worksheet("users")
 # ================= LOAD DATA =================
 def load_users():
     try:
-        df = pd.DataFrame(user_sheet.get_all_records())
-        return df
+        return pd.DataFrame(user_sheet.get_all_records())
     except:
         return pd.DataFrame()
 
@@ -94,8 +93,29 @@ menu = st.sidebar.selectbox(
     ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
 )
 
+# ================= FUNGSI JAM FLEXIBEL =================
+def parse_jam(jam_str):
+    try:
+        jam_str = str(jam_str).strip().replace(".", ":")
+
+        parts = jam_str.split(":")
+        if len(parts) != 2:
+            return None
+
+        jam = int(parts[0])
+        menit = int(parts[1])
+
+        if jam < 0 or jam > 23 or menit < 0 or menit > 59:
+            return None
+
+        return jam * 60 + menit
+
+    except:
+        return None
+
 # ================= DASHBOARD =================
 if menu == "Dashboard":
+
     st.subheader("📊 Dashboard")
 
     if not data.empty:
@@ -104,13 +124,15 @@ if menu == "Dashboard":
 
 # ================= INPUT =================
 elif menu == "Input Kinerja":
+
     st.subheader("📝 Input Kinerja")
 
     with st.form("form"):
 
         tanggal = st.date_input("Tanggal", datetime.today())
-        jam_masuk = st.text_input("Jam Masuk", "08:00")
-        jam_keluar = st.text_input("Jam Keluar", "17:00")
+        jam_masuk = st.text_input("Jam Masuk (contoh 08:00 / 8:00 / 08.00)")
+        jam_keluar = st.text_input("Jam Keluar (contoh 17:00 / 17.00)")
+
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
         lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas"])
@@ -118,9 +140,19 @@ elif menu == "Input Kinerja":
         submit = st.form_submit_button("Simpan")
 
     if submit:
-        jm = datetime.strptime(jam_masuk, "%H:%M")
-        jk = datetime.strptime(jam_keluar, "%H:%M")
-        durasi = (jk - jm).seconds // 3600
+
+        jm = parse_jam(jam_masuk)
+        jk = parse_jam(jam_keluar)
+
+        if jm is None or jk is None:
+            st.error("Format jam tidak valid (contoh: 08:00 atau 8:00)")
+            st.stop()
+
+        if jk <= jm:
+            st.error("Jam keluar harus lebih besar dari jam masuk")
+            st.stop()
+
+        durasi = round((jk - jm) / 60, 2)
 
         sheet.append_row([
             st.session_state.nama,
@@ -139,6 +171,7 @@ elif menu == "Input Kinerja":
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
+
     st.subheader("📋 Data Kinerja")
     st.dataframe(data, use_container_width=True)
 
@@ -157,6 +190,7 @@ elif menu == "Admin":
 
     # ===== TAMBAH USER =====
     with tab1:
+
         nip_b = st.text_input("NIP")
         nama_b = st.text_input("Nama")
         jabatan_b = st.text_input("Jabatan")
@@ -164,6 +198,7 @@ elif menu == "Admin":
         role_b = st.selectbox("Role", ["pegawai", "admin", "pimpinan"])
 
         if st.button("Tambah User"):
+
             user_sheet.append_row([
                 nip_b,
                 nama_b,
@@ -171,11 +206,14 @@ elif menu == "Admin":
                 pw_b,
                 role_b
             ])
+
             st.success("User ditambahkan")
 
     # ===== EDIT USER =====
     with tab2:
+
         if not users_df.empty:
+
             pilih = st.selectbox("Pilih NIP", users_df["NIP"].astype(str))
             row = users_df[users_df["NIP"].astype(str) == pilih].iloc[0]
 
@@ -184,7 +222,8 @@ elif menu == "Admin":
             pw_e = st.text_input("Password baru (kosong = tidak ubah)")
             role_e = st.selectbox("Role", ["pegawai","admin","pimpinan"])
 
-            if st.button("Update"):
+            if st.button("Update User"):
+
                 all_data = user_sheet.get_all_values()
 
                 for i, r in enumerate(all_data):
@@ -202,9 +241,11 @@ elif menu == "Admin":
 
     # ===== HAPUS USER =====
     with tab3:
+
         hapus = st.selectbox("Hapus NIP", users_df["NIP"].astype(str))
 
-        if st.button("Hapus"):
+        if st.button("Hapus User"):
+
             all_data = user_sheet.get_all_values()
 
             for i, r in enumerate(all_data):
