@@ -93,12 +93,12 @@ menu = st.sidebar.selectbox(
     ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
 )
 
-# ================= FUNGSI JAM FLEXIBEL =================
+# ================= PARSER JAM AMAN =================
 def parse_jam(jam_str):
     try:
         jam_str = str(jam_str).strip().replace(".", ":")
-
         parts = jam_str.split(":")
+
         if len(parts) != 2:
             return None
 
@@ -112,6 +112,12 @@ def parse_jam(jam_str):
 
     except:
         return None
+
+# ================= SAFE FUNCTION =================
+def safe(val):
+    if val is None:
+        return ""
+    return str(val)
 
 # ================= DASHBOARD =================
 if menu == "Dashboard":
@@ -130,8 +136,8 @@ elif menu == "Input Kinerja":
     with st.form("form"):
 
         tanggal = st.date_input("Tanggal", datetime.today())
-        jam_masuk = st.text_input("Jam Masuk (contoh 08:00 / 8:00 / 08.00)")
-        jam_keluar = st.text_input("Jam Keluar (contoh 17:00 / 17.00)")
+        jam_masuk = st.text_input("Jam Masuk (07:21 / 07.21 / 8:00)")
+        jam_keluar = st.text_input("Jam Keluar")
 
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
@@ -145,7 +151,7 @@ elif menu == "Input Kinerja":
         jk = parse_jam(jam_keluar)
 
         if jm is None or jk is None:
-            st.error("Format jam tidak valid (contoh: 08:00 atau 8:00)")
+            st.error("Format jam tidak valid")
             st.stop()
 
         if jk <= jm:
@@ -154,17 +160,18 @@ elif menu == "Input Kinerja":
 
         durasi = round((jk - jm) / 60, 2)
 
+        # ================= FIX FINAL APPEND =================
         sheet.append_row([
-            st.session_state.nama,
-            st.session_state.nip,
-            st.session_state.jabatan,
-            str(tanggal),
-            jam_masuk,
-            jam_keluar,
-            durasi,
-            uraian,
-            output,
-            lokasi
+            safe(st.session_state.nama),
+            safe(st.session_state.nip),
+            safe(st.session_state.jabatan),
+            tanggal.strftime("%Y-%m-%d"),
+            safe(jam_masuk),
+            safe(jam_keluar),
+            safe(durasi),
+            safe(uraian),
+            safe(output),
+            safe(lokasi)
         ])
 
         st.success("Data tersimpan")
