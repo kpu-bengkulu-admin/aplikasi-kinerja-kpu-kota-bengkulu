@@ -40,14 +40,21 @@ def load_data():
     except:
         return pd.DataFrame()
 
+# tambah index baris (penting untuk edit/hapus)
+def get_data_with_index():
+    df = load_data()
+    if df.empty:
+        return df
+    df["row_index"] = range(2, len(df) + 2)
+    return df
+
 # ================= SESSION =================
 if "login" not in st.session_state:
     st.session_state.login = False
 
-users_df = load_users()
-data = load_data()
-
 # ================= LOGIN =================
+users_df = load_users()
+
 if not st.session_state.login:
 
     st.subheader("🔐 Login")
@@ -93,40 +100,34 @@ menu = st.sidebar.selectbox(
     ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
 )
 
-# ================= PARSER JAM AMAN =================
+# ================= PARSER JAM =================
 def parse_jam(jam_str):
     try:
         jam_str = str(jam_str).strip().replace(".", ":")
-        parts = jam_str.split(":")
-
-        if len(parts) != 2:
+        j, m = jam_str.split(":")
+        j = int(j); m = int(m)
+        if j < 0 or j > 23 or m < 0 or m > 59:
             return None
-
-        jam = int(parts[0])
-        menit = int(parts[1])
-
-        if jam < 0 or jam > 23 or menit < 0 or menit > 59:
-            return None
-
-        return jam * 60 + menit
-
+        return j * 60 + m
     except:
         return None
 
-# ================= SAFE FUNCTION =================
 def safe(val):
-    if val is None:
-        return ""
-    return str(val)
+    return "" if val is None else str(val)
 
 # ================= DASHBOARD =================
 if menu == "Dashboard":
 
     st.subheader("📊 Dashboard")
 
+    data = load_data()
+
     if not data.empty:
         data["Durasi (Jam)"] = pd.to_numeric(data["Durasi (Jam)"], errors="coerce").fillna(0)
         st.bar_chart(data.groupby("Nama")["Durasi (Jam)"].sum())
+
+    else:
+        st.info("Belum ada data")
 
 # ================= INPUT =================
 elif menu == "Input Kinerja":
@@ -136,7 +137,7 @@ elif menu == "Input Kinerja":
     with st.form("form"):
 
         tanggal = st.date_input("Tanggal", datetime.today())
-        jam_masuk = st.text_input("Jam Masuk (07:21 / 07.21 / 8:00)")
+        jam_masuk = st.text_input("Jam Masuk")
         jam_keluar = st.text_input("Jam Keluar")
 
         uraian = st.text_area("Uraian")
@@ -151,16 +152,15 @@ elif menu == "Input Kinerja":
         jk = parse_jam(jam_keluar)
 
         if jm is None or jk is None:
-            st.error("Format jam tidak valid")
+            st.error("Format jam salah")
             st.stop()
 
         if jk <= jm:
-            st.error("Jam keluar harus lebih besar dari jam masuk")
+            st.error("Jam keluar harus lebih besar")
             st.stop()
 
         durasi = round((jk - jm) / 60, 2)
 
-        # ================= FIX FINAL APPEND =================
         sheet.append_row([
             safe(st.session_state.nama),
             safe(st.session_state.nip),
@@ -176,11 +176,82 @@ elif menu == "Input Kinerja":
 
         st.success("Data tersimpan")
 
-# ================= DATA =================
+# ================= DATA KINERJA (EDIT + HAPUS) =================
 elif menu == "Data Kinerja":
 
     st.subheader("📋 Data Kinerja")
-    st.dataframe(data, use_container_width=True)
+
+    data = get_data_with_index()
+
+    if data.empty:
+        st.warning("Belum ada data")
+        st.stop()
+
+    for i, row in data.iterrows():
+
+        with st.container():
+            col1, col2, col3 = st.columns([5,2,2])
+
+            with col1:
+                st.write(f"👤 **{row['Nama']}**")
+                st.caption(f"{row['Tanggal']} | {row['Uraian']}")
+
+            with col2:
+                st.write(f"⏱ {row['Durasi (Jam)']} jam")
+
+            with col3:
+                if st.button("✏️ Edit", key=f"edit_{i}"):
+
+                    st.session_state.edit_mode = True
+                    st.session_state.edit_row = row
+                    st.session_state.edit_index = row["row_index"]
+
+                if st.button("🗑 Hapus", key=f"del_{i}"):
+
+                    sheet.delete_rows(row["row_index"])
+                    st.success("Data dihapus")
+                    st.rerun()
+
+        st.divider()
+
+    # ================= EDIT FORM =================
+    if "edit_mode" in st.session_state and st.session_state.edit_mode:
+
+        st.subheader("✏️ Edit Data")
+
+        ed = st.session_state.edit_row
+
+        jam_masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
+        jam_keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
+        uraian = st.text_area("Uraian", ed["Uraian"])
+        output = st.text_area("Output", ed["Output"])
+
+        lokasi = st.selectbox(
+            "Lokasi",
+            ["Kantor", "Rumah", "Dinas"],
+            index=["Kantor","Rumah","Dinas"].index(ed["Lokasi"])
+        )
+
+        if st.button("💾 Simpan Perubahan"):
+
+            jm = parse_jam(jam_masuk)
+            jk = parse_jam(jam_keluar)
+
+            if jm is None or jk is None:
+                st.error("Format jam salah")
+                st.stop()
+
+            durasi = round((jk - jm) / 60, 2)
+
+            sheet.update(
+                f"E{st.session_state.edit_index}:J{st.session_state.edit_index}",
+                [[jam_masuk, jam_keluar, durasi, uraian, output, lokasi]]
+            )
+
+            st.success("Data berhasil diupdate")
+
+            st.session_state.edit_mode = False
+            st.rerun()
 
 # ================= ADMIN =================
 elif menu == "Admin":
@@ -205,15 +276,7 @@ elif menu == "Admin":
         role_b = st.selectbox("Role", ["pegawai", "admin", "pimpinan"])
 
         if st.button("Tambah User"):
-
-            user_sheet.append_row([
-                nip_b,
-                nama_b,
-                jabatan_b,
-                pw_b,
-                role_b
-            ])
-
+            user_sheet.append_row([nip_b, nama_b, jabatan_b, pw_b, role_b])
             st.success("User ditambahkan")
 
     # ===== EDIT USER =====
@@ -226,7 +289,7 @@ elif menu == "Admin":
 
             nama_e = st.text_input("Nama", row["Nama"])
             jabatan_e = st.text_input("Jabatan", row["Jabatan"])
-            pw_e = st.text_input("Password baru (kosong = tidak ubah)")
+            pw_e = st.text_input("Password (kosong = tidak ubah)")
             role_e = st.selectbox("Role", ["pegawai","admin","pimpinan"])
 
             if st.button("Update User"):
