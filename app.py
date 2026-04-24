@@ -13,15 +13,24 @@ SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/16l6pcqA1CvM-8P5rsT37U
 WORKSHEET_NAME = "Sheet1"
 
 # --- AUTH ---
-scope = ["https://www.googleapis.com/auth/spreadsheets"]
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 
 creds = Credentials.from_service_account_info(
     st.secrets["connections"]["gsheets"]["service_account"],
     scopes=scope
 )
 
+# DEBUG (boleh dihapus nanti kalau sudah jalan)
+st.write("Service Account:", creds.service_account_email)
+
 client = gspread.authorize(creds)
-sheet = client.open_by_url(SPREADSHEET_URL).worksheet(WORKSHEET_NAME)
+
+# Ambil spreadsheet & sheet
+spreadsheet = client.open_by_url(SPREADSHEET_URL)
+sheet = spreadsheet.sheet1  # lebih aman daripada worksheet("Sheet1")
 
 # --- LOAD DATA ---
 @st.cache_data(ttl=60)
@@ -29,7 +38,7 @@ def load_data():
     try:
         data = sheet.get_all_records()
         return pd.DataFrame(data)
-    except:
+    except Exception:
         return pd.DataFrame()
 
 existing_data = load_data()
@@ -50,10 +59,16 @@ with st.form("form_kinerja"):
         jam_keluar = st.time_input("Jam Keluar", value=time(17, 0))
 
     st.markdown("### 📝 Uraian Pekerjaan")
-    uraian = st.text_area("Isi uraian pekerjaan", height=150)
+    uraian = st.text_area(
+        "Isi uraian pekerjaan (gunakan ENTER untuk baris baru)",
+        height=150
+    )
 
     st.markdown("### 📦 Output Pekerjaan")
-    output = st.text_area("Isi output pekerjaan", height=150)
+    output = st.text_area(
+        "Isi output pekerjaan (gunakan ENTER untuk baris baru)",
+        height=150
+    )
 
     st.markdown("### 📍 Lokasi Bekerja")
     lokasi = st.radio(
@@ -83,13 +98,17 @@ if submit:
         }])
 
         try:
+            # Jika sheet kosong
             if existing_data.empty:
                 updated_df = new_data
             else:
                 updated_df = pd.concat([existing_data, new_data], ignore_index=True)
 
-            # UPDATE GOOGLE SHEETS
-            sheet.update([updated_df.columns.values.tolist()] + updated_df.values.tolist())
+            # Update ke Google Sheets
+            sheet.update(
+                [updated_df.columns.values.tolist()] +
+                updated_df.values.tolist()
+            )
 
             st.success("✅ Data berhasil disimpan!")
             st.cache_data.clear()
