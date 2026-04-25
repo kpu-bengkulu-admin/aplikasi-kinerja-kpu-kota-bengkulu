@@ -1,6 +1,6 @@
 # ======================================================
 # APLIKASI E-KINERJA KPU KOTA BENGKULU
-# PRODUCTION VERSION - CLEAN & STABLE
+# FINAL VERSION - SIMPLE LOGIN (NO HASH)
 # ======================================================
 
 import streamlit as st
@@ -9,7 +9,6 @@ import io
 from datetime import date
 import gspread
 from google.oauth2.service_account import Credentials
-import hashlib
 
 # ======================================================
 # CONFIG
@@ -37,9 +36,6 @@ box-shadow:0 3px 10px rgba(0,0,0,.08);border-left:5px solid #0f4c81;}
 def safe(x):
     return "" if x is None else str(x)
 
-def hash_pw(pw):
-    return hashlib.sha256(pw.encode()).hexdigest()
-
 # ======================================================
 # GOOGLE SHEETS
 # ======================================================
@@ -61,7 +57,7 @@ def connect_sheet():
 spreadsheet = connect_sheet()
 sheet = spreadsheet.sheet1
 
-# USERS
+# USERS SHEET
 try:
     user_sheet = spreadsheet.worksheet("users")
 except:
@@ -114,7 +110,7 @@ def hitung_durasi(row):
     if jm is None or jk is None:
         return 0
 
-    # SUPPORT SHIFT MALAM
+    # support shift malam
     if jk < jm:
         jk += 24 * 60
 
@@ -147,7 +143,7 @@ if not st.session_state.login:
 
         cek = users[
             (users["NIP"].astype(str)==str(nip)) &
-            (users["Password"].astype(str)==hash_pw(pw))
+            (users["Password"].astype(str)==str(pw))
         ]
 
         if not cek.empty:
@@ -233,6 +229,7 @@ elif menu == "Input Kinerja":
             st.error("Format jam salah")
             st.stop()
 
+        # hitung durasi (support shift malam)
         durasi = round((jk-jm)/60,2) if jk >= jm else round(((jk+1440)-jm)/60,2)
 
         df = load_data()
@@ -369,7 +366,7 @@ elif menu == "Admin":
 
         user_sheet.append_row([
             nip, nama, jabatan,
-            hash_pw(pw),
+            pw,
             role
         ])
 
