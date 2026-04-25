@@ -1,81 +1,84 @@
 import streamlit as st
 import pandas as pd
+from datetime import date
 import gspread
 from google.oauth2.service_account import Credentials
-from datetime import datetime, date
 import io
 
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU", layout="wide")
 
-# ================= CSS FINAL =================
+# ================= UI PRO MAX =================
 st.markdown("""
 <style>
-
-/* SIDEBAR */
-section[data-testid="stSidebar"] {
-    background: #0b1f3a;
+[data-testid="stSidebar"] {
+    background: #0f172a;
 }
-
-/* MENU TEXT */
-div[role="radiogroup"] label {
+[data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 500;
-    padding: 10px;
 }
 
-/* HOVER */
-div[role="radiogroup"] label:hover {
-    background: #1f3b63;
-    border-radius: 8px;
+.stButton button {
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-weight: bold;
 }
 
-/* ACTIVE */
-div[role="radiogroup"] input:checked + div {
-    background: #ff4b4b !important;
-    color: white !important;
-    border-radius: 8px;
-}
-
-/* HEADER */
-.header {
-    background: linear-gradient(90deg,#ff4b4b,#ff7a7a);
-    padding:20px;border-radius:15px;color:white;
-}
-
-/* CARD */
 .card {
-    background:white;padding:20px;border-radius:15px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    padding:20px;
+    border-radius:16px;
+    color:white;
     text-align:center;
+    font-weight:600;
 }
 
+.c1 {background: linear-gradient(135deg,#ef4444,#f87171);}
+.c2 {background: linear-gradient(135deg,#22c55e,#4ade80);}
+.c3 {background: linear-gradient(135deg,#f59e0b,#fbbf24);}
+.c4 {background: linear-gradient(135deg,#3b82f6,#60a5fa);}
+
+.box {
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:10px;
+    box-shadow:0 3px 8px rgba(0,0,0,0.05);
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ================= GOOGLE SHEET =================
+# ================= GOOGLE =================
 @st.cache_resource
 def connect():
-    scope = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
     creds = Credentials.from_service_account_info(
         st.secrets["connections"]["gsheets"]["service_account"],
-        scopes=scope
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ],
     )
     client = gspread.authorize(creds)
     return client.open_by_key("16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM")
 
 spreadsheet = connect()
 sheet = spreadsheet.sheet1
-user_sheet = spreadsheet.worksheet("users")
 
-# ================= FUNCTION =================
+try:
+    user_sheet = spreadsheet.worksheet("users")
+except:
+    user_sheet = spreadsheet.add_worksheet("users", 100, 5)
+    user_sheet.append_row(["NIP","Nama","Jabatan","Password","Role"])
+
+# ================= HELPER =================
+def safe(x):
+    return "" if x is None else str(x)
+
 def load_data():
     df = pd.DataFrame(sheet.get_all_records())
     if not df.empty:
-        df["row_index"] = range(2, len(df)+2)
+        df["row"] = range(2, len(df)+2)
     return df
 
 def load_users():
@@ -88,39 +91,36 @@ def parse_jam(x):
     except:
         return None
 
-def hitung(jm,jk):
-    jm = parse_jam(jm)
-    jk = parse_jam(jk)
-    if jm is None or jk is None or jk<=jm:
-        return 0
-    return round((jk-jm)/60,2)
+def durasi(row):
+    jm = parse_jam(row["Jam Masuk"])
+    jk = parse_jam(row["Jam Keluar"])
+    if jm and jk and jk>jm:
+        return round((jk-jm)/60,2)
+    return 0
 
 # ================= LOGIN =================
 if "login" not in st.session_state:
-    st.session_state.login=False
+    st.session_state.login = False
+
+users = load_users()
 
 if not st.session_state.login:
-
-    st.title("Login E-Kinerja")
-
+    st.title("🔐 Login E-Kinerja")
     nip = st.text_input("NIP")
     pw = st.text_input("Password", type="password")
-
-    users = load_users()
 
     if st.button("Login"):
         cek = users[
             (users["NIP"].astype(str)==str(nip)) &
             (users["Password"].astype(str)==str(pw))
         ]
-
         if not cek.empty:
             u = cek.iloc[0]
-            st.session_state.login=True
-            st.session_state.nama=u["Nama"]
-            st.session_state.nip=str(u["NIP"])
-            st.session_state.role=u["Role"]
-            st.session_state.jabatan=u["Jabatan"]
+            st.session_state.login = True
+            st.session_state.nama = u["Nama"]
+            st.session_state.nip = str(u["NIP"])
+            st.session_state.jabatan = u["Jabatan"]
+            st.session_state.role = u["Role"]
             st.rerun()
         else:
             st.error("Login gagal")
@@ -128,240 +128,157 @@ if not st.session_state.login:
     st.stop()
 
 # ================= SIDEBAR =================
-st.sidebar.markdown(f"### 👤 {st.session_state.nama}")
-
-menu = st.sidebar.radio("Menu",[
-    "Dashboard",
-    "Input",
-    "Data Kinerja",
-    "Admin",
-    "Superadmin"
-])
+st.sidebar.title(st.session_state.nama)
+menu = st.sidebar.radio("Menu", ["Dashboard","Input","Data Kinerja","Admin"])
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
 
 # ================= DASHBOARD =================
-if menu=="Dashboard":
+if menu == "Dashboard":
 
     df = load_data()
-
-    st.markdown(f"""
-    <div class='header'>
-    <h2>Aplikasi E-Kinerja</h2>
-    <p>{datetime.now().strftime("%A, %d %B %Y")}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
     if df.empty:
         st.info("Belum ada data")
         st.stop()
 
-    df["Durasi"] = df.apply(lambda x: hitung(x["Jam Masuk"],x["Jam Keluar"]),axis=1)
+    df["Durasi"] = df.apply(durasi, axis=1)
+    df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
     # FILTER
-    st.markdown("### 🎛️ Filter")
-
-    col1,col2,col3 = st.columns(3)
-
-    with col1:
-        tgl = st.date_input("Range Tanggal", value=None)
-
-    with col2:
+    c1,c2,c3 = st.columns(3)
+    with c1:
+        tgl = st.date_input("Tanggal", value=(date.today(), date.today()))
+    with c2:
         pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
-
-    with col3:
+    with c3:
         lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
 
-    if tgl and len(tgl)==2:
-        df = df[
-            (pd.to_datetime(df["Tanggal"])>=pd.to_datetime(tgl[0])) &
-            (pd.to_datetime(df["Tanggal"])<=pd.to_datetime(tgl[1]))
-        ]
-
+    if len(tgl)==2:
+        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
     if pegawai:
         df = df[df["Nama"].isin(pegawai)]
-
     if lokasi:
         df = df[df["Lokasi"].isin(lokasi)]
 
-    # KPI
-    c1,c2,c3,c4 = st.columns(4)
-    c1.metric("Total",len(df))
-    c2.metric("Jam",df["Durasi"].sum())
-    c3.metric("Hari",df["Tanggal"].nunique())
-    c4.metric("Pegawai",df["Nama"].nunique())
+    total = len(df)
+    jam = round(df["Durasi"].sum(),2)
+    hari = df["Tanggal"].nunique()
+    peg = df["Nama"].nunique()
 
-    st.bar_chart(df.groupby("Nama")["Durasi"].sum())
+    k1,k2,k3,k4 = st.columns(4)
+    k1.markdown(f"<div class='card c1'><h2>{total}</h2>Total</div>", unsafe_allow_html=True)
+    k2.markdown(f"<div class='card c2'><h2>{jam:.2f}</h2>Jam</div>", unsafe_allow_html=True)
+    k3.markdown(f"<div class='card c3'><h2>{hari}</h2>Hari</div>", unsafe_allow_html=True)
+    k4.markdown(f"<div class='card c4'><h2>{peg}</h2>Pegawai</div>", unsafe_allow_html=True)
+
+    # GRAFIK + RANKING
+    col1,col2 = st.columns(2)
+
+    with col1:
+        st.subheader("📊 Durasi per Pegawai")
+        st.bar_chart(df.groupby("Nama")["Durasi"].sum())
+
+    with col2:
+        st.subheader("🏆 Top Pegawai")
+        top = df.groupby("Nama")["Durasi"].sum().sort_values(ascending=False).head(5)
+        st.dataframe(top)
+
+    # KEGIATAN TERBARU
+    st.subheader("🕒 Kegiatan Terbaru")
+    latest = df.sort_values("Tanggal", ascending=False).head(5)
+    for _,r in latest.iterrows():
+        st.markdown(f"""
+        <div class='box'>
+        <b>{r['Tanggal'].date()}</b><br>
+        {r['Uraian']}<br>
+        ⏱ {r['Durasi']:.2f} jam
+        </div>
+        """, unsafe_allow_html=True)
 
 # ================= INPUT =================
-elif menu=="Input":
+elif menu == "Input":
 
-    with st.form("form",clear_on_submit=True):
-
-        tgl = st.date_input("Tanggal",date.today())
-        masuk = st.text_input("Masuk","07:30")
-        keluar = st.text_input("Keluar","16:00")
+    with st.form("form", clear_on_submit=True):
+        tgl = st.date_input("Tanggal")
+        masuk = st.text_input("Jam Masuk","07:30")
+        keluar = st.text_input("Jam Keluar","16:00")
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
-        lokasi = st.selectbox("Lokasi",["Kantor","Rumah","Dinas Luar / SPT"])
+        lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-        simpan = st.form_submit_button("Simpan")
+        submit = st.form_submit_button("Simpan")
 
-    if simpan:
-        d = hitung(masuk,keluar)
+    if submit:
+        jm = parse_jam(masuk)
+        jk = parse_jam(keluar)
+
+        if not jm or not jk or jk<=jm:
+            st.error("Jam tidak valid")
+            st.stop()
+
+        dur = round((jk-jm)/60,2)
 
         sheet.append_row([
-            str(st.session_state.nama),
-            str(st.session_state.nip),
-            str(st.session_state.jabatan),
-            tgl.strftime("%Y-%m-%d"),
-            str(masuk),
-            str(keluar),
-            float(d),
-            str(uraian),
-            str(output),
-            str(lokasi)
+            safe(st.session_state.nama),
+            safe(str(st.session_state.nip)),
+            safe(st.session_state.jabatan),
+            safe(tgl.strftime("%Y-%m-%d")),
+            safe(masuk),
+            safe(keluar),
+            dur,
+            safe(uraian),
+            safe(output),
+            safe(lokasi)
         ])
 
-        st.success("✅ Data berhasil disimpan")
-        st.rerun()
+        st.success("✅ Data tersimpan")
 
-# ================= DATA KINERJA =================
-elif menu=="Data Kinerja":
+# ================= DATA =================
+elif menu == "Data Kinerja":
 
     df = load_data()
+    df["Durasi"] = df.apply(durasi, axis=1)
 
-    if df.empty:
-        st.info("Belum ada data")
-        st.stop()
-
-    # ROLE FILTER
-    if st.session_state.role in ["admin","pimpinan","superadmin"]:
-
-        pilihan = st.radio(
-            "Tampilkan Data",
-            ["Semua Data","Data Saya"],
-            horizontal=True
-        )
-
-        if pilihan == "Data Saya":
-            df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
-
+    if st.session_state.role in ["admin","pimpinan"]:
+        mode = st.radio("Mode", ["Semua Data","Data Saya"])
+        if mode == "Data Saya":
+            df = df[df["NIP"].astype(str)==st.session_state.nip]
     else:
-        df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
-
-    df["Durasi"] = df.apply(lambda x: hitung(x["Jam Masuk"],x["Jam Keluar"]),axis=1)
+        df = df[df["NIP"].astype(str)==st.session_state.nip]
 
     for i,row in df.iterrows():
-
         c1,c2,c3 = st.columns([6,2,2])
 
-        with c1:
-            st.write(f"**{row['Nama']}**")
-            st.caption(row["Uraian"])
+        c1.write(f"**{row['Nama']}** - {row['Tanggal']}")
+        c1.caption(row["Uraian"])
+        c2.write(f"{row['Durasi']:.2f} jam")
 
-        with c2:
-            st.write(f"{row['Durasi']} Jam")
-
-        with c3:
-            if st.button("✏️",key=f"e{i}"):
-                st.session_state.edit=row
-
-            if st.button("🗑",key=f"d{i}"):
-                sheet.delete_rows(int(row["row_index"]))
+        if st.session_state.role != "pegawai":
+            if c3.button("🗑", key=i):
+                sheet.delete_rows(int(row["row"]))
                 st.rerun()
 
-    # EDIT
-    if "edit" in st.session_state:
-
-        ed = st.session_state.edit
-
-        masuk = st.text_input("Masuk",ed["Jam Masuk"])
-        keluar = st.text_input("Keluar",ed["Jam Keluar"])
-        uraian = st.text_area("Uraian",ed["Uraian"])
-
-        if st.button("Update"):
-            d = hitung(masuk,keluar)
-
-            sheet.update(f"E{int(ed['row_index'])}:J{int(ed['row_index'])}",[[
-                str(masuk), str(keluar), float(d),
-                str(uraian), str(ed["Output"]), str(ed["Lokasi"])
-            ]])
-
-            del st.session_state.edit
-            st.rerun()
-
-    # DOWNLOAD
-    st.subheader("Download Data")
-
-    start = st.date_input("Dari")
-    end = st.date_input("Sampai")
-
-    if start and end:
-        df_export = df[
-            (pd.to_datetime(df["Tanggal"])>=pd.to_datetime(start)) &
-            (pd.to_datetime(df["Tanggal"])<=pd.to_datetime(end))
-        ]
-    else:
-        df_export = df
-
     excel = io.BytesIO()
-    df_export.to_excel(excel,index=False)
+    df.to_excel(excel, index=False)
+    st.download_button("📥 Download Excel", excel.getvalue(), "data.xlsx")
 
-    st.download_button("📥 Download Excel",excel.getvalue(),"data.xlsx")
+# ================= ADMIN =================
+elif menu == "Admin":
 
-# ================= ADMIN PRO+ =================
-elif menu=="Admin":
-
-    if st.session_state.role not in ["admin","superadmin"]:
+    if st.session_state.role != "admin":
         st.error("Akses ditolak")
         st.stop()
 
-    tab1,tab2,tab3 = st.tabs(["Tambah User","Manajemen User","Data"])
+    st.subheader("Tambah User")
 
-    with tab1:
-        nip = st.text_input("NIP")
-        nama = st.text_input("Nama")
-        jab = st.text_input("Jabatan")
-        pw = st.text_input("Password")
-        role = st.selectbox("Role",["pegawai","admin","pimpinan","superadmin"])
+    nip = st.text_input("NIP")
+    nama = st.text_input("Nama")
+    jabatan = st.text_input("Jabatan")
+    pw = st.text_input("Password")
+    role = st.selectbox("Role", ["pegawai","admin","pimpinan"])
 
-        if st.button("Tambah"):
-            user_sheet.append_row([nip,nama,jab,pw,role])
-            st.success("User ditambah")
-            st.rerun()
-
-    with tab2:
-        users = load_users()
-        st.dataframe(users)
-
-        for i,row in users.iterrows():
-            if st.button(f"Hapus {row['Nama']}",key=f"u{i}"):
-                user_sheet.delete_rows(i+2)
-                st.rerun()
-
-    with tab3:
-        df = load_data()
-        st.dataframe(df)
-
-        if st.button("Reset Data"):
-            sheet.batch_clear(["A2:J10000"])
-            st.warning("Data direset")
-
-# ================= SUPERADMIN =================
-elif menu=="Superadmin":
-
-    if st.session_state.role!="superadmin":
-        st.error("Khusus Superadmin")
-        st.stop()
-
-    st.subheader("Superadmin Panel")
-
-    if st.button("🔥 Reset TOTAL"):
-        sheet.clear()
-        st.warning("Semua data dihapus")
-
-    st.dataframe(load_data())
-    st.dataframe(load_users())
+    if st.button("Tambah"):
+        user_sheet.append_row([nip,nama,jabatan,pw,role])
+        st.success("User ditambah")
