@@ -3,12 +3,23 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
-# ================= CONFIG =================
-st.set_page_config(page_title="Aplikasi Kinerja KPU", layout="wide")
-st.title("📊 Aplikasi Kinerja KPU")
+# =====================================================
+# CONFIG
+# =====================================================
+st.set_page_config(
+    page_title="Aplikasi E-Kinerja KPU Kota Bengkulu",
+    layout="wide"
+)
 
-# ================= GOOGLE SHEETS =================
+st.title("📊 Aplikasi E-Kinerja KPU Kota Bengkulu")
+
+# =====================================================
+# GOOGLE SHEETS
+# =====================================================
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
@@ -27,7 +38,9 @@ spreadsheet = client.open_by_key(SPREADSHEET_ID)
 sheet = spreadsheet.sheet1
 user_sheet = spreadsheet.worksheet("users")
 
-# ================= LOAD DATA =================
+# =====================================================
+# LOAD DATA
+# =====================================================
 def load_users():
     try:
         return pd.DataFrame(user_sheet.get_all_records())
@@ -40,7 +53,6 @@ def load_data():
     except:
         return pd.DataFrame()
 
-# tambah index baris (penting untuk edit/hapus)
 def get_data_with_index():
     df = load_data()
     if df.empty:
@@ -48,11 +60,35 @@ def get_data_with_index():
     df["row_index"] = range(2, len(df) + 2)
     return df
 
-# ================= SESSION =================
+# =====================================================
+# UTILS
+# =====================================================
+def parse_jam(jam_str):
+    try:
+        jam_str = str(jam_str).strip().replace(".", ":")
+        j, m = jam_str.split(":")
+        j = int(j)
+        m = int(m)
+
+        if j < 0 or j > 23 or m < 0 or m > 59:
+            return None
+
+        return j * 60 + m
+    except:
+        return None
+
+def safe(v):
+    return "" if v is None else str(v)
+
+# =====================================================
+# SESSION
+# =====================================================
 if "login" not in st.session_state:
     st.session_state.login = False
 
-# ================= LOGIN =================
+# =====================================================
+# LOGIN
+# =====================================================
 users_df = load_users()
 
 if not st.session_state.login:
@@ -70,15 +106,14 @@ if not st.session_state.login:
         ]
 
         if not user.empty:
+
             u = user.iloc[0]
 
-            st.session_state.update({
-                "login": True,
-                "nama": u["Nama"],
-                "nip": u["NIP"],
-                "jabatan": u["Jabatan"],
-                "role": u["Role"]
-            })
+            st.session_state.login = True
+            st.session_state.nama = u["Nama"]
+            st.session_state.nip = u["NIP"]
+            st.session_state.jabatan = u["Jabatan"]
+            st.session_state.role = u["Role"]
 
             st.rerun()
 
@@ -87,66 +122,85 @@ if not st.session_state.login:
 
     st.stop()
 
-# ================= HEADER =================
-st.success(f"Login sebagai: {st.session_state.nama} ({st.session_state.role})")
+# =====================================================
+# HEADER
+# =====================================================
+st.success(
+    f"Login sebagai: {st.session_state.nama} ({st.session_state.role})"
+)
 
 if st.button("🚪 Logout"):
     st.session_state.clear()
     st.rerun()
 
-# ================= MENU =================
+# =====================================================
+# MENU
+# =====================================================
 menu = st.sidebar.selectbox(
     "Menu",
     ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
 )
 
-# ================= PARSER JAM =================
-def parse_jam(jam_str):
-    try:
-        jam_str = str(jam_str).strip().replace(".", ":")
-        j, m = jam_str.split(":")
-        j = int(j); m = int(m)
-        if j < 0 or j > 23 or m < 0 or m > 59:
-            return None
-        return j * 60 + m
-    except:
-        return None
-
-def safe(val):
-    return "" if val is None else str(val)
-
-# ================= DASHBOARD =================
+# =====================================================
+# DASHBOARD
+# =====================================================
 if menu == "Dashboard":
 
-    st.subheader("📊 Dashboard")
+    st.subheader("📈 Dashboard")
 
     data = load_data()
 
-    if not data.empty:
-        data["Durasi (Jam)"] = pd.to_numeric(data["Durasi (Jam)"], errors="coerce").fillna(0)
-        st.bar_chart(data.groupby("Nama")["Durasi (Jam)"].sum())
-
-    else:
+    if data.empty:
         st.info("Belum ada data")
+    else:
 
-# ================= INPUT =================
+        if st.session_state.role == "pegawai":
+            data = data[
+                data["NIP"].astype(str) == str(st.session_state.nip)
+            ]
+
+        data["Durasi (Jam)"] = pd.to_numeric(
+            data["Durasi (Jam)"],
+            errors="coerce"
+        ).fillna(0)
+
+        st.metric(
+            "Total Jam Kerja",
+            round(data["Durasi (Jam)"].sum(), 2)
+        )
+
+        st.bar_chart(
+            data.groupby("Nama")["Durasi (Jam)"].sum()
+        )
+
+# =====================================================
+# INPUT KINERJA
+# =====================================================
 elif menu == "Input Kinerja":
 
     st.subheader("📝 Input Kinerja")
 
-    with st.form("form"):
+    with st.form("form_input"):
 
-        tanggal = st.date_input("Tanggal", datetime.today())
-        jam_masuk = st.text_input("Jam Masuk")
-        jam_keluar = st.text_input("Jam Keluar")
+        tanggal = st.date_input(
+            "Tanggal",
+            datetime.today()
+        )
+
+        jam_masuk = st.text_input("Jam Masuk (08:00)")
+        jam_keluar = st.text_input("Jam Keluar (16:30)")
 
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
-        lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas"])
 
-        submit = st.form_submit_button("Simpan")
+        lokasi = st.selectbox(
+            "Lokasi",
+            ["Kantor", "Rumah", "Dinas"]
+        )
 
-    if submit:
+        simpan = st.form_submit_button("💾 Simpan")
+
+    if simpan:
 
         jm = parse_jam(jam_masuk)
         jk = parse_jam(jam_keluar)
@@ -174,9 +228,11 @@ elif menu == "Input Kinerja":
             safe(lokasi)
         ])
 
-        st.success("Data tersimpan")
+        st.success("Data berhasil disimpan")
 
-# ================= DATA KINERJA (EDIT + HAPUS) =================
+# =====================================================
+# DATA KINERJA
+# =====================================================
 elif menu == "Data Kinerja":
 
     st.subheader("📋 Data Kinerja")
@@ -187,73 +243,214 @@ elif menu == "Data Kinerja":
         st.warning("Belum ada data")
         st.stop()
 
+    # ================= FILTER ROLE =================
+    if st.session_state.role == "pegawai":
+        data = data[
+            data["NIP"].astype(str) == str(st.session_state.nip)
+        ]
+
+    # ================= FILTER TANGGAL =================
+    col1, col2 = st.columns(2)
+
+    with col1:
+        tgl1 = st.date_input("Dari Tanggal")
+
+    with col2:
+        tgl2 = st.date_input("Sampai Tanggal")
+
+    data["Tanggal"] = pd.to_datetime(
+        data["Tanggal"],
+        errors="coerce"
+    )
+
+    data = data[
+        (data["Tanggal"] >= pd.to_datetime(tgl1)) &
+        (data["Tanggal"] <= pd.to_datetime(tgl2))
+    ]
+
+    if data.empty:
+        st.info("Tidak ada data")
+        st.stop()
+
+    # ================= TABEL =================
+    st.dataframe(
+        data.drop(columns=["row_index"]),
+        use_container_width=True
+    )
+
+    # =================================================
+    # DOWNLOAD EXCEL
+    # =================================================
+    excel_buffer = io.BytesIO()
+
+    with pd.ExcelWriter(
+        excel_buffer,
+        engine="openpyxl"
+    ) as writer:
+
+        data.drop(columns=["row_index"]).to_excel(
+            writer,
+            index=False,
+            sheet_name="Kinerja"
+        )
+
+    st.download_button(
+        label="📥 Download Excel",
+        data=excel_buffer.getvalue(),
+        file_name=f"rekap_{st.session_state.nama}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    # =================================================
+    # DOWNLOAD PDF
+    # =================================================
+    pdf_buffer = io.BytesIO()
+
+    c = canvas.Canvas(pdf_buffer, pagesize=A4)
+
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(
+        50, 800,
+        "LAPORAN KINERJA PEGAWAI"
+    )
+
+    c.setFont("Helvetica", 10)
+    c.drawString(
+        50, 780,
+        f"Nama : {st.session_state.nama}"
+    )
+    c.drawString(
+        50, 765,
+        f"NIP : {st.session_state.nip}"
+    )
+    c.drawString(
+        50, 750,
+        f"Periode : {tgl1} s/d {tgl2}"
+    )
+
+    y = 720
+
+    for _, row in data.iterrows():
+
+        teks = (
+            f"{row['Tanggal'].date()} | "
+            f"{row['Uraian']} | "
+            f"{row['Durasi (Jam)']} jam"
+        )
+
+        c.drawString(50, y, teks)
+        y -= 18
+
+        if y < 50:
+            c.showPage()
+            y = 800
+
+    c.save()
+
+    st.download_button(
+        label="📄 Download PDF",
+        data=pdf_buffer.getvalue(),
+        file_name=f"laporan_{st.session_state.nama}.pdf",
+        mime="application/pdf"
+    )
+
+    # =================================================
+    # EDIT + HAPUS
+    # =================================================
+    st.divider()
+    st.subheader("✏️ Edit / Hapus Data")
+
     for i, row in data.iterrows():
 
-        with st.container():
-            col1, col2, col3 = st.columns([5,2,2])
+        c1, c2, c3 = st.columns([5, 2, 2])
 
-            with col1:
-                st.write(f"👤 **{row['Nama']}**")
-                st.caption(f"{row['Tanggal']} | {row['Uraian']}")
+        with c1:
+            st.write(f"👤 {row['Nama']}")
+            st.caption(
+                f"{row['Tanggal'].date()} | {row['Uraian']}"
+            )
 
-            with col2:
-                st.write(f"⏱ {row['Durasi (Jam)']} jam")
+        with c2:
+            st.write(f"⏱ {row['Durasi (Jam)']} jam")
 
-            with col3:
-                if st.button("✏️ Edit", key=f"edit_{i}"):
+        with c3:
 
-                    st.session_state.edit_mode = True
-                    st.session_state.edit_row = row
-                    st.session_state.edit_index = row["row_index"]
+            if st.button("Edit", key=f"edit{i}"):
 
-                if st.button("🗑 Hapus", key=f"del_{i}"):
+                st.session_state.edit_mode = True
+                st.session_state.edit_row = row
+                st.session_state.edit_index = row["row_index"]
 
-                    sheet.delete_rows(row["row_index"])
-                    st.success("Data dihapus")
-                    st.rerun()
+            if st.button("Hapus", key=f"hapus{i}"):
+
+                sheet.delete_rows(row["row_index"])
+                st.success("Data dihapus")
+                st.rerun()
 
         st.divider()
 
-    # ================= EDIT FORM =================
-    if "edit_mode" in st.session_state and st.session_state.edit_mode:
+    # ================= FORM EDIT =================
+    if "edit_mode" in st.session_state:
 
-        st.subheader("✏️ Edit Data")
+        if st.session_state.edit_mode:
 
-        ed = st.session_state.edit_row
+            st.subheader("📝 Form Edit")
 
-        jam_masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
-        jam_keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"])
-        output = st.text_area("Output", ed["Output"])
+            ed = st.session_state.edit_row
 
-        lokasi = st.selectbox(
-            "Lokasi",
-            ["Kantor", "Rumah", "Dinas"],
-            index=["Kantor","Rumah","Dinas"].index(ed["Lokasi"])
-        )
-
-        if st.button("💾 Simpan Perubahan"):
-
-            jm = parse_jam(jam_masuk)
-            jk = parse_jam(jam_keluar)
-
-            if jm is None or jk is None:
-                st.error("Format jam salah")
-                st.stop()
-
-            durasi = round((jk - jm) / 60, 2)
-
-            sheet.update(
-                f"E{st.session_state.edit_index}:J{st.session_state.edit_index}",
-                [[jam_masuk, jam_keluar, durasi, uraian, output, lokasi]]
+            jm = st.text_input(
+                "Jam Masuk",
+                ed["Jam Masuk"]
             )
 
-            st.success("Data berhasil diupdate")
+            jk = st.text_input(
+                "Jam Keluar",
+                ed["Jam Keluar"]
+            )
 
-            st.session_state.edit_mode = False
-            st.rerun()
+            uraian = st.text_area(
+                "Uraian",
+                ed["Uraian"]
+            )
 
-# ================= ADMIN =================
+            output = st.text_area(
+                "Output",
+                ed["Output"]
+            )
+
+            lokasi = st.selectbox(
+                "Lokasi",
+                ["Kantor", "Rumah", "Dinas"],
+                index=["Kantor", "Rumah", "Dinas"].index(
+                    ed["Lokasi"]
+                )
+            )
+
+            if st.button("💾 Simpan Perubahan"):
+
+                masuk = parse_jam(jm)
+                keluar = parse_jam(jk)
+
+                durasi = round(
+                    (keluar - masuk) / 60,
+                    2
+                )
+
+                idx = st.session_state.edit_index
+
+                sheet.update(
+                    f"E{idx}:J{idx}",
+                    [[jm, jk, durasi, uraian, output, lokasi]]
+                )
+
+                st.success("Data berhasil diupdate")
+
+                st.session_state.edit_mode = False
+                st.rerun()
+
+# =====================================================
+# ADMIN
+# =====================================================
 elif menu == "Admin":
 
     if st.session_state.role != "admin":
@@ -262,64 +459,116 @@ elif menu == "Admin":
 
     st.subheader("⚙️ Admin Panel")
 
-    tab1, tab2, tab3 = st.tabs(["Tambah", "Edit", "Hapus"])
-
     users_df = load_users()
 
-    # ===== TAMBAH USER =====
+    tab1, tab2, tab3 = st.tabs(
+        ["Tambah User", "Edit User", "Hapus User"]
+    )
+
+    # ==========================================
+    # TAMBAH
+    # ==========================================
     with tab1:
 
-        nip_b = st.text_input("NIP")
-        nama_b = st.text_input("Nama")
-        jabatan_b = st.text_input("Jabatan")
-        pw_b = st.text_input("Password")
-        role_b = st.selectbox("Role", ["pegawai", "admin", "pimpinan"])
+        nip = st.text_input("NIP Baru")
+        nama = st.text_input("Nama Baru")
+        jabatan = st.text_input("Jabatan Baru")
+        password = st.text_input("Password Baru")
+        role = st.selectbox(
+            "Role",
+            ["pegawai", "admin", "pimpinan"]
+        )
 
         if st.button("Tambah User"):
-            user_sheet.append_row([nip_b, nama_b, jabatan_b, pw_b, role_b])
-            st.success("User ditambahkan")
 
-    # ===== EDIT USER =====
+            user_sheet.append_row([
+                nip,
+                nama,
+                jabatan,
+                password,
+                role
+            ])
+
+            st.success("User berhasil ditambah")
+
+    # ==========================================
+    # EDIT
+    # ==========================================
     with tab2:
 
         if not users_df.empty:
 
-            pilih = st.selectbox("Pilih NIP", users_df["NIP"].astype(str))
-            row = users_df[users_df["NIP"].astype(str) == pilih].iloc[0]
+            pilih = st.selectbox(
+                "Pilih User",
+                users_df["NIP"].astype(str)
+            )
 
-            nama_e = st.text_input("Nama", row["Nama"])
-            jabatan_e = st.text_input("Jabatan", row["Jabatan"])
-            pw_e = st.text_input("Password (kosong = tidak ubah)")
-            role_e = st.selectbox("Role", ["pegawai","admin","pimpinan"])
+            row = users_df[
+                users_df["NIP"].astype(str) == pilih
+            ].iloc[0]
+
+            nama_e = st.text_input(
+                "Nama",
+                row["Nama"]
+            )
+
+            jabatan_e = st.text_input(
+                "Jabatan",
+                row["Jabatan"]
+            )
+
+            pw_e = st.text_input(
+                "Password Baru (kosong=tidak ganti)"
+            )
+
+            role_e = st.selectbox(
+                "Role Baru",
+                ["pegawai", "admin", "pimpinan"]
+            )
 
             if st.button("Update User"):
 
                 all_data = user_sheet.get_all_values()
 
                 for i, r in enumerate(all_data):
+
                     if r[0] == pilih:
 
-                        pw_final = r[3] if pw_e == "" else pw_e
+                        pass_final = r[3]
+                        if pw_e != "":
+                            pass_final = pw_e
 
                         user_sheet.update(
                             f"A{i+1}:E{i+1}",
-                            [[pilih, nama_e, jabatan_e, pw_final, role_e]]
+                            [[
+                                pilih,
+                                nama_e,
+                                jabatan_e,
+                                pass_final,
+                                role_e
+                            ]]
                         )
 
-                        st.success("User diupdate")
+                        st.success("User berhasil diupdate")
                         st.rerun()
 
-    # ===== HAPUS USER =====
+    # ==========================================
+    # HAPUS
+    # ==========================================
     with tab3:
 
-        hapus = st.selectbox("Hapus NIP", users_df["NIP"].astype(str))
+        hapus = st.selectbox(
+            "Pilih NIP Hapus",
+            users_df["NIP"].astype(str)
+        )
 
         if st.button("Hapus User"):
 
             all_data = user_sheet.get_all_values()
 
             for i, r in enumerate(all_data):
+
                 if r[0] == hapus:
-                    user_sheet.delete_rows(i+1)
-                    st.success("User dihapus")
+                    user_sheet.delete_rows(i + 1)
+                    st.success("User berhasil dihapus")
                     st.rerun()
