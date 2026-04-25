@@ -179,7 +179,7 @@ elif menu == "Input":
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
-        df = load_data()
+    df = load_data()
     if df.empty:
         st.info("Belum ada data")
         st.stop()
