@@ -8,25 +8,48 @@ import io
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU", layout="wide")
 
-# ================= CSS =================
+# ================= CSS FINAL =================
 st.markdown("""
 <style>
+
+/* SIDEBAR */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg,#0b1f3a,#061224);
-    color:white;
+    background: #0b1f3a;
 }
+
+/* MENU TEXT */
 div[role="radiogroup"] label {
-    color:white !important;
+    color: white !important;
+    font-weight: 500;
+    padding: 10px;
 }
+
+/* HOVER */
+div[role="radiogroup"] label:hover {
+    background: #1f3b63;
+    border-radius: 8px;
+}
+
+/* ACTIVE */
+div[role="radiogroup"] input:checked + div {
+    background: #ff4b4b !important;
+    color: white !important;
+    border-radius: 8px;
+}
+
+/* HEADER */
 .header {
     background: linear-gradient(90deg,#ff4b4b,#ff7a7a);
     padding:20px;border-radius:15px;color:white;
 }
+
+/* CARD */
 .card {
     background:white;padding:20px;border-radius:15px;
     box-shadow:0 4px 10px rgba(0,0,0,0.1);
     text-align:center;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -137,6 +160,33 @@ if menu=="Dashboard":
 
     df["Durasi"] = df.apply(lambda x: hitung(x["Jam Masuk"],x["Jam Keluar"]),axis=1)
 
+    # FILTER
+    st.markdown("### 🎛️ Filter")
+
+    col1,col2,col3 = st.columns(3)
+
+    with col1:
+        tgl = st.date_input("Range Tanggal", value=None)
+
+    with col2:
+        pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
+
+    with col3:
+        lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
+
+    if tgl and len(tgl)==2:
+        df = df[
+            (pd.to_datetime(df["Tanggal"])>=pd.to_datetime(tgl[0])) &
+            (pd.to_datetime(df["Tanggal"])<=pd.to_datetime(tgl[1]))
+        ]
+
+    if pegawai:
+        df = df[df["Nama"].isin(pegawai)]
+
+    if lokasi:
+        df = df[df["Lokasi"].isin(lokasi)]
+
+    # KPI
     c1,c2,c3,c4 = st.columns(4)
     c1.metric("Total",len(df))
     c2.metric("Jam",df["Durasi"].sum())
@@ -167,20 +217,41 @@ elif menu=="Input":
             str(st.session_state.nip),
             str(st.session_state.jabatan),
             tgl.strftime("%Y-%m-%d"),
-            str(masuk), str(keluar),
+            str(masuk),
+            str(keluar),
             float(d),
             str(uraian),
             str(output),
             str(lokasi)
         ])
 
-        st.success("Data tersimpan")
+        st.success("✅ Data berhasil disimpan")
         st.rerun()
 
-# ================= DATA =================
+# ================= DATA KINERJA =================
 elif menu=="Data Kinerja":
 
     df = load_data()
+
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
+
+    # ROLE FILTER
+    if st.session_state.role in ["admin","pimpinan","superadmin"]:
+
+        pilihan = st.radio(
+            "Tampilkan Data",
+            ["Semua Data","Data Saya"],
+            horizontal=True
+        )
+
+        if pilihan == "Data Saya":
+            df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
+
+    else:
+        df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
+
     df["Durasi"] = df.apply(lambda x: hitung(x["Jam Masuk"],x["Jam Keluar"]),axis=1)
 
     for i,row in df.iterrows():
@@ -202,7 +273,9 @@ elif menu=="Data Kinerja":
                 sheet.delete_rows(int(row["row_index"]))
                 st.rerun()
 
+    # EDIT
     if "edit" in st.session_state:
+
         ed = st.session_state.edit
 
         masuk = st.text_input("Masuk",ed["Jam Masuk"])
@@ -211,11 +284,33 @@ elif menu=="Data Kinerja":
 
         if st.button("Update"):
             d = hitung(masuk,keluar)
+
             sheet.update(f"E{int(ed['row_index'])}:J{int(ed['row_index'])}",[[
-                masuk, keluar, d, uraian, ed["Output"], ed["Lokasi"]
+                str(masuk), str(keluar), float(d),
+                str(uraian), str(ed["Output"]), str(ed["Lokasi"])
             ]])
+
             del st.session_state.edit
             st.rerun()
+
+    # DOWNLOAD
+    st.subheader("Download Data")
+
+    start = st.date_input("Dari")
+    end = st.date_input("Sampai")
+
+    if start and end:
+        df_export = df[
+            (pd.to_datetime(df["Tanggal"])>=pd.to_datetime(start)) &
+            (pd.to_datetime(df["Tanggal"])<=pd.to_datetime(end))
+        ]
+    else:
+        df_export = df
+
+    excel = io.BytesIO()
+    df_export.to_excel(excel,index=False)
+
+    st.download_button("📥 Download Excel",excel.getvalue(),"data.xlsx")
 
 # ================= ADMIN PRO+ =================
 elif menu=="Admin":
@@ -226,7 +321,6 @@ elif menu=="Admin":
 
     tab1,tab2,tab3 = st.tabs(["Tambah User","Manajemen User","Data"])
 
-    # TAMBAH
     with tab1:
         nip = st.text_input("NIP")
         nama = st.text_input("Nama")
@@ -239,7 +333,6 @@ elif menu=="Admin":
             st.success("User ditambah")
             st.rerun()
 
-    # MANAJEMEN USER
     with tab2:
         users = load_users()
         st.dataframe(users)
@@ -249,7 +342,6 @@ elif menu=="Admin":
                 user_sheet.delete_rows(i+2)
                 st.rerun()
 
-    # DATA
     with tab3:
         df = load_data()
         st.dataframe(df)
