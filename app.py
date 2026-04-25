@@ -1,5 +1,5 @@
 # ======================================================
-# E-KINERJA KPU KOTA BENGKULU (FINAL PERFECT VERSION)
+# E-KINERJA KPU KOTA BENGKULU (FINAL PRODUCTION)
 # ======================================================
 
 import streamlit as st
@@ -12,7 +12,7 @@ from google.oauth2.service_account import Credentials
 st.set_page_config(page_title="E-Kinerja KPU", layout="wide")
 
 # ======================================================
-# CSS UI PRO
+# CSS UI
 # ======================================================
 st.markdown("""
 <style>
@@ -111,7 +111,8 @@ def parse_jam(x):
     try:
         x = str(x).replace(".",":")
         h,m = map(int,x.split(":"))
-        if h>23 or m>59: return None
+        if h>23 or m>59:
+            return None
         return h*60+m
     except:
         return None
@@ -119,10 +120,13 @@ def parse_jam(x):
 def hitung_durasi(row):
     jm = parse_jam(row.get("Jam Masuk"))
     jk = parse_jam(row.get("Jam Keluar"))
+
     if jm is None or jk is None:
         return 0
+
     if jk < jm:
         jk += 1440
+
     return round((jk-jm)/60,2)
 
 # ======================================================
@@ -167,7 +171,7 @@ if not st.session_state.login:
 # ======================================================
 st.sidebar.markdown(f"### 👤 {st.session_state.nama}")
 menu = st.sidebar.radio("Menu",[
-    "Dashboard","Input Kinerja","Data Kinerja","Download Rekap","Admin"
+    "Dashboard","Input Kinerja","Data Kinerja","Admin"
 ])
 
 if st.sidebar.button("Logout"):
@@ -277,14 +281,41 @@ elif menu == "Input Kinerja":
         st.rerun()
 
 # ======================================================
-# DATA
+# DATA KINERJA
 # ======================================================
 elif menu == "Data Kinerja":
 
     df = get_data_with_index()
 
-    if st.session_state.role == "pegawai":
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
+
+    # FILTER ROLE
+    if st.session_state.role in ["admin","pimpinan"]:
+        pilihan = st.radio("Filter Data",["Semua Data","Data Saya"],horizontal=True)
+        if pilihan == "Data Saya":
+            df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
+    else:
         df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
+
+    # FILTER TANGGAL
+    col1,col2 = st.columns(2)
+    with col1:
+        tgl_awal = st.date_input("Dari", date.today())
+    with col2:
+        tgl_akhir = st.date_input("Sampai", date.today())
+
+    df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
+
+    df = df[
+        (df["Tanggal"] >= pd.to_datetime(tgl_awal)) &
+        (df["Tanggal"] <= pd.to_datetime(tgl_akhir))
+    ]
+
+    if df.empty:
+        st.warning("Tidak ada data")
+        st.stop()
 
     df["Durasi (Jam)"] = df.apply(hitung_durasi, axis=1)
 
@@ -293,7 +324,7 @@ elif menu == "Data Kinerja":
         c1,c2,c3 = st.columns([6,2,2])
 
         c1.write(f"**{row['Nama']}**")
-        c1.caption(f"{row['Tanggal']} | {row['Uraian']}")
+        c1.caption(f"{row['Tanggal'].date()} | {row['Uraian']}")
         c2.write(f"{row['Durasi (Jam)']} jam")
 
         if c3.button("✏️", key=f"e{i}"):
@@ -330,18 +361,40 @@ elif menu == "Data Kinerja":
             load_data.clear()
             st.rerun()
 
-# ======================================================
-# DOWNLOAD
-# ======================================================
-elif menu == "Download Rekap":
-
-    df = load_data()
+    # DOWNLOAD
+    st.markdown("### 📥 Download Rekap")
 
     excel = io.BytesIO()
-    with pd.ExcelWriter(excel, engine="openpyxl") as writer:
-        df.to_excel(writer,index=False)
+    export = df.drop(columns=["row_index"]).copy()
+    export["Tanggal"] = export["Tanggal"].dt.strftime("%Y-%m-%d")
 
-    st.download_button("Download Excel", excel.getvalue(), "rekap.xlsx")
+    with pd.ExcelWriter(excel, engine="openpyxl") as writer:
+        export.to_excel(writer, index=False)
+
+    st.download_button("📥 Download Excel", excel.getvalue(), "rekap.xlsx")
+
+    try:
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+        from reportlab.lib import colors
+
+        pdf_buffer = io.BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer)
+
+        data_pdf = [export.columns.tolist()] + export.values.tolist()
+
+        table = Table(data_pdf)
+        table.setStyle(TableStyle([
+            ('BACKGROUND',(0,0),(-1,0),colors.grey),
+            ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+            ('GRID',(0,0),(-1,-1),1,colors.black),
+        ]))
+
+        doc.build([table])
+
+        st.download_button("📄 Download PDF", pdf_buffer.getvalue(), "rekap.pdf")
+
+    except:
+        st.info("Install reportlab untuk fitur PDF")
 
 # ======================================================
 # ADMIN
