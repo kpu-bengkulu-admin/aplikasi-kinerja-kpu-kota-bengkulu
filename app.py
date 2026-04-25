@@ -1,55 +1,52 @@
 # ======================================================
-# E-KINERJA KPU KOTA BENGKULU (FINAL STABLE)
+# E-KINERJA KPU KOTA BENGKULU (FINAL UI PRO)
 # ======================================================
 
 import streamlit as st
 import pandas as pd
 import io
-from datetime import date
+from datetime import date, datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-# ======================================================
-# CONFIG
-# ======================================================
 st.set_page_config(page_title="E-Kinerja KPU", layout="wide")
 
 # ======================================================
-# CSS UI
+# CSS PRO
 # ======================================================
 st.markdown("""
 <style>
-body {background-color:#f4f6f9;}
+body {background:#f4f6f9;}
 
-section[data-testid="stSidebar"] {
-    background:#0d1b2a;
+section[data-testid="stSidebar"]{
+    background: linear-gradient(180deg,#0d1b2a,#1b263b);
 }
-section[data-testid="stSidebar"] * {
+section[data-testid="stSidebar"] *{
     color:white !important;
 }
 
-.title-main {
-    font-size:36px;
-    font-weight:800;
-    text-align:center;
+.header-banner{
+    background: linear-gradient(90deg,#ffffff 50%,#e63946 100%);
+    padding:20px;
+    border-radius:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
 }
 
-.card {
+.card{
     background:white;
     padding:20px;
     border-radius:16px;
-    box-shadow:0 5px 12px rgba(0,0,0,0.08);
+    box-shadow:0 6px 14px rgba(0,0,0,0.08);
     text-align:center;
 }
-.card-red {border-top:5px solid #e63946;}
-.card-green {border-top:5px solid #2a9d8f;}
-.card-orange {border-top:5px solid #f4a261;}
-.card-blue {border-top:5px solid #4361ee;}
 
-.activity {
+.activity{
     background:white;
     padding:12px;
-    border-radius:10px;
+    border-radius:12px;
     margin-bottom:10px;
     box-shadow:0 2px 6px rgba(0,0,0,.05);
 }
@@ -57,7 +54,7 @@ section[data-testid="stSidebar"] * {
 """, unsafe_allow_html=True)
 
 # ======================================================
-# SAFE FUNCTION (ANTI ERROR JSON)
+# SAFE
 # ======================================================
 def safe(x):
     if x is None:
@@ -71,7 +68,7 @@ def safe(x):
 # GOOGLE SHEETS
 # ======================================================
 @st.cache_resource
-def connect_sheet():
+def connect():
     creds = Credentials.from_service_account_info(
         st.secrets["connections"]["gsheets"]["service_account"],
         scopes=[
@@ -83,7 +80,7 @@ def connect_sheet():
         "16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"
     )
 
-spreadsheet = connect_sheet()
+spreadsheet = connect()
 sheet = spreadsheet.sheet1
 
 # USERS
@@ -94,21 +91,15 @@ except:
     user_sheet.append_row(["NIP","Nama","Jabatan","Password","Role"])
 
 # ======================================================
-# LOAD DATA
+# LOAD
 # ======================================================
 @st.cache_data(ttl=60)
 def load_data():
-    try:
-        return pd.DataFrame(sheet.get_all_records())
-    except:
-        return pd.DataFrame()
+    return pd.DataFrame(sheet.get_all_records())
 
 @st.cache_data(ttl=60)
 def load_users():
-    try:
-        return pd.DataFrame(user_sheet.get_all_records())
-    except:
-        return pd.DataFrame()
+    return pd.DataFrame(user_sheet.get_all_records())
 
 def get_data_with_index():
     df = load_data()
@@ -121,7 +112,7 @@ def get_data_with_index():
 # ======================================================
 def parse_jam(x):
     try:
-        x = str(x).replace(".", ":")
+        x = str(x).replace(".",":")
         h,m = map(int,x.split(":"))
         return h*60+m
     except:
@@ -130,13 +121,10 @@ def parse_jam(x):
 def hitung_durasi(row):
     jm = parse_jam(row.get("Jam Masuk"))
     jk = parse_jam(row.get("Jam Keluar"))
-
     if jm is None or jk is None:
         return 0
-
     if jk < jm:
         jk += 1440
-
     return round((jk-jm)/60,2)
 
 # ======================================================
@@ -145,14 +133,14 @@ def hitung_durasi(row):
 if "login" not in st.session_state:
     st.session_state.login = False
 
+users = load_users()
+
 # ======================================================
 # LOGIN
 # ======================================================
-users = load_users()
-
 if not st.session_state.login:
 
-    st.markdown("<div class='title-main'>📊 E-Kinerja KPU Kota Bengkulu</div>", unsafe_allow_html=True)
+    st.title("📊 E-Kinerja KPU Kota Bengkulu")
 
     nip = st.text_input("NIP")
     pw = st.text_input("Password", type="password")
@@ -179,11 +167,28 @@ if not st.session_state.login:
 # SIDEBAR
 # ======================================================
 st.sidebar.markdown(f"### 👤 {st.session_state.nama}")
-menu = st.sidebar.radio("Menu",["Dashboard","Input Kinerja","Data Kinerja","Admin"])
+menu = st.sidebar.radio("Menu",[
+    "Dashboard","Input Kinerja","Data Kinerja","Admin"
+])
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
+
+# ======================================================
+# HEADER
+# ======================================================
+today = datetime.now().strftime("%A, %d %B %Y")
+
+st.markdown(f"""
+<div class="header-banner">
+    <div>
+        <b style="font-size:28px;">Aplikasi <span style="color:red;">E-Kinerja</span></b><br>
+        <small>KPU Kota Bengkulu</small>
+    </div>
+    <div>📅 {today}</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ======================================================
 # DASHBOARD
@@ -206,13 +211,12 @@ if menu == "Dashboard":
     hari = df["Tanggal"].nunique()
     lokasi = df["Lokasi"].mode()[0]
 
-    st.markdown(f"<div class='title-main'>Selamat datang, <span style='color:red'>{st.session_state.nama}</span></div>", unsafe_allow_html=True)
-
     c1,c2,c3,c4 = st.columns(4)
-    c1.markdown(f"<div class='card card-red'><h4>Total</h4><h2>{total}</h2></div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='card card-green'><h4>Jam</h4><h2>{jam}</h2></div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='card card-orange'><h4>Hari</h4><h2>{hari}</h2></div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='card card-blue'><h4>Lokasi</h4><h2>{lokasi}</h2></div>", unsafe_allow_html=True)
+
+    c1.markdown(f"<div class='card'><h4>Total</h4><h2>{total}</h2></div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='card'><h4>Jam</h4><h2>{jam}</h2></div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='card'><h4>Hari</h4><h2>{hari}</h2></div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='card'><h4>Lokasi</h4><h2>{lokasi}</h2></div>", unsafe_allow_html=True)
 
     col1,col2 = st.columns([2,1])
 
@@ -222,14 +226,21 @@ if menu == "Dashboard":
     with col2:
         latest = df.sort_values("Tanggal", ascending=False).head(5)
         for _,r in latest.iterrows():
-            st.markdown(f"<div class='activity'><b>{r['Tanggal']}</b><br>{r['Uraian']}<br><b>{r['Durasi (Jam)']} jam</b></div>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='activity'>
+            <b>{r['Tanggal']}</b><br>
+            {r['Uraian']}<br>
+            <b>{r['Durasi (Jam)']} jam</b>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ======================================================
-# INPUT (FIX ERROR DISINI)
+# INPUT KINERJA (FIX CLEAR FORM)
 # ======================================================
 elif menu == "Input Kinerja":
 
-    with st.form("form"):
+    with st.form("form_input", clear_on_submit=True):
+
         tgl = st.date_input("Tanggal", date.today())
         masuk = st.text_input("Jam Masuk","07:30")
         keluar = st.text_input("Jam Keluar","16:00")
@@ -237,7 +248,7 @@ elif menu == "Input Kinerja":
         output = st.text_area("Output")
         lokasi = st.selectbox("Lokasi",["Kantor","Rumah","Dinas Luar / SPT"])
 
-        simpan = st.form_submit_button("Simpan")
+        simpan = st.form_submit_button("💾 Simpan")
 
     if simpan:
 
@@ -250,8 +261,7 @@ elif menu == "Input Kinerja":
 
         durasi = hitung_durasi({"Jam Masuk":masuk,"Jam Keluar":keluar})
 
-        # 🔥 FIX UTAMA
-        row_data = [
+        row = [
             st.session_state.nama,
             st.session_state.nip,
             "",
@@ -264,16 +274,15 @@ elif menu == "Input Kinerja":
             lokasi
         ]
 
-        row_data = [safe(x) for x in row_data]
+        row = [safe(x) for x in row]
 
-        sheet.append_row(row_data)
+        sheet.append_row(row)
 
-        st.success("Data tersimpan")
+        st.success("✅ Data berhasil disimpan")
         st.cache_data.clear()
-        st.rerun()
 
 # ======================================================
-# DATA KINERJA (EDIT & DELETE)
+# DATA KINERJA
 # ======================================================
 elif menu == "Data Kinerja":
 
@@ -320,7 +329,7 @@ elif menu == "Admin":
     pw = st.text_input("Password")
     role = st.selectbox("Role",["pegawai","admin"])
 
-    if st.button("Tambah"):
+    if st.button("Tambah User"):
         user_sheet.append_row([nip,nama,jabatan,pw,role])
         st.success("User ditambah")
         st.rerun()
