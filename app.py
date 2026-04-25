@@ -1,5 +1,5 @@
 # ======================================================
-# E-KINERJA KPU KOTA BENGKULU (FINAL UI PRO)
+# E-KINERJA KPU KOTA BENGKULU (FINAL PERFECT VERSION)
 # ======================================================
 
 import streamlit as st
@@ -12,7 +12,7 @@ from google.oauth2.service_account import Credentials
 st.set_page_config(page_title="E-Kinerja KPU", layout="wide")
 
 # ======================================================
-# CSS PRO
+# CSS UI PRO
 # ======================================================
 st.markdown("""
 <style>
@@ -25,14 +25,14 @@ section[data-testid="stSidebar"] *{
     color:white !important;
 }
 
-.header-banner{
-    background: linear-gradient(90deg,#ffffff 50%,#e63946 100%);
-    padding:20px;
+.header{
+    background: linear-gradient(90deg,#ffffff 55%,#e63946 100%);
+    padding:25px;
     border-radius:16px;
+    margin-bottom:20px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:20px;
 }
 
 .card{
@@ -57,8 +57,6 @@ section[data-testid="stSidebar"] *{
 # SAFE
 # ======================================================
 def safe(x):
-    if x is None:
-        return ""
     try:
         return str(x)
     except:
@@ -83,7 +81,6 @@ def connect():
 spreadsheet = connect()
 sheet = spreadsheet.sheet1
 
-# USERS
 try:
     user_sheet = spreadsheet.worksheet("users")
 except:
@@ -114,6 +111,7 @@ def parse_jam(x):
     try:
         x = str(x).replace(".",":")
         h,m = map(int,x.split(":"))
+        if h>23 or m>59: return None
         return h*60+m
     except:
         return None
@@ -156,6 +154,7 @@ if not st.session_state.login:
             st.session_state.login = True
             st.session_state.nama = u["Nama"]
             st.session_state.nip = u["NIP"]
+            st.session_state.jabatan = u["Jabatan"]
             st.session_state.role = u["Role"]
             st.rerun()
         else:
@@ -168,7 +167,7 @@ if not st.session_state.login:
 # ======================================================
 st.sidebar.markdown(f"### 👤 {st.session_state.nama}")
 menu = st.sidebar.radio("Menu",[
-    "Dashboard","Input Kinerja","Data Kinerja","Admin"
+    "Dashboard","Input Kinerja","Data Kinerja","Download Rekap","Admin"
 ])
 
 if st.sidebar.button("Logout"):
@@ -181,9 +180,9 @@ if st.sidebar.button("Logout"):
 today = datetime.now().strftime("%A, %d %B %Y")
 
 st.markdown(f"""
-<div class="header-banner">
+<div class="header">
     <div>
-        <b style="font-size:28px;">Aplikasi <span style="color:red;">E-Kinerja</span></b><br>
+        <h2>Aplikasi <span style="color:red;">E-Kinerja</span></h2>
         <small>KPU Kota Bengkulu</small>
     </div>
     <div>📅 {today}</div>
@@ -213,10 +212,10 @@ if menu == "Dashboard":
 
     c1,c2,c3,c4 = st.columns(4)
 
-    c1.markdown(f"<div class='card'><h4>Total</h4><h2>{total}</h2></div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='card'><h4>Jam</h4><h2>{jam}</h2></div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='card'><h4>Hari</h4><h2>{hari}</h2></div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='card'><h4>Lokasi</h4><h2>{lokasi}</h2></div>", unsafe_allow_html=True)
+    c1.markdown(f"<div class='card'><h3>{total}</h3>Total</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='card'><h3>{jam}</h3>Jam</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='card'><h3>{hari}</h3>Hari</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='card'><h3>{lokasi}</h3>Lokasi</div>", unsafe_allow_html=True)
 
     col1,col2 = st.columns([2,1])
 
@@ -226,21 +225,14 @@ if menu == "Dashboard":
     with col2:
         latest = df.sort_values("Tanggal", ascending=False).head(5)
         for _,r in latest.iterrows():
-            st.markdown(f"""
-            <div class='activity'>
-            <b>{r['Tanggal']}</b><br>
-            {r['Uraian']}<br>
-            <b>{r['Durasi (Jam)']} jam</b>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div class='activity'><b>{r['Tanggal']}</b><br>{r['Uraian']}<br>{r['Durasi (Jam)']} jam</div>", unsafe_allow_html=True)
 
 # ======================================================
-# INPUT KINERJA (FIX CLEAR FORM)
+# INPUT
 # ======================================================
 elif menu == "Input Kinerja":
 
-    with st.form("form_input", clear_on_submit=True):
-
+    with st.form("form", clear_on_submit=True):
         tgl = st.date_input("Tanggal", date.today())
         masuk = st.text_input("Jam Masuk","07:30")
         keluar = st.text_input("Jam Keluar","16:00")
@@ -252,6 +244,10 @@ elif menu == "Input Kinerja":
 
     if simpan:
 
+        if uraian.strip()=="" or output.strip()=="":
+            st.warning("Uraian & Output wajib diisi")
+            st.stop()
+
         jm = parse_jam(masuk)
         jk = parse_jam(keluar)
 
@@ -262,35 +258,33 @@ elif menu == "Input Kinerja":
         durasi = hitung_durasi({"Jam Masuk":masuk,"Jam Keluar":keluar})
 
         row = [
-            st.session_state.nama,
-            st.session_state.nip,
-            "",
-            tgl.strftime("%Y-%m-%d"),
-            masuk,
-            keluar,
+            safe(st.session_state.nama),
+            safe(st.session_state.nip),
+            safe(st.session_state.jabatan),
+            safe(tgl.strftime("%Y-%m-%d")),
+            safe(masuk),
+            safe(keluar),
             float(durasi),
-            uraian,
-            output,
-            lokasi
+            safe(uraian),
+            safe(output),
+            safe(lokasi)
         ]
-
-        row = [safe(x) for x in row]
 
         sheet.append_row(row)
 
         st.success("✅ Data berhasil disimpan")
-        st.cache_data.clear()
+        load_data.clear()
+        st.rerun()
 
 # ======================================================
-# DATA KINERJA
+# DATA
 # ======================================================
 elif menu == "Data Kinerja":
 
     df = get_data_with_index()
 
-    if df.empty:
-        st.info("Belum ada data")
-        st.stop()
+    if st.session_state.role == "pegawai":
+        df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
 
     df["Durasi (Jam)"] = df.apply(hitung_durasi, axis=1)
 
@@ -302,17 +296,52 @@ elif menu == "Data Kinerja":
         c1.caption(f"{row['Tanggal']} | {row['Uraian']}")
         c2.write(f"{row['Durasi (Jam)']} jam")
 
-        if c3.button("✏️", key=f"edit{i}"):
-            st.session_state.edit = True
-            st.session_state.row = row
+        if c3.button("✏️", key=f"e{i}"):
+            st.session_state.edit = row
 
-        if c3.button("🗑", key=f"del{i}"):
+        if c3.button("🗑", key=f"d{i}"):
             sheet.delete_rows(int(row["row_index"]))
-            st.success("Dihapus")
-            st.cache_data.clear()
+            load_data.clear()
             st.rerun()
 
-        st.divider()
+    # EDIT
+    if "edit" in st.session_state:
+        ed = st.session_state.edit
+
+        st.subheader("Edit Data")
+
+        masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
+        keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
+        uraian = st.text_area("Uraian", ed["Uraian"])
+        output = st.text_area("Output", ed["Output"])
+
+        if st.button("Simpan Edit"):
+            durasi = hitung_durasi({"Jam Masuk":masuk,"Jam Keluar":keluar})
+
+            idx = int(ed["row_index"])
+
+            sheet.update(
+                f"E{idx}:J{idx}",
+                [[masuk, keluar, durasi, uraian, output, ed["Lokasi"]]]
+            )
+
+            st.success("Update berhasil")
+            del st.session_state.edit
+            load_data.clear()
+            st.rerun()
+
+# ======================================================
+# DOWNLOAD
+# ======================================================
+elif menu == "Download Rekap":
+
+    df = load_data()
+
+    excel = io.BytesIO()
+    with pd.ExcelWriter(excel, engine="openpyxl") as writer:
+        df.to_excel(writer,index=False)
+
+    st.download_button("Download Excel", excel.getvalue(), "rekap.xlsx")
 
 # ======================================================
 # ADMIN
@@ -327,7 +356,7 @@ elif menu == "Admin":
     nama = st.text_input("Nama")
     jabatan = st.text_input("Jabatan")
     pw = st.text_input("Password")
-    role = st.selectbox("Role",["pegawai","admin"])
+    role = st.selectbox("Role",["pegawai","admin","pimpinan"])
 
     if st.button("Tambah User"):
         user_sheet.append_row([nip,nama,jabatan,pw,role])
