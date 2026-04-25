@@ -1,8 +1,7 @@
 # app.py
 # ======================================================
 # APLIKASI E-KINERJA KPU KOTA BENGKULU
-# FULL SUPER FINAL UX VERSION
-# Siap Deploy Streamlit Cloud
+# FINAL FULL VERSION - STABIL & SIAP DEPLOY
 # ======================================================
 
 import streamlit as st
@@ -31,12 +30,12 @@ st.set_page_config(
 )
 
 # ======================================================
-# CSS FINAL
+# CSS
 # ======================================================
 st.markdown("""
 <style>
 .block-container{
-    padding-top:3rem;
+    padding-top:2rem;
     max-width:1450px;
 }
 .titlex{
@@ -44,7 +43,7 @@ st.markdown("""
     font-weight:800;
     text-align:center;
     color:#0f4c81;
-    margin-bottom:20px;
+    margin-bottom:15px;
 }
 .card{
     background:white;
@@ -53,15 +52,8 @@ st.markdown("""
     box-shadow:0 4px 12px rgba(0,0,0,.08);
     border-left:6px solid #0f4c81;
 }
-.small{
-    font-size:13px;
-    color:#666;
-}
-.big{
-    font-size:28px;
-    font-weight:800;
-    color:#0f4c81;
-}
+.small{font-size:13px;color:#666;}
+.big{font-size:28px;font-weight:800;color:#0f4c81;}
 .stButton > button{
     width:100%;
     border:none;
@@ -106,16 +98,17 @@ def connect_sheet():
 spreadsheet = connect_sheet()
 sheet = spreadsheet.sheet1
 
+# USERS SHEET
 try:
     user_sheet = spreadsheet.worksheet("users")
 except:
     user_sheet = spreadsheet.add_worksheet("users", 100, 5)
     user_sheet.append_row(
-        ["NIP", "Nama", "Jabatan", "Password", "Role"]
+        ["NIP","Nama","Jabatan","Password","Role"]
     )
 
 # ======================================================
-# LOAD
+# LOAD DATA
 # ======================================================
 def load_data():
     try:
@@ -136,23 +129,38 @@ def get_data_with_index():
     return df
 
 # ======================================================
-# TIME PARSER
+# TIME
 # ======================================================
 def parse_jam(x):
     try:
         x = str(x).replace(".", ":").strip()
-        a, b = x.split(":")
-        a = int(a)
-        b = int(b)
+        h,m = x.split(":")
+        h = int(h)
+        m = int(m)
 
-        if a < 0 or a > 23:
+        if h < 0 or h > 23:
             return None
-        if b < 0 or b > 59:
+        if m < 0 or m > 59:
             return None
 
-        return a * 60 + b
+        return h*60 + m
     except:
         return None
+
+def hitung_durasi(row):
+    try:
+        jm = parse_jam(row["Jam Masuk"])
+        jk = parse_jam(row["Jam Keluar"])
+
+        if jm is None or jk is None:
+            return 0
+
+        if jk <= jm:
+            return 0
+
+        return round((jk-jm)/60,2)
+    except:
+        return 0
 
 # ======================================================
 # SESSION
@@ -180,12 +188,12 @@ if not st.session_state.login:
     if st.button("Login"):
 
         if users.empty:
-            st.error("Data user kosong")
+            st.error("Data users kosong")
             st.stop()
 
         cek = users[
-            (users["NIP"].astype(str) == str(nip)) &
-            (users["Password"].astype(str) == str(pw))
+            (users["NIP"].astype(str)==str(nip)) &
+            (users["Password"].astype(str)==str(pw))
         ]
 
         if not cek.empty:
@@ -209,11 +217,11 @@ if not st.session_state.login:
 # HEADER
 # ======================================================
 st.markdown(
-    "<div class='titlex'>📊 Aplikasi E-Kinerja KPU Kota Bengkulu</div>",
-    unsafe_allow_html=True
+"<div class='titlex'>📊 Aplikasi E-Kinerja KPU Kota Bengkulu</div>",
+unsafe_allow_html=True
 )
 
-a, b = st.columns([8,2])
+a,b = st.columns([8,2])
 
 with a:
     st.success(
@@ -230,7 +238,7 @@ with b:
 # ======================================================
 menu = st.sidebar.selectbox(
     "Menu",
-    ["Dashboard", "Input Kinerja", "Data Kinerja", "Admin"]
+    ["Dashboard","Input Kinerja","Data Kinerja","Admin"]
 )
 
 # ======================================================
@@ -245,53 +253,38 @@ if menu == "Dashboard":
         st.stop()
 
     if st.session_state.role == "pegawai":
-        df = df[df["NIP"].astype(str) == str(st.session_state.nip)]
+        df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
 
     if df.empty:
         st.info("Belum ada data")
         st.stop()
 
-    df["Durasi (Jam)"] = pd.to_numeric(
-        df["Durasi (Jam)"],
-        errors="coerce"
-    ).fillna(0)
+    df["Durasi (Jam)"] = df.apply(hitung_durasi, axis=1)
 
-    total_jam = round(df["Durasi (Jam)"].sum(), 2)
+    total_jam = round(df["Durasi (Jam)"].sum(),2)
     total_data = len(df)
     hari = df["Tanggal"].nunique()
-    rata = round(total_jam / hari, 2) if hari else 0
+    rata = round(total_jam/hari,2) if hari else 0
 
     c1,c2,c3,c4 = st.columns(4)
 
     with c1:
-        st.markdown(
-            f"<div class='card'><div class='small'>⏱ Total Jam</div><div class='big'>{total_jam}</div></div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"<div class='card'><div class='small'>⏱ Total Jam</div><div class='big'>{total_jam}</div></div>", unsafe_allow_html=True)
 
     with c2:
-        st.markdown(
-            f"<div class='card'><div class='small'>📄 Total Data</div><div class='big'>{total_data}</div></div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"<div class='card'><div class='small'>📄 Total Data</div><div class='big'>{total_data}</div></div>", unsafe_allow_html=True)
 
     with c3:
-        st.markdown(
-            f"<div class='card'><div class='small'>📅 Hari Aktif</div><div class='big'>{hari}</div></div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"<div class='card'><div class='small'>📅 Hari Aktif</div><div class='big'>{hari}</div></div>", unsafe_allow_html=True)
 
     with c4:
-        st.markdown(
-            f"<div class='card'><div class='small'>📈 Rata-rata</div><div class='big'>{rata}</div></div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"<div class='card'><div class='small'>📈 Rata-rata</div><div class='big'>{rata}</div></div>", unsafe_allow_html=True)
 
     st.markdown("### 📊 Grafik Kinerja")
     st.bar_chart(df.groupby("Nama")["Durasi (Jam)"].sum())
 
 # ======================================================
-# INPUT KINERJA (UX FINAL)
+# INPUT
 # ======================================================
 elif menu == "Input Kinerja":
 
@@ -300,40 +293,40 @@ elif menu == "Input Kinerja":
     with st.form("form_input", clear_on_submit=True):
 
         tanggal = st.date_input("Tanggal", date.today())
-        jam_masuk = st.text_input("Jam Masuk", "07:30")
-        jam_keluar = st.text_input("Jam Keluar", "16:00")
+        masuk = st.text_input("Jam Masuk", "07:30")
+        keluar = st.text_input("Jam Keluar", "16:00")
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
 
         lokasi = st.selectbox(
             "Lokasi",
-            ["Kantor", "Rumah", "Dinas Luar / SPT"]
+            ["Kantor","Rumah","Dinas Luar / SPT"]
         )
 
         simpan = st.form_submit_button("💾 Simpan Data")
 
     if simpan:
 
-        if uraian.strip() == "":
+        if uraian.strip()=="":
             st.warning("Uraian wajib diisi")
             st.stop()
 
-        if output.strip() == "":
+        if output.strip()=="":
             st.warning("Output wajib diisi")
             st.stop()
 
-        jm = parse_jam(jam_masuk)
-        jk = parse_jam(jam_keluar)
+        jm = parse_jam(masuk)
+        jk = parse_jam(keluar)
 
         if jm is None or jk is None:
-            st.error("Format jam salah. Contoh 07:30")
+            st.error("Format jam salah")
             st.stop()
 
         if jk <= jm:
             st.error("Jam keluar harus lebih besar")
             st.stop()
 
-        durasi = round((jk - jm) / 60, 2)
+        durasi = round((jk-jm)/60,2)
 
         with st.spinner("Menyimpan data..."):
 
@@ -342,8 +335,8 @@ elif menu == "Input Kinerja":
                 safe(st.session_state.nip),
                 safe(st.session_state.jabatan),
                 safe(tanggal.strftime("%Y-%m-%d")),
-                safe(jam_masuk.replace(".", ":")),
-                safe(jam_keluar.replace(".", ":")),
+                safe(masuk),
+                safe(keluar),
                 float(durasi),
                 safe(uraian),
                 safe(output),
@@ -351,16 +344,10 @@ elif menu == "Input Kinerja":
             ])
 
         st.success("✅ Data berhasil disimpan")
-
-        try:
-            st.toast("Data tersimpan")
-        except:
-            pass
-
         st.rerun()
 
 # ======================================================
-# DATA KINERJA + EDIT + HAPUS
+# DATA KINERJA
 # ======================================================
 elif menu == "Data Kinerja":
 
@@ -371,11 +358,13 @@ elif menu == "Data Kinerja":
         st.stop()
 
     if st.session_state.role == "pegawai":
-        df = df[df["NIP"].astype(str) == str(st.session_state.nip)]
+        df = df[df["NIP"].astype(str)==str(st.session_state.nip)]
+
+    df["Durasi (Jam)"] = df.apply(hitung_durasi, axis=1)
 
     st.subheader("📋 Data Kinerja")
 
-    for i, row in df.iterrows():
+    for i,row in df.iterrows():
 
         with st.container():
 
@@ -383,7 +372,9 @@ elif menu == "Data Kinerja":
 
             with x1:
                 st.write(f"**{row['Nama']}**")
-                st.caption(f"{row['Tanggal']} | {row['Uraian']}")
+                st.caption(
+                    f"{row['Tanggal']} | {row['Uraian']}"
+                )
 
             with x2:
                 st.write(f"{row['Durasi (Jam)']} Jam")
@@ -391,11 +382,16 @@ elif menu == "Data Kinerja":
             with x3:
 
                 if st.button("✏️ Edit", key=f"edit{i}"):
+
                     st.session_state.edit = True
                     st.session_state.edit_row = row
 
                 if st.button("🗑 Hapus", key=f"hapus{i}"):
-                    sheet.delete_rows(int(row["row_index"]))
+
+                    sheet.delete_rows(
+                        int(row["row_index"])
+                    )
+
                     st.success("Data dihapus")
                     st.rerun()
 
@@ -408,17 +404,37 @@ elif menu == "Data Kinerja":
 
         st.subheader("✏️ Edit Data")
 
-        masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
-        keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"])
-        output = st.text_area("Output", ed["Output"])
+        masuk = st.text_input(
+            "Jam Masuk",
+            ed["Jam Masuk"]
+        )
 
-        opsi = ["Kantor", "Rumah", "Dinas Luar / SPT"]
+        keluar = st.text_input(
+            "Jam Keluar",
+            ed["Jam Keluar"]
+        )
+
+        uraian = st.text_area(
+            "Uraian",
+            ed["Uraian"]
+        )
+
+        output = st.text_area(
+            "Output",
+            ed["Output"]
+        )
+
+        opsi = [
+            "Kantor",
+            "Rumah",
+            "Dinas Luar / SPT"
+        ]
 
         lokasi = st.selectbox(
             "Lokasi",
             opsi,
-            index=opsi.index(ed["Lokasi"]) if ed["Lokasi"] in opsi else 0
+            index=opsi.index(ed["Lokasi"])
+            if ed["Lokasi"] in opsi else 0
         )
 
         if st.button("💾 Simpan Perubahan"):
@@ -434,7 +450,7 @@ elif menu == "Data Kinerja":
                 st.error("Jam keluar harus lebih besar")
                 st.stop()
 
-            durasi = round((jk - jm) / 60, 2)
+            durasi = round((jk-jm)/60,2)
 
             idx = int(ed["row_index"])
 
@@ -450,12 +466,13 @@ elif menu == "Data Kinerja":
                 ]]
             )
 
-            st.success("Perubahan berhasil disimpan")
+            st.success("Berhasil diupdate")
             st.session_state.edit = False
             st.rerun()
 
     # DOWNLOAD EXCEL
     excel = io.BytesIO()
+
     export = df.drop(columns=["row_index"]).copy()
     export["NIP"] = export["NIP"].astype(str)
 
@@ -468,35 +485,6 @@ elif menu == "Data Kinerja":
         file_name="rekap_kinerja.xlsx"
     )
 
-    # DOWNLOAD PDF
-    if PDF_READY:
-
-        pdf = io.BytesIO()
-        c = canvas.Canvas(pdf, pagesize=A4)
-
-        c.drawString(50, 800, "Laporan Kinerja")
-
-        y = 770
-
-        for _, r in df.iterrows():
-
-            text = f"{r['Tanggal']} | {r['Uraian']} | {r['Durasi (Jam)']} Jam"
-
-            c.drawString(30, y, text[:100])
-            y -= 18
-
-            if y < 50:
-                c.showPage()
-                y = 800
-
-        c.save()
-
-        st.download_button(
-            "📄 Download PDF",
-            pdf.getvalue(),
-            file_name="laporan_kinerja.pdf"
-        )
-
 # ======================================================
 # ADMIN
 # ======================================================
@@ -506,19 +494,21 @@ elif menu == "Admin":
         st.error("Akses ditolak")
         st.stop()
 
-    st.subheader("⚙️ Admin Panel")
+    st.subheader("⚙️ Admin")
 
-    tab1, tab2 = st.tabs(["Tambah User", "Daftar User"])
+    tab1,tab2 = st.tabs(
+        ["Tambah User","Daftar User"]
+    )
 
     with tab1:
 
         nip = st.text_input("NIP Baru")
-        nama = st.text_input("Nama Baru")
-        jabatan = st.text_input("Jabatan Baru")
-        pw = st.text_input("Password Baru")
+        nama = st.text_input("Nama")
+        jabatan = st.text_input("Jabatan")
+        pw = st.text_input("Password")
         role = st.selectbox(
             "Role",
-            ["pegawai", "admin", "pimpinan"]
+            ["pegawai","admin","pimpinan"]
         )
 
         if st.button("Tambah User"):
@@ -531,7 +521,7 @@ elif menu == "Admin":
                 safe(role)
             ])
 
-            st.success("User berhasil ditambah")
+            st.success("User ditambah")
             st.rerun()
 
     with tab2:
