@@ -179,22 +179,47 @@ elif menu == "Input":
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
-    df = load_data()
-    df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
+        df = load_data()
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
 
+    df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
+    df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
+
+    # ================= FILTER ROLE =================
     if st.session_state.role in ["admin","pimpinan"]:
-        mode = st.radio("Mode", ["Semua Data","Data Saya"])
+        mode = st.radio("Mode Data", ["Semua Data","Data Saya"])
         if mode == "Data Saya":
             df = df[df["NIP"].astype(str)==st.session_state.nip]
     else:
         df = df[df["NIP"].astype(str)==st.session_state.nip]
 
-    # LIST DATA
+    # ================= FILTER TANGGAL =================
+    st.subheader("📅 Filter Tanggal")
+
+    start_default = df["Tanggal"].min()
+    end_default = df["Tanggal"].max()
+
+    tgl = st.date_input(
+        "Pilih Range Tanggal",
+        value=(start_default, end_default)
+    )
+
+    if len(tgl) == 2:
+        df = df[
+            (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
+            (df["Tanggal"] <= pd.to_datetime(tgl[1]))
+        ]
+
+    # ================= TAMPIL DATA =================
     for i,row in df.iterrows():
+
         c1,c2,c3,c4 = st.columns([5,2,1,1])
 
-        c1.write(f"**{row['Nama']}** - {row['Tanggal']}")
+        c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
         c1.caption(row["Uraian"])
+
         c2.write(f"{row['Durasi']:.2f} jam")
 
         if c3.button("✏️", key=f"edit{i}"):
@@ -204,19 +229,22 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
-    # EDIT FORM (FIX TOTAL)
+    # ================= EDIT =================
     if "edit" in st.session_state:
         ed = st.session_state.edit
 
-        st.subheader("Edit Data")
+        st.subheader("✏️ Edit Data")
 
         masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
         keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
         uraian = st.text_area("Uraian", ed["Uraian"])
         output = st.text_area("Output", ed["Output"])
-        lokasi = st.selectbox("Lokasi",
-            ["Kantor","Rumah","Dinas Luar / SPT"],
-            index=0
+
+        opsi = ["Kantor","Rumah","Dinas Luar / SPT"]
+        lokasi = st.selectbox(
+            "Lokasi",
+            opsi,
+            index=opsi.index(ed["Lokasi"]) if ed["Lokasi"] in opsi else 0
         )
 
         if st.button("Update"):
@@ -231,10 +259,21 @@ elif menu == "Data Kinerja":
             st.success("Update berhasil")
             st.rerun()
 
-    # DOWNLOAD
+    # ================= DOWNLOAD SESUAI FILTER =================
+    st.divider()
+    st.subheader("📥 Download Data (Sesuai Filter)")
+
+    export = df.copy()
+    export["Tanggal"] = export["Tanggal"].dt.strftime("%Y-%m-%d")
+
     excel = io.BytesIO()
-    df.to_excel(excel, index=False)
-    st.download_button("Download Excel", excel.getvalue(), "data.xlsx")
+    export.to_excel(excel, index=False)
+
+    st.download_button(
+        "📥 Download Excel",
+        excel.getvalue(),
+        file_name="data_kinerja_filtered.xlsx"
+    )
 
 # ================= ADMIN =================
 elif menu == "Admin":
