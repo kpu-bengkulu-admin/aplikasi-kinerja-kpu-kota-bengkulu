@@ -104,10 +104,43 @@ if not st.session_state.login:
     st.stop()
 
 # ================= SIDEBAR =================
-st.sidebar.title(st.session_state.nama)
-menu = st.sidebar.radio("Menu", ["Dashboard","Input","Data Kinerja","Admin"])
+# ================= SIDEBAR MODERN =================
 
-if st.sidebar.button("Logout"):
+nama = st.session_state.nama
+role = st.session_state.role
+
+# ambil inisial
+inisial = "".join([x[0] for x in nama.split()[:2]]).upper()
+
+# warna role
+role_color = {
+    "admin": "#ef4444",
+    "pimpinan": "#22c55e",
+    "pegawai": "#3b82f6"
+}.get(role, "#999")
+
+st.sidebar.markdown(f"""
+<div class='sidebar-user'>
+    <div class='avatar'>{inisial}</div>
+    <h3 style='margin:10px 0 5px 0'>{nama}</h3>
+    <div class='role-badge' style='background:{role_color}'>
+        {role.upper()}
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# MENU
+st.sidebar.markdown("### 📌 Menu Aplikasi")
+
+menu = st.sidebar.radio(
+    "",
+    ["Dashboard","Input","Data Kinerja","Admin"]
+)
+
+st.sidebar.markdown("---")
+
+# LOGOUT
+if st.sidebar.button("🚪 Logout"):
     st.session_state.clear()
     st.rerun()
 
