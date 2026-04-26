@@ -122,10 +122,6 @@ if not st.session_state.login:
     st.stop()
 
 # ================= SIDEBAR =================
-st.sidebar.image(
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Logo_KPU.svg/512px-Logo_KPU.svg.png",
-    width=80
-)
 
 st.sidebar.title(st.session_state.nama)
 st.sidebar.caption(f"Role: {st.session_state.role.upper()}")
