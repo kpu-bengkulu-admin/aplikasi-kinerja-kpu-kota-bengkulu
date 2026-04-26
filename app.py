@@ -118,7 +118,6 @@ role_color = {
 
 st.sidebar.markdown(f"""
 <div class='sidebar-user'>
-    <div class='avatar'>{inisial}</div>
     <h3 style='margin:10px 0 5px 0'>{nama}</h3>
     <div class='role-badge' style='background:{role_color}'>
         {role.upper()}
