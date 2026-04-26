@@ -109,9 +109,6 @@ if not st.session_state.login:
 nama = st.session_state.nama
 role = st.session_state.role
 
-# ambil inisial
-inisial = "".join([x[0] for x in nama.split()[:2]]).upper()
-
 # warna role
 role_color = {
     "admin": "#ef4444",
