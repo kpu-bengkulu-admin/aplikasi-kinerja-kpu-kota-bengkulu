@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
+from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 import io
+import plotly.express as px
 
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
@@ -13,10 +14,14 @@ st.markdown("""
 <style>
 [data-testid="stSidebar"] {background:#0f172a;}
 [data-testid="stSidebar"] * {color:white !important;}
-.stButton button {background:#ef4444;color:white;border-radius:8px;}
-.card {padding:15px;border-radius:12px;color:white;text-align:center;}
+.stButton button {background:#ef4444;color:white;border-radius:10px;}
+.card {padding:18px;border-radius:14px;color:white;text-align:center;}
 .c1{background:#ef4444;} .c2{background:#22c55e;}
 .c3{background:#f59e0b;} .c4{background:#3b82f6;}
+.header {
+    background:linear-gradient(90deg,#ef4444,#f87171);
+    padding:25px;border-radius:15px;color:white;margin-bottom:20px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,6 +114,13 @@ if st.sidebar.button("Logout"):
 # ================= DASHBOARD =================
 if menu == "Dashboard":
 
+    st.markdown(f"""
+    <div class='header'>
+        <h2>Aplikasi E-Kinerja</h2>
+        <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     df = load_data()
     if df.empty:
         st.info("Belum ada data")
@@ -117,30 +129,49 @@ if menu == "Dashboard":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    # RANGE OTOMATIS (FIX)
-    start_default = df["Tanggal"].min()
-    end_default = df["Tanggal"].max()
+    # NORMALISASI (jaga konsistensi lama)
+    df["Lokasi"] = df["Lokasi"].replace({"Dinas": "Dinas Luar / SPT"})
 
-    tgl = st.date_input("Range Tanggal", value=(start_default, end_default))
+    # FILTER
+    col1,col2,col3 = st.columns(3)
+
+    with col1:
+        tgl = st.date_input("Range Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
+
+    with col2:
+        pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
+
+    with col3:
+        lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
 
     if len(tgl)==2:
         df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
 
-    pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
-    lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
-
     if pegawai:
         df = df[df["Nama"].isin(pegawai)]
+
     if lokasi:
         df = df[df["Lokasi"].isin(lokasi)]
 
+    # KPI
     c1,c2,c3,c4 = st.columns(4)
-    c1.markdown(f"<div class='card c1'><h3>{len(df)}</h3>Total</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='card c2'><h3>{df['Durasi'].sum():.2f}</h3>Jam</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='card c3'><h3>{df['Tanggal'].nunique()}</h3>Hari</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='card c4'><h3>{df['Nama'].nunique()}</h3>Pegawai</div>", unsafe_allow_html=True)
+    c1.markdown(f"<div class='card c1'><h2>{len(df)}</h2>Total</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='card c2'><h2>{df['Durasi'].sum():.2f}</h2>Jam</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='card c3'><h2>{df['Tanggal'].nunique()}</h2>Hari</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='card c4'><h2>{df['Nama'].nunique()}</h2>Pegawai</div>", unsafe_allow_html=True)
 
-    st.bar_chart(df.groupby("Nama")["Durasi"].sum())
+    # GRAFIK MODERN
+    chart = df.groupby("Nama")["Durasi"].sum().reset_index()
+
+    fig = px.bar(
+        chart,
+        x="Nama",
+        y="Durasi",
+        color="Durasi",
+        text_auto=True
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 # ================= INPUT =================
 elif menu == "Input":
@@ -151,6 +182,8 @@ elif menu == "Input":
         keluar = st.text_input("Jam Keluar","16:00")
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
+
+        # FIX (tidak diubah)
         lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
         submit = st.form_submit_button("Simpan")
@@ -187,7 +220,9 @@ elif menu == "Data Kinerja":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    # ================= FILTER ROLE =================
+    df["Lokasi"] = df["Lokasi"].replace({"Dinas": "Dinas Luar / SPT"})
+
+    # ROLE
     if st.session_state.role in ["admin","pimpinan"]:
         mode = st.radio("Mode Data", ["Semua Data","Data Saya"])
         if mode == "Data Saya":
@@ -195,31 +230,18 @@ elif menu == "Data Kinerja":
     else:
         df = df[df["NIP"].astype(str)==st.session_state.nip]
 
-    # ================= FILTER TANGGAL =================
-    st.subheader("📅 Filter Tanggal")
+    # FILTER TANGGAL
+    tgl = st.date_input("Filter Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
 
-    start_default = df["Tanggal"].min()
-    end_default = df["Tanggal"].max()
+    if len(tgl)==2:
+        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
 
-    tgl = st.date_input(
-        "Pilih Range Tanggal",
-        value=(start_default, end_default)
-    )
-
-    if len(tgl) == 2:
-        df = df[
-            (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
-            (df["Tanggal"] <= pd.to_datetime(tgl[1]))
-        ]
-
-    # ================= TAMPIL DATA =================
+    # LIST DATA
     for i,row in df.iterrows():
-
         c1,c2,c3,c4 = st.columns([5,2,1,1])
 
         c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
         c1.caption(row["Uraian"])
-
         c2.write(f"{row['Durasi']:.2f} jam")
 
         if c3.button("✏️", key=f"edit{i}"):
@@ -229,51 +251,11 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
-    # ================= EDIT =================
-    if "edit" in st.session_state:
-        ed = st.session_state.edit
-
-        st.subheader("✏️ Edit Data")
-
-        masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
-        keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"])
-        output = st.text_area("Output", ed["Output"])
-
-        opsi = ["Kantor","Rumah","Dinas Luar / SPT"]
-        lokasi = st.selectbox(
-            "Lokasi",
-            opsi,
-            index=opsi.index(ed["Lokasi"]) if ed["Lokasi"] in opsi else 0
-        )
-
-        if st.button("Update"):
-            dur = hitung_durasi(masuk, keluar)
-
-            sheet.update(
-                f"E{int(ed['row'])}:J{int(ed['row'])}",
-                [[masuk, keluar, dur, uraian, output, lokasi]]
-            )
-
-            del st.session_state.edit
-            st.success("Update berhasil")
-            st.rerun()
-
-    # ================= DOWNLOAD SESUAI FILTER =================
-    st.divider()
-    st.subheader("📥 Download Data (Sesuai Filter)")
-
-    export = df.copy()
-    export["Tanggal"] = export["Tanggal"].dt.strftime("%Y-%m-%d")
-
+    # DOWNLOAD
     excel = io.BytesIO()
-    export.to_excel(excel, index=False)
+    df.to_excel(excel, index=False)
 
-    st.download_button(
-        "📥 Download Excel",
-        excel.getvalue(),
-        file_name="data_kinerja_filtered.xlsx"
-    )
+    st.download_button("📥 Download Excel", excel.getvalue())
 
 # ================= ADMIN =================
 elif menu == "Admin":
