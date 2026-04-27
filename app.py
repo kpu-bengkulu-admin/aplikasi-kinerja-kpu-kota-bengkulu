@@ -215,13 +215,8 @@ elif menu == "Input":
 
         # ===== GPS SETELAH FOTO =====
 # ================= GPS OTOMATIS + LOADING =================
+# ================= GPS OTOMATIS (FIX STABLE) =================
 st.markdown("### 📡 GPS Otomatis")
-
-# indikator loading
-status = st.empty()
-
-if not st.session_state.get("gps"):
-    status.warning("📡 GPS sedang diambil... mohon tunggu")
 
 st.components.v1.html("""
 <script>
@@ -230,6 +225,7 @@ function setGPS(){
         function(pos){
             const coords = pos.coords.latitude + "," + pos.coords.longitude;
 
+            // cari semua input di parent
             const inputs = window.parent.document.querySelectorAll('input');
 
             inputs.forEach(input => {
@@ -245,7 +241,7 @@ function setGPS(){
     );
 }
 
-// jalan otomatis
+// AUTO JALAN
 setGPS();
 </script>
 """, height=0)
@@ -256,10 +252,9 @@ gps = st.text_input(
     placeholder="Koordinat GPS"
 )
 
-# simpan ke session
+# SIMPAN KE SESSION (INI KUNCI NYA)
 if gps:
     st.session_state.gps = gps
-    status.success("✅ GPS berhasil didapatkan")
 
     # ================= FORM =================
     with st.form("form"):
