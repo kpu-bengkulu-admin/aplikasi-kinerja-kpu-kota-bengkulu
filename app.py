@@ -11,9 +11,12 @@ from googleapiclient.http import MediaIoBaseUpload
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
 
-# ================= INIT SESSION =================
+# ================= SESSION =================
 if "gps" not in st.session_state:
     st.session_state.gps = ""
+
+if "login" not in st.session_state:
+    st.session_state.login = False
 
 # ================= STYLE =================
 st.markdown("""
@@ -33,7 +36,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ================= GOOGLE =================
+# ================= GOOGLE SHEETS =================
 @st.cache_resource
 def connect():
     creds = Credentials.from_service_account_info(
@@ -43,19 +46,51 @@ def connect():
             "https://www.googleapis.com/auth/drive"
         ],
     )
-    return gspread.authorize(creds).open_by_key("16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM")
+    return gspread.authorize(creds).open_by_key(
+        "16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"
+    )
 
 spreadsheet = connect()
 sheet = spreadsheet.sheet1
 
-# USERS
 try:
     user_sheet = spreadsheet.worksheet("users")
 except:
     user_sheet = spreadsheet.add_worksheet("users", 100, 5)
     user_sheet.append_row(["NIP","Nama","Jabatan","Password","Role"])
 
-# ================= HELPER =================
+# ================= DRIVE UPLOAD =================
+FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
+
+def upload_foto(file):
+    creds = Credentials.from_service_account_info(
+        st.secrets["connections"]["gsheets"]["service_account"]
+    )
+    service = build("drive", "v3", credentials=creds)
+
+    file_metadata = {
+        "name": f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.name}",
+        "parents": [FOLDER_ID]
+    }
+
+    media = MediaIoBaseUpload(file, mimetype=file.type)
+
+    uploaded = service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id"
+    ).execute()
+
+    file_id = uploaded["id"]
+
+    service.permissions().create(
+        fileId=file_id,
+        body={"role": "reader", "type": "anyone"}
+    ).execute()
+
+    return f"https://drive.google.com/uc?id={file_id}"
+
+# ================= HELPERS =================
 def safe(x): return "" if x is None else str(x)
 
 def load_data():
@@ -81,44 +116,7 @@ def hitung_durasi(masuk, keluar):
         return round((jk-jm)/60,2)
     return 0
 
-# ================= DRIVE =================
-FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
-
-def upload_foto(file):
-    creds = Credentials.from_service_account_info(
-        st.secrets["connections"]["gsheets"]["service_account"]
-    )
-    service = build("drive", "v3", credentials=creds)
-
-    file_metadata = {
-        "name": f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.name}",
-        "parents": [FOLDER_ID]
-    }
-
-    media = MediaIoBaseUpload(file, mimetype=file.type)
-
-    uploaded = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields="id"
-    ).execute()
-
-    file_id = uploaded.get("id")
-
-    service.permissions().create(
-        fileId=file_id,
-        body={"role": "reader", "type": "anyone"}
-    ).execute()
-
-    return f"https://drive.google.com/uc?id={file_id}"
-
 # ================= LOGIN =================
-if "login" not in st.session_state:
-    st.session_state.login=False
-
-if "gps" not in st.session_state:
-    st.session_state.gps = ""
-
 users = load_users()
 
 if not st.session_state.login:
@@ -134,11 +132,11 @@ if not st.session_state.login:
         ]
         if not cek.empty:
             u = cek.iloc[0]
-            st.session_state.login=True
-            st.session_state.nama=u["Nama"]
-            st.session_state.nip=str(u["NIP"])
-            st.session_state.jabatan=u["Jabatan"]
-            st.session_state.role=u["Role"]
+            st.session_state.login = True
+            st.session_state.nama = u["Nama"]
+            st.session_state.nip = str(u["NIP"])
+            st.session_state.jabatan = u["Jabatan"]
+            st.session_state.role = u["Role"]
             st.rerun()
         else:
             st.error("Login gagal")
@@ -146,8 +144,6 @@ if not st.session_state.login:
 
 # ================= SIDEBAR =================
 st.sidebar.title(st.session_state.nama)
-st.sidebar.caption(f"Role: {st.session_state.role.upper()}")
-
 menu = st.sidebar.radio("Menu", ["Dashboard","Input","Data Kinerja","Admin"])
 
 if st.sidebar.button("Logout"):
@@ -159,8 +155,8 @@ if menu == "Dashboard":
 
     st.markdown(f"""
     <div class='header'>
-        <h2>Aplikasi E-Kinerja</h2>
-        <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
+        <h2>E-Kinerja Dashboard</h2>
+        <p>{st.session_state.nama}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -172,53 +168,15 @@ if menu == "Dashboard":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    col1,col2,col3 = st.columns(3)
-
-    with col1:
-        tgl = st.date_input("Range Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
-
-    with col2:
-        pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
-
-    with col3:
-        lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
-
-    if len(tgl)==2:
-        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
-
-    if pegawai:
-        df = df[df["Nama"].isin(pegawai)]
-
-    if lokasi:
-        df = df[df["Lokasi"].isin(lokasi)]
-
     c1,c2,c3,c4 = st.columns(4)
-    c1.markdown(f"<div class='card c1'><h2>{len(df)}</h2>Total</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='card c2'><h2>{df['Durasi'].sum():.2f}</h2>Jam</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='card c3'><h2>{df['Tanggal'].nunique()}</h2>Hari</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='card c4'><h2>{df['Nama'].nunique()}</h2>Pegawai</div>", unsafe_allow_html=True)
+    c1.metric("Total Data", len(df))
+    c2.metric("Total Jam", df["Durasi"].sum())
+    c3.metric("Hari", df["Tanggal"].nunique())
+    c4.metric("Pegawai", df["Nama"].nunique())
 
-    # BAR CHART
-    chart = df.groupby("Nama")["Durasi"].sum().reset_index()
-    fig = px.bar(chart, x="Nama", y="Durasi", color="Durasi", text_auto=True)
+    fig = px.bar(df.groupby("Nama")["Durasi"].sum().reset_index(),
+                 x="Nama", y="Durasi", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
-
-    # MAP
-    if "Koordinat" in df.columns:
-        coords = df["Koordinat"].dropna()
-        lat, lon = [], []
-
-        for c in coords:
-            try:
-                a,b = c.split(",")
-                lat.append(float(a))
-                lon.append(float(b))
-            except:
-                pass
-
-        if lat:
-            map_df = pd.DataFrame({"lat":lat,"lon":lon})
-            st.map(map_df)
 
 # ================= INPUT =================
 elif menu == "Input":
@@ -227,44 +185,35 @@ elif menu == "Input":
 
     lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-    # ================= GPS =================
+    foto = None
+
+    # ================= GPS FIX =================
     if lokasi == "Rumah":
 
-        st.markdown("### 📡 GPS Otomatis")
+        st.markdown("### 📡 GPS")
 
-        if st.button("📍 Ambil Lokasi Sekarang"):
-
+        if st.button("📍 Ambil GPS"):
             st.components.v1.html("""
             <script>
             navigator.geolocation.getCurrentPosition(
                 function(pos){
                     const coords = pos.coords.latitude + "," + pos.coords.longitude;
-
-                    // kirim ke URL (FIX PALING STABIL)
-                    const url = new URL(window.parent.location);
-                    url.searchParams.set("gps", coords);
-                    window.parent.location.href = url.toString();
-                },
-                function(err){
-                    alert("Gagal GPS: " + err.message);
+                    window.parent.postMessage({
+                        type: "streamlit:setComponentValue",
+                        value: coords
+                    }, "*");
                 }
             );
             </script>
             """, height=0)
 
-        # AMBIL DARI URL
-        params = st.query_params
-        if "gps" in params:
-            st.session_state.gps = params["gps"]
+        gps = st.text_input("Koordinat GPS", st.session_state.gps)
 
-        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
+        if gps:
+            st.session_state.gps = gps
 
-        # ================= FOTO =================
-        st.markdown("### 📸 Ambil Foto (Kamera Langsung)")
-        foto = st.camera_input("Ambil Foto Kehadiran")
-
-    else:
-        foto = None
+        st.markdown("### 📸 Kamera")
+        foto = st.camera_input("Ambil Foto")
 
     # ================= FORM =================
     with st.form("form"):
@@ -274,9 +223,9 @@ elif menu == "Input":
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
 
-        submit = st.form_submit_button("💾 Simpan")
+        submit = st.form_submit_button("Simpan")
 
-    # ================= SIMPAN =================
+    # ================= SAVE =================
     if submit:
 
         dur = hitung_durasi(masuk, keluar)
@@ -285,39 +234,35 @@ elif menu == "Input":
             st.error("Jam tidak valid")
             st.stop()
 
-        if lokasi == "Rumah":
+        link_foto = ""
 
+        if lokasi == "Rumah":
             if not st.session_state.gps:
                 st.error("GPS wajib")
                 st.stop()
-
             if foto is None:
                 st.error("Foto wajib")
                 st.stop()
 
             link_foto = upload_foto(foto)
 
-        else:
-            link_foto = ""
-
         sheet.append_row([
-            safe(st.session_state.nama),
-            safe(st.session_state.nip),
-            safe(st.session_state.jabatan),
-            safe(tgl.strftime("%Y-%m-%d")),
-            safe(masuk),
-            safe(keluar),
+            st.session_state.nama,
+            st.session_state.nip,
+            st.session_state.jabatan,
+            tgl.strftime("%Y-%m-%d"),
+            masuk,
+            keluar,
             dur,
-            safe(uraian),
-            safe(output),
-            safe(lokasi),
-            safe(st.session_state.gps),
-            safe(link_foto)
+            uraian,
+            output,
+            lokasi,
+            st.session_state.gps,
+            link_foto
         ])
 
-        st.success("✅ Data berhasil disimpan")
+        st.success("✅ Tersimpan")
 
-        # reset gps setelah simpan
         st.session_state.gps = ""
 
 # ================= DATA =================
@@ -325,30 +270,18 @@ elif menu == "Data Kinerja":
 
     df = load_data()
     if df.empty:
-        st.info("Belum ada data")
+        st.info("Kosong")
         st.stop()
 
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
-    df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    for i,row in df.iterrows():
-        c1,c2,c3,c4 = st.columns([5,2,1,1])
-
-        c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
-        c2.write(f"{row['Durasi']:.2f} jam")
-
-        if c3.button("✏️", key=f"edit{i}"):
-            st.session_state.edit = row
-
-        if c4.button("🗑", key=f"del{i}"):
-            sheet.delete_rows(int(row["row"]))
-            st.rerun()
+    st.dataframe(df)
 
 # ================= ADMIN =================
 elif menu == "Admin":
 
     if st.session_state.role != "admin":
-        st.error("Akses ditolak")
+        st.error("No access")
         st.stop()
 
     nip = st.text_input("NIP")
@@ -357,6 +290,6 @@ elif menu == "Admin":
     pw = st.text_input("Password")
     role = st.selectbox("Role", ["pegawai","admin","pimpinan"])
 
-    if st.button("Tambah User"):
+    if st.button("Tambah"):
         user_sheet.append_row([nip,nama,jab,pw,role])
-        st.success("User ditambahkan")
+        st.success("User dibuat")
