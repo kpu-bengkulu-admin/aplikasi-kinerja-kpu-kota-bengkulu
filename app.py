@@ -44,7 +44,11 @@ def upload_foto(file):
     return f"https://drive.google.com/uc?id={file_id}"
 
 # ================= CONFIG =================
-st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
+st.set_page_config(
+    page_title="E-Kinerja KPU Kota Bengkulu",
+    page_icon="📊",
+    layout="wide"
+)
 
 # ================= UI =================
 st.markdown("""
@@ -146,6 +150,19 @@ if st.sidebar.button("Logout"):
 
 # ================= DASHBOARD =================
 if menu == "Dashboard":
+
+    st.markdown(f"""
+    <div style="
+        background:linear-gradient(90deg,#ef4444,#f87171);
+        padding:20px;
+        border-radius:12px;
+        color:white;
+        margin-bottom:20px;
+    ">
+        <h2>📊 Aplikasi E-Kinerja</h2>
+        <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     df = load_data()
     if df.empty:
