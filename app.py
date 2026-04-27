@@ -73,8 +73,8 @@ def connect():
         ],
     )
     return gspread.authorize(creds).open_by_key(
-        "SPREADSHEET_ID"
-    )
+    st.secrets["SPREADSHEET_ID"]
+)
 
 spreadsheet = connect()
 sheet = spreadsheet.sheet1
