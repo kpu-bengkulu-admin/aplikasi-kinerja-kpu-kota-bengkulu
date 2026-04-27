@@ -5,11 +5,20 @@ import gspread
 from google.oauth2.service_account import Credentials
 import io
 import plotly.express as px
+
+# DRIVE
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
+
+# ================= SESSION DEFAULT =================
+if "gps" not in st.session_state:
+    st.session_state.gps = ""
+
+if "foto" not in st.session_state:
+    st.session_state.foto = None
 
 # ================= STYLE =================
 st.markdown("""
@@ -17,9 +26,11 @@ st.markdown("""
 [data-testid="stSidebar"] {background:#0f172a;}
 [data-testid="stSidebar"] * {color:white !important;}
 .stButton button {background:#ef4444;color:white;border-radius:10px;}
+
 .card {padding:18px;border-radius:14px;color:white;text-align:center;}
 .c1{background:#ef4444;} .c2{background:#22c55e;}
 .c3{background:#f59e0b;} .c4{background:#3b82f6;}
+
 .header {
     background:linear-gradient(90deg,#ef4444,#f87171);
     padding:25px;border-radius:15px;color:white;margin-bottom:20px;
@@ -37,7 +48,43 @@ def connect():
             "https://www.googleapis.com/auth/drive"
         ],
     )
-    return gspread.authorize(creds).open_by_key("16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM")
+    return gspread.authorize(creds).open_by_key(
+        st.secrets["16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"]
+    )
+
+@st.cache_resource
+def connect_drive():
+    creds = Credentials.from_service_account_info(
+        st.secrets["connections"]["gsheets"]["service_account"],
+        scopes=["https://www.googleapis.com/auth/drive"]
+    )
+    return build("drive", "v3", credentials=creds)
+
+def upload_to_drive(file):
+    service = connect_drive()
+
+    file_bytes = io.BytesIO(file.getvalue())
+    media = MediaIoBaseUpload(file_bytes, mimetype=file.type)
+
+    file_metadata = {
+        "name": f"foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg",
+        "parents": [st.secrets["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]]
+    }
+
+    uploaded = service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id"
+    ).execute()
+
+    file_id = uploaded.get("id")
+
+    service.permissions().create(
+        fileId=file_id,
+        body={"role": "reader", "type": "anyone"}
+    ).execute()
+
+    return f"https://drive.google.com/file/d/{file_id}/view"
 
 spreadsheet = connect()
 sheet = spreadsheet.sheet1
@@ -48,40 +95,6 @@ try:
 except:
     user_sheet = spreadsheet.add_worksheet("users", 100, 5)
     user_sheet.append_row(["NIP","Nama","Jabatan","Password","Role"])
-
-# ================= DRIVE =================
-FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
-
-def upload_foto(file):
-    try:
-        creds = Credentials.from_service_account_info(
-            st.secrets["connections"]["gsheets"]["service_account"]
-        )
-        service = build("drive", "v3", credentials=creds)
-
-        file_metadata = {
-            "name": f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.name}",
-            "parents": ["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]
-        }
-
-        media = MediaIoBaseUpload(file, mimetype=file.type)
-
-        uploaded = service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields="id"
-        ).execute()
-
-        file_id = uploaded.get("id")
-
-        service.permissions().create(
-            fileId=file_id,
-            body={"role": "reader", "type": "anyone"}
-        ).execute()
-
-        return f"https://drive.google.com/uc?id={file_id}"
-    except:
-        return ""
 
 # ================= HELPER =================
 def safe(x): return "" if x is None else str(x)
@@ -109,13 +122,10 @@ def hitung_durasi(masuk, keluar):
         return round((jk-jm)/60,2)
     return 0
 
-# ================= SESSION =================
+# ================= LOGIN =================
 if "login" not in st.session_state:
     st.session_state.login=False
-if "gps" not in st.session_state:
-    st.session_state.gps=""
 
-# ================= LOGIN =================
 users = load_users()
 
 if not st.session_state.login:
@@ -169,10 +179,7 @@ if menu == "Dashboard":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    tgl = st.date_input("Range Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
-    if len(tgl)==2:
-        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
-
+    # KPI
     c1,c2,c3,c4 = st.columns(4)
     c1.markdown(f"<div class='card c1'><h2>{len(df)}</h2>Total</div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='card c2'><h2>{df['Durasi'].sum():.2f}</h2>Jam</div>", unsafe_allow_html=True)
@@ -184,93 +191,58 @@ if menu == "Dashboard":
     st.plotly_chart(fig, use_container_width=True)
 
     # MAP
-    if "Koordinat" in df.columns:
-        coords = df["Koordinat"].dropna()
-        lat, lon = [], []
-        for c in coords:
-            try:
-                a,b = str(c).split(",")
-                lat.append(float(a))
-                lon.append(float(b))
-            except:
-                pass
-        if lat:
-            st.map(pd.DataFrame({"lat":lat,"lon":lon}))
+    if "GPS" in df.columns:
+        st.markdown("### 📍 Peta Lokasi")
+        df_map = df[df["GPS"] != ""]
+        if not df_map.empty:
+            df_map[["lat","lon"]] = df_map["GPS"].str.split(",", expand=True)
+            df_map["lat"] = pd.to_numeric(df_map["lat"], errors="coerce")
+            df_map["lon"] = pd.to_numeric(df_map["lon"], errors="coerce")
+            st.map(df_map[["lat","lon"]])
 
 # ================= INPUT =================
 elif menu == "Input":
 
-    st.subheader("📍 Input Kinerja")
+    st.subheader("Input Kinerja")
 
-    # ===== SESSION STATE (ANTI RESET) =====
-    if "gps" not in st.session_state:
-        st.session_state.gps = ""
+    tgl = st.date_input("Tanggal")
+    masuk = st.text_input("Jam Masuk","07:30")
+    keluar = st.text_input("Jam Keluar","16:00")
+    uraian = st.text_area("Uraian")
+    output = st.text_area("Output")
 
-    if "foto" not in st.session_state:
-        st.session_state.foto = None
+    lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-    with st.form("form", clear_on_submit=False):
+    # ===== GPS + FOTO KHUSUS RUMAH =====
+    if lokasi == "Rumah":
 
-        tgl = st.date_input("Tanggal")
-        masuk = st.text_input("Jam Masuk", "07:30")
-        keluar = st.text_input("Jam Keluar", "16:00")
-        uraian = st.text_area("Uraian")
-        output = st.text_area("Output")
+        st.markdown("### 📡 GPS Otomatis")
 
-        lokasi = st.selectbox(
-            "Lokasi",
-            ["Kantor", "Rumah", "Dinas Luar / SPT"]
-        )
+        if st.button("📍 Ambil GPS"):
+            st.components.v1.html("""
+            <script>
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                    window.parent.postMessage({
+                        type: "streamlit:setComponentValue",
+                        value: coords
+                    }, "*");
+                }
+            );
+            </script>
+            """, height=0)
 
-        # ================== AUTO GPS + FOTO ==================
-        # ================= GPS =================
-if lokasi == "Rumah":
+        gps = st.text_input("Koordinat GPS", value=st.session_state.gps)
+        if gps:
+            st.session_state.gps = gps
 
-    st.markdown("### 📡 GPS Otomatis")
+        st.markdown("### 📸 Ambil Foto")
+        foto = st.camera_input("Foto Pegawai")
+        if foto:
+            st.session_state.foto = foto
 
-    if st.button("📍 Ambil Lokasi GPS"):
-
-        st.components.v1.html("""
-        <script>
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const coords = pos.coords.latitude + "," + pos.coords.longitude;
-
-                let inputs = window.parent.document.querySelectorAll('input');
-
-                inputs.forEach((input) => {
-                    if(input.placeholder === "Koordinat GPS"){
-                        input.value = coords;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                });
-
-                alert("GPS berhasil: " + coords);
-            },
-            (err) => {
-                alert("GPS gagal: " + err.message);
-            }
-        );
-        </script>
-        """, height=0)
-
-    gps = st.text_input("Koordinat GPS", placeholder="Koordinat GPS")
-
-            # ===== FOTO =====
-            st.markdown("### 📷 Ambil Foto")
-            foto = st.camera_input("Ambil foto langsung")
-
-            if foto:
-                st.session_state.foto = foto
-
-        else:
-            gps = ""
-            foto = None
-
-        submit = st.form_submit_button("💾 Simpan")
-
-    # ================== SIMPAN ==================
-    if submit:
+    if st.button("💾 Simpan"):
 
         dur = hitung_durasi(masuk, keluar)
 
@@ -278,20 +250,19 @@ if lokasi == "Rumah":
             st.error("Jam tidak valid")
             st.stop()
 
-        # WAJIB GPS + FOTO kalau rumah
+        link_foto = ""
+
         if lokasi == "Rumah":
+
             if not st.session_state.gps:
-                st.error("GPS wajib diambil")
+                st.error("GPS wajib")
                 st.stop()
 
             if not st.session_state.foto:
-                st.error("Foto wajib diambil")
+                st.error("Foto wajib")
                 st.stop()
 
-        # ===== SIMPAN FOTO (BASE64) =====
-        foto_data = ""
-        if st.session_state.foto:
-            foto_data = st.session_state.foto.getvalue()
+            link_foto = upload_to_drive(st.session_state.foto)
 
         sheet.append_row([
             safe(st.session_state.nama),
@@ -305,12 +276,11 @@ if lokasi == "Rumah":
             safe(output),
             safe(lokasi),
             safe(st.session_state.gps),
-            foto_data
+            safe(link_foto)
         ])
 
-        st.success("✅ Data tersimpan")
+        st.success("Data tersimpan")
 
-        # RESET
         st.session_state.gps = ""
         st.session_state.foto = None
 
@@ -318,19 +288,14 @@ if lokasi == "Rumah":
 elif menu == "Data Kinerja":
 
     df = load_data()
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
+
+    df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
 
     for i,row in df.iterrows():
-        c1,c2,c3,c4 = st.columns([5,2,1,1])
-
-        c1.write(f"{row['Nama']} - {row['Tanggal']}")
-        c2.write(row["Durasi"])
-
-        if c3.button("✏️", key=i):
-            st.session_state.edit=row
-
-        if c4.button("🗑", key=f"d{i}"):
-            sheet.delete_rows(int(row["row"]))
-            st.rerun()
+        st.write(f"{row['Nama']} - {row['Tanggal']} ({row['Durasi']} jam)")
 
 # ================= ADMIN =================
 elif menu == "Admin":
