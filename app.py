@@ -152,7 +152,6 @@ if menu == "Dashboard":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    # FILTER
     col1,col2,col3 = st.columns(3)
 
     with col1:
@@ -173,19 +172,16 @@ if menu == "Dashboard":
     if lokasi:
         df = df[df["Lokasi"].isin(lokasi)]
 
-    # KPI
     c1,c2,c3,c4 = st.columns(4)
     c1.markdown(f"<div class='card c1'><h2>{len(df)}</h2>Total</div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='card c2'><h2>{df['Durasi'].sum():.2f}</h2>Jam</div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='card c3'><h2>{df['Tanggal'].nunique()}</h2>Hari</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='card c4'><h2>{df['Nama'].nunique()}</h2>Pegawai</div>", unsafe_allow_html=True)
 
-    # GRAFIK
     chart = df.groupby("Nama")["Durasi"].sum().reset_index()
     fig = px.bar(chart, x="Nama", y="Durasi", color="Durasi", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
 
-    # ================= MAP =================
     st.subheader("📍 Peta Lokasi Kerja")
 
     if "Lat" in df.columns and "Lon" in df.columns:
@@ -196,8 +192,6 @@ if menu == "Dashboard":
             st.map(map_df.rename(columns={"Lat":"lat","Lon":"lon"}))
         else:
             st.info("Belum ada data lokasi")
-    else:
-        st.info("Kolom Lat/Lon belum tersedia di Sheet")
 
 # ================= INPUT =================
 elif menu == "Input":
@@ -211,7 +205,6 @@ elif menu == "Input":
 
         lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-        # ================= FOTO + GPS =================
         foto = None
         lat = ""
         lon = ""
@@ -221,21 +214,28 @@ elif menu == "Input":
 
             foto = st.camera_input("Ambil Foto")
 
-            st.info("📍 Izinkan lokasi di browser")
-            st.components.v1.html("""
-            <script>
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    const text = lat + "," + lon;
-                    window.parent.postMessage({type: "streamlit:setComponentValue", value: text}, "*");
-                }
-            );
-            </script>
-            """, height=0)
+            if st.form_submit_button("📍 Ambil Lokasi"):
+                st.session_state.ambil_lokasi = True
 
-            koordinat = st.text_input("Koordinat")
+            koordinat = st.text_input("Koordinat Otomatis", key="gps")
+
+            if st.session_state.get("ambil_lokasi"):
+                st.components.v1.html("""
+                <script>
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                        const inputs = window.parent.document.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            if(input.placeholder === "Koordinat Otomatis"){
+                                input.value = coords;
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        });
+                    }
+                );
+                </script>
+                """, height=0)
 
             if koordinat and "," in koordinat:
                 lat, lon = koordinat.split(",")
@@ -311,12 +311,9 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
-    # ================= EDIT =================
     if "edit" in st.session_state:
-
         ed = st.session_state.edit
 
-        st.divider()
         st.subheader("✏️ Edit Data")
 
         masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
@@ -325,22 +322,11 @@ elif menu == "Data Kinerja":
         output = st.text_area("Output", ed["Output"])
 
         lokasi_list = ["Kantor","Rumah","Dinas Luar / SPT"]
-        lokasi = st.selectbox(
-            "Lokasi",
-            lokasi_list,
-            index=lokasi_list.index(ed["Lokasi"]) if ed["Lokasi"] in lokasi_list else 0
-        )
+        lokasi = st.selectbox("Lokasi", lokasi_list)
 
-        colA, colB = st.columns(2)
-
-        if colA.button("💾 Update"):
-            dur = hitung_durasi(masuk, keluar)
-
-            if dur == 0:
-                st.error("Jam tidak valid")
-                st.stop()
-
+        if st.button("Update"):
             row_num = int(ed["row"])
+            dur = hitung_durasi(masuk, keluar)
 
             sheet.update(f"E{row_num}", masuk)
             sheet.update(f"F{row_num}", keluar)
@@ -349,11 +335,7 @@ elif menu == "Data Kinerja":
             sheet.update(f"I{row_num}", output)
             sheet.update(f"J{row_num}", lokasi)
 
-            st.success("✅ Data berhasil diupdate")
-            del st.session_state.edit
-            st.rerun()
-
-        if colB.button("❌ Batal"):
+            st.success("Update berhasil")
             del st.session_state.edit
             st.rerun()
 
