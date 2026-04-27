@@ -152,22 +152,28 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
-    st.title("📍 Input Kinerja")
+    st.subheader("📍 Input Kinerja")
 
-    lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
+    # ================= PILIH LOKASI (LUAR FORM) =================
+    lokasi = st.selectbox(
+        "Lokasi",
+        ["Kantor","Rumah","Dinas Luar / SPT"],
+        key="lokasi"
+    )
 
-    # ===== GPS =====
+    # ================= GPS BUTTON (WAJIB DI LUAR FORM) =================
     if lokasi == "Rumah":
 
-        st.subheader("📡 GPS Otomatis")
+        st.markdown("### 📡 GPS Otomatis")
 
-        if st.button("📍 Ambil GPS"):
+        if st.button("📍 Ambil Lokasi GPS"):
 
             st.components.v1.html("""
             <script>
             navigator.geolocation.getCurrentPosition(
                 function(pos){
                     const coords = pos.coords.latitude + "," + pos.coords.longitude;
+
                     const inputs = window.parent.document.querySelectorAll('input');
                     inputs.forEach(i=>{
                         if(i.placeholder==="Koordinat GPS"){
@@ -175,14 +181,17 @@ elif menu == "Input":
                             i.dispatchEvent(new Event('input',{bubbles:true}));
                         }
                     });
-                    alert("GPS: "+coords);
+
+                    alert("GPS: " + coords);
                 },
-                function(err){alert(err.message);}
+                function(err){
+                    alert("Gagal ambil GPS: " + err.message);
+                }
             );
             </script>
             """, height=0)
 
-    # ===== FORM =====
+    # ================= FORM =================
     with st.form("form"):
 
         tgl = st.date_input("Tanggal")
@@ -191,21 +200,28 @@ elif menu == "Input":
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
 
+        # ===== GPS FIELD =====
         gps = st.text_input(
             "Koordinat GPS",
             value=st.session_state.get("gps",""),
             placeholder="Koordinat GPS"
         )
 
+        # simpan ke session agar tidak hilang
         st.session_state.gps = gps
 
+        # ===== FOTO =====
         foto = None
         if lokasi == "Rumah":
-            foto = st.file_uploader("Upload Foto", type=["jpg","png","jpeg"])
+            st.markdown("### 📸 Ambil Foto")
+            foto = st.file_uploader(
+                "Upload Foto Kehadiran",
+                type=["jpg","png","jpeg"]
+            )
 
         submit = st.form_submit_button("💾 Simpan")
 
-    # ===== SIMPAN =====
+    # ================= SIMPAN =================
     if submit:
 
         dur = hitung_durasi(masuk, keluar)
@@ -214,11 +230,10 @@ elif menu == "Input":
             st.error("Jam tidak valid")
             st.stop()
 
-        link_foto = ""
-
+        # VALIDASI KHUSUS RUMAH
         if lokasi == "Rumah":
 
-            if not st.session_state.gps:
+            if not st.session_state.get("gps"):
                 st.error("GPS wajib")
                 st.stop()
 
@@ -226,11 +241,10 @@ elif menu == "Input":
                 st.error("Foto wajib")
                 st.stop()
 
-            link_foto = upload_to_drive(foto)
-
         sheet.append_row([
             safe(st.session_state.nama),
             safe(st.session_state.nip),
+            safe(st.session_state.jabatan),
             safe(tgl.strftime("%Y-%m-%d")),
             safe(masuk),
             safe(keluar),
@@ -238,11 +252,12 @@ elif menu == "Input":
             safe(uraian),
             safe(output),
             safe(lokasi),
-            safe(st.session_state.gps),
-            safe(link_foto)
+            safe(st.session_state.get("gps"))
         ])
 
-        st.success("Data berhasil disimpan")
+        st.success("✅ Data berhasil disimpan")
+
+        # reset gps setelah simpan
         st.session_state.gps = ""
 
 # ================= DATA =================
