@@ -214,28 +214,48 @@ elif menu == "Input":
     lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
     # ===== GPS + FOTO KHUSUS RUMAH =====
-    if lokasi == "Rumah":
+if lokasi == "Rumah":
 
-        st.markdown("### 📡 GPS Otomatis")
+    st.markdown("### 📡 GPS Otomatis")
 
-        if st.button("📍 Ambil GPS"):
-            st.components.v1.html("""
-            <script>
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const coords = pos.coords.latitude + "," + pos.coords.longitude;
-                    window.parent.postMessage({
-                        type: "streamlit:setComponentValue",
-                        value: coords
-                    }, "*");
-                }
-            );
-            </script>
-            """, height=0)
+    if "gps" not in st.session_state:
+        st.session_state.gps = ""
 
-        gps = st.text_input("Koordinat GPS", value=st.session_state.gps)
-        if gps:
-            st.session_state.gps = gps
+    if st.button("📍 Ambil Lokasi GPS"):
+
+        st.components.v1.html(f"""
+        <script>
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {{
+                const coords = pos.coords.latitude + "," + pos.coords.longitude;
+
+                // Cari input berdasarkan label
+                const inputs = window.parent.document.querySelectorAll('input');
+
+                inputs.forEach(input => {{
+                    if(input.placeholder === "Koordinat GPS") {{
+                        input.value = coords;
+                        input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    }}
+                }});
+
+                alert("GPS berhasil: " + coords);
+            }},
+            function(err) {{
+                alert("Gagal ambil GPS: " + err.message);
+            }}
+        );
+        </script>
+        """, height=0)
+
+    gps = st.text_input(
+        "Koordinat GPS",
+        value=st.session_state.gps,
+        placeholder="Koordinat GPS"
+    )
+
+    if gps:
+        st.session_state.gps = gps
 
         st.markdown("### 📸 Ambil Foto")
         foto = st.camera_input("Foto Pegawai")
