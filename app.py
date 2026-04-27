@@ -5,6 +5,44 @@ import gspread
 from google.oauth2.service_account import Credentials
 import io
 
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+
+# ================= SESSION =================
+if "gps" not in st.session_state:
+    st.session_state.gps = ""
+
+# ================= DRIVE =================
+FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
+
+def upload_foto(file):
+    creds = Credentials.from_service_account_info(
+        st.secrets["connections"]["gsheets"]["service_account"]
+    )
+    service = build("drive", "v3", credentials=creds)
+
+    file_metadata = {
+        "name": file.name,
+        "parents": [FOLDER_ID]
+    }
+
+    media = MediaIoBaseUpload(file, mimetype=file.type)
+
+    uploaded = service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id"
+    ).execute()
+
+    file_id = uploaded.get("id")
+
+    service.permissions().create(
+        fileId=file_id,
+        body={"role": "reader", "type": "anyone"}
+    ).execute()
+
+    return f"https://drive.google.com/uc?id={file_id}"
+
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
 
@@ -31,7 +69,7 @@ def connect():
         ],
     )
     return gspread.authorize(creds).open_by_key(
-        "16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"
+        "SPREADSHEET_ID"
     )
 
 spreadsheet = connect()
@@ -145,21 +183,82 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
-    with st.form("form", clear_on_submit=True):
+    st.subheader("📍 Input Kinerja")
+
+    lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
+
+    foto = None
+
+    # ================= KHUSUS RUMAH =================
+    if lokasi == "Rumah":
+
+        # ===== FOTO DULU =====
+        st.markdown("### 📸 Ambil Foto")
+        foto = st.camera_input("Foto Kehadiran")
+
+        # ===== GPS SETELAH FOTO =====
+        st.markdown("### 📡 Ambil GPS")
+
+        if st.button("📍 Ambil Lokasi GPS"):
+
+            st.components.v1.html("""
+            <script>
+            navigator.geolocation.getCurrentPosition(
+                function(pos){
+                    const coords = pos.coords.latitude + "," + pos.coords.longitude;
+
+                    const url = new URL(window.parent.location);
+                    url.searchParams.set("gps", coords);
+                    window.parent.location.href = url.toString();
+                },
+                function(err){
+                    alert("Gagal GPS: " + err.message);
+                }
+            );
+            </script>
+            """, height=0)
+
+        params = st.query_params
+        if "gps" in params:
+            st.session_state.gps = params["gps"]
+
+        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
+
+    # ================= FORM =================
+    with st.form("form"):
         tgl = st.date_input("Tanggal")
         masuk = st.text_input("Jam Masuk","07:30")
         keluar = st.text_input("Jam Keluar","16:00")
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
-        lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-        submit = st.form_submit_button("Simpan")
+        submit = st.form_submit_button("💾 Simpan")
 
+    # ================= SIMPAN =================
     if submit:
+
         dur = hitung_durasi(masuk, keluar)
+
         if dur == 0:
             st.error("Jam tidak valid")
             st.stop()
+
+        if lokasi == "Rumah":
+
+            if not st.session_state.gps:
+                st.error("GPS wajib")
+                st.stop()
+
+            if foto is None:
+                st.error("Foto wajib")
+                st.stop()
+
+            link_foto = upload_foto(foto)
+            koordinat = st.session_state.gps
+
+        else:
+            link_foto = ""
+            koordinat = ""
 
         sheet.append_row([
             safe(st.session_state.nama),
@@ -171,10 +270,15 @@ elif menu == "Input":
             dur,
             safe(uraian),
             safe(output),
-            safe(lokasi)
+            safe(lokasi),
+            safe(koordinat),
+            safe(link_foto)
         ])
 
         st.success("✅ Data tersimpan")
+
+        # reset gps
+        st.session_state.gps = ""
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
@@ -187,7 +291,7 @@ elif menu == "Data Kinerja":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    # ================= FILTER ROLE =================
+    # FILTER ROLE
     if st.session_state.role in ["admin","pimpinan"]:
         mode = st.radio("Mode Data", ["Semua Data","Data Saya"])
         if mode == "Data Saya":
@@ -195,30 +299,25 @@ elif menu == "Data Kinerja":
     else:
         df = df[df["NIP"].astype(str)==st.session_state.nip]
 
-    # ================= FILTER TANGGAL =================
-    st.subheader("📅 Filter Tanggal")
+    # FILTER TANGGAL
+    tgl = st.date_input("Filter Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
 
-    start_default = df["Tanggal"].min()
-    end_default = df["Tanggal"].max()
+    if len(tgl)==2:
+        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
 
-    tgl = st.date_input(
-        "Pilih Range Tanggal",
-        value=(start_default, end_default)
-    )
-
-    if len(tgl) == 2:
-        df = df[
-            (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
-            (df["Tanggal"] <= pd.to_datetime(tgl[1]))
-        ]
-
-    # ================= TAMPIL DATA =================
+    # TAMPIL DATA
     for i,row in df.iterrows():
 
         c1,c2,c3,c4 = st.columns([5,2,1,1])
 
         c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
         c1.caption(row["Uraian"])
+
+        if "Koordinat" in row and row["Koordinat"]:
+            c1.write(f"📍 {row['Koordinat']}")
+
+        if "Foto" in row and row["Foto"]:
+            c1.markdown(f"[📸 Lihat Foto]({row['Foto']})")
 
         c2.write(f"{row['Durasi']:.2f} jam")
 
@@ -229,7 +328,7 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
-    # ================= EDIT =================
+    # EDIT
     if "edit" in st.session_state:
         ed = st.session_state.edit
 
@@ -240,39 +339,28 @@ elif menu == "Data Kinerja":
         uraian = st.text_area("Uraian", ed["Uraian"])
         output = st.text_area("Output", ed["Output"])
 
-        opsi = ["Kantor","Rumah","Dinas Luar / SPT"]
-        lokasi = st.selectbox(
-            "Lokasi",
-            opsi,
-            index=opsi.index(ed["Lokasi"]) if ed["Lokasi"] in opsi else 0
-        )
-
         if st.button("Update"):
             dur = hitung_durasi(masuk, keluar)
 
             sheet.update(
                 f"E{int(ed['row'])}:J{int(ed['row'])}",
-                [[masuk, keluar, dur, uraian, output, lokasi]]
+                [[masuk, keluar, dur, uraian, output, ed["Lokasi"]]]
             )
 
             del st.session_state.edit
             st.success("Update berhasil")
             st.rerun()
 
-    # ================= DOWNLOAD SESUAI FILTER =================
+    # DOWNLOAD
     st.divider()
-    st.subheader("📥 Download Data (Sesuai Filter)")
-
-    export = df.copy()
-    export["Tanggal"] = export["Tanggal"].dt.strftime("%Y-%m-%d")
 
     excel = io.BytesIO()
-    export.to_excel(excel, index=False)
+    df.to_excel(excel, index=False)
 
     st.download_button(
         "📥 Download Excel",
         excel.getvalue(),
-        file_name="data_kinerja_filtered.xlsx"
+        file_name="data_kinerja.xlsx"
     )
 
 # ================= ADMIN =================
