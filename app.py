@@ -214,32 +214,52 @@ elif menu == "Input":
         foto = st.camera_input("Foto Kehadiran")
 
         # ===== GPS SETELAH FOTO =====
-        st.markdown("### 📡 Ambil GPS")
+# ================= GPS OTOMATIS + LOADING =================
+st.markdown("### 📡 GPS Otomatis")
 
-        if st.button("📍 Ambil Lokasi GPS"):
+# indikator loading
+status = st.empty()
 
-            st.components.v1.html("""
-            <script>
-            navigator.geolocation.getCurrentPosition(
-                function(pos){
-                    const coords = pos.coords.latitude + "," + pos.coords.longitude;
+if not st.session_state.get("gps"):
+    status.warning("📡 GPS sedang diambil... mohon tunggu")
 
-                    const url = new URL(window.parent.location);
-                    url.searchParams.set("gps", coords);
-                    window.parent.location.href = url.toString();
-                },
-                function(err){
-                    alert("Gagal GPS: " + err.message);
+st.components.v1.html("""
+<script>
+function setGPS(){
+    navigator.geolocation.getCurrentPosition(
+        function(pos){
+            const coords = pos.coords.latitude + "," + pos.coords.longitude;
+
+            const inputs = window.parent.document.querySelectorAll('input');
+
+            inputs.forEach(input => {
+                if(input.placeholder === "Koordinat GPS"){
+                    input.value = coords;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
                 }
-            );
-            </script>
-            """, height=0)
+            });
+        },
+        function(err){
+            console.log("GPS error:", err.message);
+        }
+    );
+}
 
-        params = st.query_params
-        if "gps" in params:
-            st.session_state.gps = params["gps"]
+// jalan otomatis
+setGPS();
+</script>
+""", height=0)
 
-        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
+gps = st.text_input(
+    "Koordinat GPS",
+    value=st.session_state.get("gps",""),
+    placeholder="Koordinat GPS"
+)
+
+# simpan ke session
+if gps:
+    st.session_state.gps = gps
+    status.success("✅ GPS berhasil didapatkan")
 
     # ================= FORM =================
     with st.form("form"):
