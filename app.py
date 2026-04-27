@@ -11,6 +11,10 @@ from googleapiclient.http import MediaIoBaseUpload
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
 
+# ================= INIT SESSION =================
+if "gps" not in st.session_state:
+    st.session_state.gps = ""
+
 # ================= STYLE =================
 st.markdown("""
 <style>
@@ -223,10 +227,7 @@ elif menu == "Input":
 
     lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-    gps = ""
-    foto = None
-
-    # ================= KHUSUS RUMAH =================
+    # ================= GPS =================
     if lokasi == "Rumah":
 
         st.markdown("### 📡 GPS Otomatis")
@@ -239,15 +240,10 @@ elif menu == "Input":
                 function(pos){
                     const coords = pos.coords.latitude + "," + pos.coords.longitude;
 
-                    const inputs = window.parent.document.querySelectorAll('input');
-                    inputs.forEach(i=>{
-                        if(i.placeholder==="Koordinat GPS"){
-                            i.value = coords;
-                            i.dispatchEvent(new Event('input',{bubbles:true}));
-                        }
-                    });
-
-                    alert("GPS: " + coords);
+                    // kirim ke URL (FIX PALING STABIL)
+                    const url = new URL(window.parent.location);
+                    url.searchParams.set("gps", coords);
+                    window.parent.location.href = url.toString();
                 },
                 function(err){
                     alert("Gagal GPS: " + err.message);
@@ -256,17 +252,22 @@ elif menu == "Input":
             </script>
             """, height=0)
 
-        gps = st.text_input(
-            "Koordinat GPS",
-            placeholder="Koordinat GPS"
-        )
+        # AMBIL DARI URL
+        params = st.query_params
+        if "gps" in params:
+            st.session_state.gps = params["gps"]
 
+        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
+
+        # ================= FOTO =================
         st.markdown("### 📸 Ambil Foto (Kamera Langsung)")
         foto = st.camera_input("Ambil Foto Kehadiran")
 
+    else:
+        foto = None
+
     # ================= FORM =================
     with st.form("form"):
-
         tgl = st.date_input("Tanggal")
         masuk = st.text_input("Jam Masuk","07:30")
         keluar = st.text_input("Jam Keluar","16:00")
@@ -284,10 +285,9 @@ elif menu == "Input":
             st.error("Jam tidak valid")
             st.stop()
 
-        # VALIDASI RUMAH
         if lokasi == "Rumah":
 
-            if not gps:
+            if not st.session_state.gps:
                 st.error("GPS wajib")
                 st.stop()
 
@@ -311,11 +311,14 @@ elif menu == "Input":
             safe(uraian),
             safe(output),
             safe(lokasi),
-            safe(gps),
+            safe(st.session_state.gps),
             safe(link_foto)
         ])
 
         st.success("✅ Data berhasil disimpan")
+
+        # reset gps setelah simpan
+        st.session_state.gps = ""
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
