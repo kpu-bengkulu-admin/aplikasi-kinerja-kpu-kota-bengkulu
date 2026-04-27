@@ -9,37 +9,17 @@ import plotly.express as px
 # ================= CONFIG =================
 st.set_page_config(page_title="E-Kinerja KPU Kota Bengkulu", layout="wide")
 
-# ================= UI =================
+# ================= STYLE =================
 st.markdown("""
 <style>
 [data-testid="stSidebar"] {background:#0f172a;}
 [data-testid="stSidebar"] * {color:white !important;}
-
-.stButton button {
-    background:#ef4444;
-    color:white;
-    border-radius:10px;
-}
-
-.card {
-    padding:18px;
-    border-radius:14px;
-    color:white;
-    text-align:center;
-}
-
-.c1{background:#ef4444;}
-.c2{background:#22c55e;}
-.c3{background:#f59e0b;}
-.c4{background:#3b82f6;}
-
-.header {
-    background:linear-gradient(90deg,#ef4444,#f87171);
-    padding:25px;
-    border-radius:15px;
-    color:white;
-    margin-bottom:20px;
-}
+.stButton button {background:#ef4444;color:white;border-radius:10px;}
+.card {padding:18px;border-radius:14px;color:white;text-align:center;}
+.c1{background:#ef4444;} .c2{background:#22c55e;}
+.c3{background:#f59e0b;} .c4{background:#3b82f6;}
+.header {background:linear-gradient(90deg,#ef4444,#f87171);
+padding:25px;border-radius:15px;color:white;margin-bottom:20px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -53,9 +33,7 @@ def connect():
             "https://www.googleapis.com/auth/drive"
         ],
     )
-    return gspread.authorize(creds).open_by_key(
-        "16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"
-    )
+    return gspread.authorize(creds).open_by_key("16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM")
 
 spreadsheet = connect()
 sheet = spreadsheet.sheet1
@@ -100,7 +78,6 @@ users = load_users()
 
 if not st.session_state.login:
     st.title("🔐 Login E-Kinerja KPU Kota Bengkulu")
-
     nip = st.text_input("NIP")
     pw = st.text_input("Password", type="password")
 
@@ -125,10 +102,7 @@ if not st.session_state.login:
 st.sidebar.title(st.session_state.nama)
 st.sidebar.caption(f"Role: {st.session_state.role.upper()}")
 
-menu = st.sidebar.radio(
-    "Menu",
-    ["Dashboard","Input","Data Kinerja","Admin"]
-)
+menu = st.sidebar.radio("Menu", ["Dashboard","Input","Data Kinerja","Admin"])
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
@@ -152,23 +126,14 @@ if menu == "Dashboard":
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
-    col1,col2,col3 = st.columns(3)
-
-    with col1:
-        tgl = st.date_input("Range Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
-
-    with col2:
-        pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
-
-    with col3:
-        lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
+    tgl = st.date_input("Range Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
+    pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
+    lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
 
     if len(tgl)==2:
         df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
-
     if pegawai:
         df = df[df["Nama"].isin(pegawai)]
-
     if lokasi:
         df = df[df["Lokasi"].isin(lokasi)]
 
@@ -182,65 +147,59 @@ if menu == "Dashboard":
     fig = px.bar(chart, x="Nama", y="Durasi", color="Durasi", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("📍 Peta Lokasi Kerja")
-
     if "Lat" in df.columns and "Lon" in df.columns:
         map_df = df.dropna(subset=["Lat","Lon"])
         if not map_df.empty:
             map_df["Lat"] = pd.to_numeric(map_df["Lat"], errors='coerce')
             map_df["Lon"] = pd.to_numeric(map_df["Lon"], errors='coerce')
             st.map(map_df.rename(columns={"Lat":"lat","Lon":"lon"}))
-        else:
-            st.info("Belum ada data lokasi")
 
 # ================= INPUT =================
 elif menu == "Input":
 
-    with st.form("form", clear_on_submit=True):
+    st.subheader("Input Data")
+
+    with st.form("form"):
         tgl = st.date_input("Tanggal")
         masuk = st.text_input("Jam Masuk","07:30")
         keluar = st.text_input("Jam Keluar","16:00")
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
-
         lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
-
-        foto = None
-        lat = ""
-        lon = ""
-
-        if lokasi == "Rumah":
-            st.warning("📸 Wajib foto & lokasi")
-
-            foto = st.camera_input("Ambil Foto")
-
-            if st.form_submit_button("📍 Ambil Lokasi"):
-                st.session_state.ambil_lokasi = True
-
-            koordinat = st.text_input("Koordinat Otomatis", key="gps")
-
-            if st.session_state.get("ambil_lokasi"):
-                st.components.v1.html("""
-                <script>
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const coords = pos.coords.latitude + "," + pos.coords.longitude;
-                        const inputs = window.parent.document.querySelectorAll('input');
-                        inputs.forEach(input => {
-                            if(input.placeholder === "Koordinat Otomatis"){
-                                input.value = coords;
-                                input.dispatchEvent(new Event('input', { bubbles: true }));
-                            }
-                        });
-                    }
-                );
-                </script>
-                """, height=0)
-
-            if koordinat and "," in koordinat:
-                lat, lon = koordinat.split(",")
-
+        foto = st.camera_input("Foto (wajib jika Rumah)") if lokasi=="Rumah" else None
         submit = st.form_submit_button("Simpan")
+
+    # GPS DI LUAR FORM
+    lat, lon = "", ""
+
+    if lokasi == "Rumah":
+        st.subheader("📍 Ambil Lokasi")
+
+        if st.button("Ambil Lokasi"):
+            st.session_state.get_loc = True
+
+        koordinat = st.text_input("Koordinat", key="gps")
+
+        if st.session_state.get("get_loc"):
+            st.components.v1.html("""
+            <script>
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                    const inputs = window.parent.document.querySelectorAll('input');
+                    inputs.forEach(i=>{
+                        if(i.placeholder==="Koordinat"){
+                            i.value=coords;
+                            i.dispatchEvent(new Event('input',{bubbles:true}));
+                        }
+                    });
+                }
+            );
+            </script>
+            """, height=0)
+
+        if koordinat and "," in koordinat:
+            lat, lon = koordinat.split(",")
 
     if submit:
         dur = hitung_durasi(masuk, keluar)
@@ -254,12 +213,12 @@ elif menu == "Input":
                 st.error("Foto wajib")
                 st.stop()
             if lat == "" or lon == "":
-                st.error("Lokasi wajib")
+                st.error("Lokasi belum diambil")
                 st.stop()
 
         sheet.append_row([
             safe(st.session_state.nama),
-            safe(str(st.session_state.nip)),
+            safe(st.session_state.nip),
             safe(st.session_state.jabatan),
             safe(tgl.strftime("%Y-%m-%d")),
             safe(masuk),
@@ -272,89 +231,64 @@ elif menu == "Input":
             safe(lon)
         ])
 
-        st.success("✅ Data tersimpan")
+        st.success("Data tersimpan")
+        st.session_state.get_loc=False
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
     df = load_data()
-    if df.empty:
-        st.info("Belum ada data")
-        st.stop()
-
     df["Durasi"] = df.apply(lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]), axis=1)
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
     if st.session_state.role in ["admin","pimpinan"]:
         mode = st.radio("Mode Data", ["Semua Data","Data Saya"])
-        if mode == "Data Saya":
+        if mode=="Data Saya":
             df = df[df["NIP"].astype(str)==st.session_state.nip]
     else:
         df = df[df["NIP"].astype(str)==st.session_state.nip]
 
-    tgl = st.date_input("Filter Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
-
-    if len(tgl)==2:
-        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
-
     for i,row in df.iterrows():
         c1,c2,c3,c4 = st.columns([5,2,1,1])
-
         c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
-        c1.caption(row["Uraian"])
-        c2.write(f"{row['Durasi']:.2f} jam")
+        c2.write(f"{row['Durasi']} jam")
 
-        if c3.button("✏️", key=f"edit{i}"):
-            st.session_state.edit = row
+        if c3.button("✏️", key=f"e{i}"):
+            st.session_state.edit=row
 
-        if c4.button("🗑", key=f"del{i}"):
+        if c4.button("🗑", key=f"d{i}"):
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
     if "edit" in st.session_state:
         ed = st.session_state.edit
-
-        st.subheader("✏️ Edit Data")
-
-        masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
-        keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"])
-        output = st.text_area("Output", ed["Output"])
-
-        lokasi_list = ["Kantor","Rumah","Dinas Luar / SPT"]
-        lokasi = st.selectbox("Lokasi", lokasi_list)
+        masuk = st.text_input("Masuk", ed["Jam Masuk"])
+        keluar = st.text_input("Keluar", ed["Jam Keluar"])
 
         if st.button("Update"):
-            row_num = int(ed["row"])
-            dur = hitung_durasi(masuk, keluar)
+            row_num=int(ed["row"])
+            dur=hitung_durasi(masuk,keluar)
 
             sheet.update(f"E{row_num}", masuk)
             sheet.update(f"F{row_num}", keluar)
             sheet.update(f"G{row_num}", dur)
-            sheet.update(f"H{row_num}", uraian)
-            sheet.update(f"I{row_num}", output)
-            sheet.update(f"J{row_num}", lokasi)
 
-            st.success("Update berhasil")
+            st.success("Updated")
             del st.session_state.edit
             st.rerun()
-
-    excel = io.BytesIO()
-    df.to_excel(excel, index=False)
-    st.download_button("📥 Download Excel", excel.getvalue())
 
 # ================= ADMIN =================
 elif menu == "Admin":
 
-    if st.session_state.role != "admin":
+    if st.session_state.role!="admin":
         st.error("Akses ditolak")
         st.stop()
 
-    nip = st.text_input("NIP")
-    nama = st.text_input("Nama")
-    jab = st.text_input("Jabatan")
-    pw = st.text_input("Password")
-    role = st.selectbox("Role", ["pegawai","admin","pimpinan"])
+    nip=st.text_input("NIP")
+    nama=st.text_input("Nama")
+    jab=st.text_input("Jabatan")
+    pw=st.text_input("Password")
+    role=st.selectbox("Role",["pegawai","admin","pimpinan"])
 
     if st.button("Tambah User"):
         user_sheet.append_row([nip,nama,jab,pw,role])
