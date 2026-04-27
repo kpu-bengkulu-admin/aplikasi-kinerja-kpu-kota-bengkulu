@@ -223,12 +223,14 @@ elif menu == "Input":
 
     lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
+    gps = ""
+    foto = None
+
     # ================= KHUSUS RUMAH =================
     if lokasi == "Rumah":
 
         st.markdown("### 📡 GPS Otomatis")
 
-        # Tombol trigger (WAJIB ADA karena browser security)
         if st.button("📍 Ambil Lokasi Sekarang"):
 
             st.components.v1.html("""
@@ -245,7 +247,7 @@ elif menu == "Input":
                         }
                     });
 
-                    alert("GPS berhasil: " + coords);
+                    alert("GPS: " + coords);
                 },
                 function(err){
                     alert("Gagal GPS: " + err.message);
@@ -256,21 +258,11 @@ elif menu == "Input":
 
         gps = st.text_input(
             "Koordinat GPS",
-            value=st.session_state.get("gps",""),
             placeholder="Koordinat GPS"
         )
 
-        # simpan agar tidak hilang
-        st.session_state.gps = gps
-
-        # ================= KAMERA LANGSUNG =================
         st.markdown("### 📸 Ambil Foto (Kamera Langsung)")
-
         foto = st.camera_input("Ambil Foto Kehadiran")
-
-    else:
-        gps = ""
-        foto = None
 
     # ================= FORM =================
     with st.form("form"):
@@ -292,9 +284,10 @@ elif menu == "Input":
             st.error("Jam tidak valid")
             st.stop()
 
+        # VALIDASI RUMAH
         if lokasi == "Rumah":
 
-            if not st.session_state.get("gps"):
+            if not gps:
                 st.error("GPS wajib")
                 st.stop()
 
@@ -302,7 +295,6 @@ elif menu == "Input":
                 st.error("Foto wajib")
                 st.stop()
 
-            # upload ke drive
             link_foto = upload_foto(foto)
 
         else:
@@ -319,14 +311,11 @@ elif menu == "Input":
             safe(uraian),
             safe(output),
             safe(lokasi),
-            safe(st.session_state.get("gps")),
+            safe(gps),
             safe(link_foto)
         ])
 
         st.success("✅ Data berhasil disimpan")
-
-        # reset gps
-        st.session_state.gps = ""
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
