@@ -235,10 +235,17 @@ if lokasi == "Rumah":
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const coords = pos.coords.latitude + "," + pos.coords.longitude;
-                window.parent.postMessage({
-                    type: "streamlit:setComponentValue",
-                    value: coords
-                }, "*");
+
+                let inputs = window.parent.document.querySelectorAll('input');
+
+                inputs.forEach((input) => {
+                    if(input.placeholder === "Koordinat GPS"){
+                        input.value = coords;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+
+                alert("GPS berhasil: " + coords);
             },
             (err) => {
                 alert("GPS gagal: " + err.message);
@@ -247,13 +254,7 @@ if lokasi == "Rumah":
         </script>
         """, height=0)
 
-    gps = st.text_input(
-        "Koordinat GPS",
-        value=st.session_state.get("gps", "")
-    )
-
-    if gps:
-        st.session_state.gps = gps
+    gps = st.text_input("Koordinat GPS", placeholder="Koordinat GPS")
 
             # ===== FOTO =====
             st.markdown("### 📷 Ambil Foto")
