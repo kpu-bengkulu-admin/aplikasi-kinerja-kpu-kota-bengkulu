@@ -214,47 +214,28 @@ elif menu == "Input":
         foto = st.camera_input("Foto Kehadiran")
 
         # ===== GPS SETELAH FOTO =====
-# ================= GPS OTOMATIS + LOADING =================
-# ================= GPS OTOMATIS (FIX STABLE) =================
-st.markdown("### 📡 GPS Otomatis")
+        st.markdown("### 📡 GPS Otomatis")
 
-st.components.v1.html("""
-<script>
-function setGPS(){
-    navigator.geolocation.getCurrentPosition(
-        function(pos){
-            const coords = pos.coords.latitude + "," + pos.coords.longitude;
-
-            // cari semua input di parent
-            const inputs = window.parent.document.querySelectorAll('input');
-
-            inputs.forEach(input => {
-                if(input.placeholder === "Koordinat GPS"){
-                    input.value = coords;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
+        st.components.v1.html("""
+        <script>
+        navigator.geolocation.getCurrentPosition(
+            function(pos){
+                const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                const url = new URL(window.parent.location);
+                if(!url.searchParams.get("gps")){
+                    url.searchParams.set("gps", coords);
+                    window.parent.location.href = url.toString();
                 }
-            });
-        },
-        function(err){
-            console.log("GPS error:", err.message);
-        }
-    );
-}
+            }
+        );
+        </script>
+        """, height=0)
 
-// AUTO JALAN
-setGPS();
-</script>
-""", height=0)
+        params = st.query_params
+        if "gps" in params:
+            st.session_state.gps = params["gps"]
 
-gps = st.text_input(
-    "Koordinat GPS",
-    value=st.session_state.get("gps",""),
-    placeholder="Koordinat GPS"
-)
-
-# SIMPAN KE SESSION (INI KUNCI NYA)
-if gps:
-    st.session_state.gps = gps
+        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
 
     # ================= FORM =================
     with st.form("form"):
