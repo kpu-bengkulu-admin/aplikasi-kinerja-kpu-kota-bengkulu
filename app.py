@@ -219,49 +219,94 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
-    st.subheader("📍 Input Kinerja + GPS + Foto")
+    st.subheader("📍 Input Kinerja")
 
-    if st.button("📡 Ambil GPS"):
-        st.components.v1.html("""
-        <script>
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const coords = pos.coords.latitude + "," + pos.coords.longitude;
-                window.parent.postMessage({gps:coords},"*");
-            }
-        );
-        </script>
-        """, height=0)
+    lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-    if "gps" in st.session_state:
-        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
+    # ================= KHUSUS RUMAH =================
+    if lokasi == "Rumah":
 
-    foto = st.file_uploader("Upload Foto", type=["jpg","png","jpeg"])
+        st.markdown("### 📡 GPS Otomatis")
 
+        # Tombol trigger (WAJIB ADA karena browser security)
+        if st.button("📍 Ambil Lokasi Sekarang"):
+
+            st.components.v1.html("""
+            <script>
+            navigator.geolocation.getCurrentPosition(
+                function(pos){
+                    const coords = pos.coords.latitude + "," + pos.coords.longitude;
+
+                    const inputs = window.parent.document.querySelectorAll('input');
+                    inputs.forEach(i=>{
+                        if(i.placeholder==="Koordinat GPS"){
+                            i.value = coords;
+                            i.dispatchEvent(new Event('input',{bubbles:true}));
+                        }
+                    });
+
+                    alert("GPS berhasil: " + coords);
+                },
+                function(err){
+                    alert("Gagal GPS: " + err.message);
+                }
+            );
+            </script>
+            """, height=0)
+
+        gps = st.text_input(
+            "Koordinat GPS",
+            value=st.session_state.get("gps",""),
+            placeholder="Koordinat GPS"
+        )
+
+        # simpan agar tidak hilang
+        st.session_state.gps = gps
+
+        # ================= KAMERA LANGSUNG =================
+        st.markdown("### 📸 Ambil Foto (Kamera Langsung)")
+
+        foto = st.camera_input("Ambil Foto Kehadiran")
+
+    else:
+        gps = ""
+        foto = None
+
+    # ================= FORM =================
     with st.form("form"):
+
         tgl = st.date_input("Tanggal")
         masuk = st.text_input("Jam Masuk","07:30")
         keluar = st.text_input("Jam Keluar","16:00")
         uraian = st.text_area("Uraian")
         output = st.text_area("Output")
-        lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
-        submit = st.form_submit_button("Simpan")
+        submit = st.form_submit_button("💾 Simpan")
 
+    # ================= SIMPAN =================
     if submit:
+
         dur = hitung_durasi(masuk, keluar)
 
         if dur == 0:
             st.error("Jam tidak valid")
             st.stop()
 
-        if lokasi == "Rumah" and not st.session_state.gps:
-            st.error("GPS wajib untuk lokasi rumah")
-            st.stop()
+        if lokasi == "Rumah":
 
-        link_foto = ""
-        if foto:
+            if not st.session_state.get("gps"):
+                st.error("GPS wajib")
+                st.stop()
+
+            if foto is None:
+                st.error("Foto wajib")
+                st.stop()
+
+            # upload ke drive
             link_foto = upload_foto(foto)
+
+        else:
+            link_foto = ""
 
         sheet.append_row([
             safe(st.session_state.nama),
@@ -274,11 +319,13 @@ elif menu == "Input":
             safe(uraian),
             safe(output),
             safe(lokasi),
-            safe(st.session_state.gps),
+            safe(st.session_state.get("gps")),
             safe(link_foto)
         ])
 
-        st.success("Data berhasil disimpan")
+        st.success("✅ Data berhasil disimpan")
+
+        # reset gps
         st.session_state.gps = ""
 
 # ================= DATA =================
