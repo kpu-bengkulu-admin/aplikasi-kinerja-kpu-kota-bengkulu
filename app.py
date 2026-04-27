@@ -200,50 +200,93 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
-    st.subheader("📍 Input + GPS + Foto")
+    st.subheader("📍 Input Kinerja")
 
-    tgl = st.date_input("Tanggal", key="tgl")
-    masuk = st.text_input("Jam Masuk","07:30", key="masuk")
-    keluar = st.text_input("Jam Keluar","16:00", key="keluar")
-    uraian = st.text_area("Uraian", key="uraian")
-    output = st.text_area("Output", key="output")
-    lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"], key="lokasi")
+    # ===== SESSION STATE (ANTI RESET) =====
+    if "gps" not in st.session_state:
+        st.session_state.gps = ""
 
-    # GPS AUTO
-    st.markdown("### 📡 GPS Otomatis")
-    st.components.v1.html("""
-    <script>
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            const coords = pos.coords.latitude + "," + pos.coords.longitude;
-            const inputs = window.parent.document.querySelectorAll('input');
-            inputs.forEach(i=>{
-                if(i.placeholder==="GPS"){
-                    i.value=coords;
-                    i.dispatchEvent(new Event('input',{bubbles:true}));
-                }
-            });
-        }
-    );
-    </script>
-    """, height=0)
+    if "foto" not in st.session_state:
+        st.session_state.foto = None
 
-    koordinat = st.text_input("Koordinat GPS", placeholder="GPS")
+    with st.form("form", clear_on_submit=False):
 
-    foto = st.file_uploader("Upload Foto", type=["jpg","png","jpeg"])
+        tgl = st.date_input("Tanggal")
+        masuk = st.text_input("Jam Masuk", "07:30")
+        keluar = st.text_input("Jam Keluar", "16:00")
+        uraian = st.text_area("Uraian")
+        output = st.text_area("Output")
 
-    if st.button("💾 Simpan"):
+        lokasi = st.selectbox(
+            "Lokasi",
+            ["Kantor", "Rumah", "Dinas Luar / SPT"]
+        )
+
+        # ================== AUTO GPS + FOTO ==================
+        if lokasi == "Rumah":
+
+            st.markdown("### 📡 GPS Otomatis")
+
+            # AUTO GPS (langsung jalan)
+            st.components.v1.html("""
+                <script>
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                        window.parent.postMessage({
+                            type: "streamlit:setComponentValue",
+                            value: coords
+                        }, "*");
+                    },
+                    (err) => {
+                        alert("GPS gagal: " + err.message);
+                    }
+                );
+                </script>
+            """, height=0)
+
+            gps = st.text_input("Koordinat GPS", value=st.session_state.gps)
+
+            # SIMPAN KE SESSION
+            if gps:
+                st.session_state.gps = gps
+
+            # ===== FOTO =====
+            st.markdown("### 📷 Ambil Foto")
+            foto = st.camera_input("Ambil foto langsung")
+
+            if foto:
+                st.session_state.foto = foto
+
+        else:
+            gps = ""
+            foto = None
+
+        submit = st.form_submit_button("💾 Simpan")
+
+    # ================== SIMPAN ==================
+    if submit:
+
         dur = hitung_durasi(masuk, keluar)
 
         if dur == 0:
             st.error("Jam tidak valid")
             st.stop()
 
-        if lokasi == "Rumah" and not koordinat:
-            st.error("GPS wajib untuk lokasi rumah")
-            st.stop()
+        # WAJIB GPS + FOTO kalau rumah
+        if lokasi == "Rumah":
+            if not st.session_state.gps:
+                st.error("GPS wajib diambil")
+                st.stop()
 
-        link = upload_foto(foto) if foto else ""
+            if not st.session_state.foto:
+                st.error("Foto wajib diambil")
+                st.stop()
+
+        # ===== SIMPAN FOTO (BASE64) =====
+        foto_data = ""
+        if st.session_state.foto:
+            foto_data = st.session_state.foto.getvalue()
 
         sheet.append_row([
             safe(st.session_state.nama),
@@ -256,11 +299,15 @@ elif menu == "Input":
             safe(uraian),
             safe(output),
             safe(lokasi),
-            safe(koordinat),
-            safe(link)
+            safe(st.session_state.gps),
+            foto_data
         ])
 
-        st.success("Data tersimpan")
+        st.success("✅ Data tersimpan")
+
+        # RESET
+        st.session_state.gps = ""
+        st.session_state.foto = None
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
