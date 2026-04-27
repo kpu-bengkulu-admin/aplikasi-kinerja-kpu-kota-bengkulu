@@ -61,7 +61,7 @@ def upload_foto(file):
 
         file_metadata = {
             "name": f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.name}",
-            "parents": [1XRppl-J-WLoy0FM38au_ypPmg7faH1T9]
+            "parents": ["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]
         }
 
         media = MediaIoBaseUpload(file, mimetype=file.type)
