@@ -122,7 +122,6 @@ if not st.session_state.login:
     st.stop()
 
 # ================= SIDEBAR =================
-
 st.sidebar.title(st.session_state.nama)
 st.sidebar.caption(f"Role: {st.session_state.role.upper()}")
 
@@ -181,18 +180,24 @@ if menu == "Dashboard":
     c3.markdown(f"<div class='card c3'><h2>{df['Tanggal'].nunique()}</h2>Hari</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='card c4'><h2>{df['Nama'].nunique()}</h2>Pegawai</div>", unsafe_allow_html=True)
 
-    # GRAFIK MODERN
+    # GRAFIK
     chart = df.groupby("Nama")["Durasi"].sum().reset_index()
-
-    fig = px.bar(
-        chart,
-        x="Nama",
-        y="Durasi",
-        color="Durasi",
-        text_auto=True
-    )
-
+    fig = px.bar(chart, x="Nama", y="Durasi", color="Durasi", text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
+
+    # ================= MAP =================
+    st.subheader("📍 Peta Lokasi Kerja")
+
+    if "Lat" in df.columns and "Lon" in df.columns:
+        map_df = df.dropna(subset=["Lat","Lon"])
+        if not map_df.empty:
+            map_df["Lat"] = pd.to_numeric(map_df["Lat"], errors='coerce')
+            map_df["Lon"] = pd.to_numeric(map_df["Lon"], errors='coerce')
+            st.map(map_df.rename(columns={"Lat":"lat","Lon":"lon"}))
+        else:
+            st.info("Belum ada data lokasi")
+    else:
+        st.info("Kolom Lat/Lon belum tersedia di Sheet")
 
 # ================= INPUT =================
 elif menu == "Input":
@@ -206,13 +211,51 @@ elif menu == "Input":
 
         lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
+        # ================= FOTO + GPS =================
+        foto = None
+        lat = ""
+        lon = ""
+
+        if lokasi == "Rumah":
+            st.warning("📸 Wajib foto & lokasi")
+
+            foto = st.camera_input("Ambil Foto")
+
+            st.info("📍 Izinkan lokasi di browser")
+            st.components.v1.html("""
+            <script>
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const text = lat + "," + lon;
+                    window.parent.postMessage({type: "streamlit:setComponentValue", value: text}, "*");
+                }
+            );
+            </script>
+            """, height=0)
+
+            koordinat = st.text_input("Koordinat")
+
+            if koordinat and "," in koordinat:
+                lat, lon = koordinat.split(",")
+
         submit = st.form_submit_button("Simpan")
 
     if submit:
         dur = hitung_durasi(masuk, keluar)
+
         if dur == 0:
             st.error("Jam tidak valid")
             st.stop()
+
+        if lokasi == "Rumah":
+            if foto is None:
+                st.error("Foto wajib")
+                st.stop()
+            if lat == "" or lon == "":
+                st.error("Lokasi wajib")
+                st.stop()
 
         sheet.append_row([
             safe(st.session_state.nama),
@@ -224,7 +267,9 @@ elif menu == "Input":
             dur,
             safe(uraian),
             safe(output),
-            safe(lokasi)
+            safe(lokasi),
+            safe(lat),
+            safe(lon)
         ])
 
         st.success("✅ Data tersimpan")
@@ -266,9 +311,54 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
+    # ================= EDIT =================
+    if "edit" in st.session_state:
+
+        ed = st.session_state.edit
+
+        st.divider()
+        st.subheader("✏️ Edit Data")
+
+        masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
+        keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
+        uraian = st.text_area("Uraian", ed["Uraian"])
+        output = st.text_area("Output", ed["Output"])
+
+        lokasi_list = ["Kantor","Rumah","Dinas Luar / SPT"]
+        lokasi = st.selectbox(
+            "Lokasi",
+            lokasi_list,
+            index=lokasi_list.index(ed["Lokasi"]) if ed["Lokasi"] in lokasi_list else 0
+        )
+
+        colA, colB = st.columns(2)
+
+        if colA.button("💾 Update"):
+            dur = hitung_durasi(masuk, keluar)
+
+            if dur == 0:
+                st.error("Jam tidak valid")
+                st.stop()
+
+            row_num = int(ed["row"])
+
+            sheet.update(f"E{row_num}", masuk)
+            sheet.update(f"F{row_num}", keluar)
+            sheet.update(f"G{row_num}", dur)
+            sheet.update(f"H{row_num}", uraian)
+            sheet.update(f"I{row_num}", output)
+            sheet.update(f"J{row_num}", lokasi)
+
+            st.success("✅ Data berhasil diupdate")
+            del st.session_state.edit
+            st.rerun()
+
+        if colB.button("❌ Batal"):
+            del st.session_state.edit
+            st.rerun()
+
     excel = io.BytesIO()
     df.to_excel(excel, index=False)
-
     st.download_button("📥 Download Excel", excel.getvalue())
 
 # ================= ADMIN =================
