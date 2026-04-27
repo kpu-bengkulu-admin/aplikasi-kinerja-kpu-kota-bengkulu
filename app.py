@@ -49,7 +49,7 @@ def connect():
         ],
     )
     return gspread.authorize(creds).open_by_key(
-        st.secrets["16l6pcqA1CvM-8P5rsT37UkMJnrEWTJW1CcOcS92WnlM"]
+        st.secrets["SPREADSHEET_ID"]
     )
 
 @st.cache_resource
@@ -68,7 +68,7 @@ def upload_to_drive(file):
 
     file_metadata = {
         "name": f"foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg",
-        "parents": [st.secrets["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]]
+        "parents": [st.secrets["DRIVE_FOLDER_ID"]]
     }
 
     uploaded = service.files().create(
