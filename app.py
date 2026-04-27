@@ -223,33 +223,37 @@ elif menu == "Input":
         )
 
         # ================== AUTO GPS + FOTO ==================
-        if lokasi == "Rumah":
+        # ================= GPS =================
+if lokasi == "Rumah":
 
-            st.markdown("### 📡 GPS Otomatis")
+    st.markdown("### 📡 GPS Otomatis")
 
-            # AUTO GPS (langsung jalan)
-            st.components.v1.html("""
-                <script>
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const coords = pos.coords.latitude + "," + pos.coords.longitude;
-                        window.parent.postMessage({
-                            type: "streamlit:setComponentValue",
-                            value: coords
-                        }, "*");
-                    },
-                    (err) => {
-                        alert("GPS gagal: " + err.message);
-                    }
-                );
-                </script>
-            """, height=0)
+    if st.button("📍 Ambil Lokasi GPS"):
 
-            gps = st.text_input("Koordinat GPS", value=st.session_state.gps)
+        st.components.v1.html("""
+        <script>
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const coords = pos.coords.latitude + "," + pos.coords.longitude;
+                window.parent.postMessage({
+                    type: "streamlit:setComponentValue",
+                    value: coords
+                }, "*");
+            },
+            (err) => {
+                alert("GPS gagal: " + err.message);
+            }
+        );
+        </script>
+        """, height=0)
 
-            # SIMPAN KE SESSION
-            if gps:
-                st.session_state.gps = gps
+    gps = st.text_input(
+        "Koordinat GPS",
+        value=st.session_state.get("gps", "")
+    )
+
+    if gps:
+        st.session_state.gps = gps
 
             # ===== FOTO =====
             st.markdown("### 📷 Ambil Foto")
