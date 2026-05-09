@@ -17,7 +17,7 @@ FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
 
 def upload_foto(file):
     creds = Credentials.from_service_account_info(
-        st.secrets["connections"]["gsheets"]["service_account"]
+        st.secrets["connections"]["gsheets"]
     )
     service = build("drive", "v3", credentials=creds)
 
@@ -199,43 +199,42 @@ if menu == "Dashboard":
 
 # ================= INPUT =================
 elif menu == "Input":
-
     st.subheader("📍 Input Kinerja")
-
     lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
-
+    
     foto = None
+    gps = ""  # Inisialisasi variabel GPS agar tidak error saat simpan
 
     # ================= KHUSUS RUMAH =================
-    if lokasi == "Rumah":
+from streamlit_js_eval import get_geolocation
 
-        # ===== FOTO DULU =====
-        st.markdown("### 📸 Ambil Foto")
-        foto = st.camera_input("Foto Kehadiran")
+# ... (di dalam menu Input) ...
+if lokasi == "Rumah":
+    st.markdown("### 📡 GPS Otomatis")
+    
+    # Ambil data lokasi
+    loc = get_geolocation()
+    
+    # Inisialisasi variabel gps agar tidak kosong saat tombol simpan ditekan
+    gps_value = ""
 
-        # ===== GPS SETELAH FOTO =====
-        st.markdown("### 📡 GPS Otomatis")
+    if loc:
+        # Format loc dari streamlit_js_eval biasanya: {'coords': {'latitude': ..., 'longitude': ...}}
+        lat = loc['coords']['latitude']
+        lon = loc['coords']['longitude']
+        gps_value = f"{lat}, {lon}"
+        
+        st.success(f"✅ GPS Berhasil: {gps_value}")
+        # Gunakan text_input tanpa 'disabled' agar nilainya bisa diproses oleh Streamlit
+        gps_input = st.text_input("Koordinat Terdeteksi", value=gps_value, key="gps_input")
+    else:
+        st.warning("📡 Menunggu izin lokasi... Jika tidak muncul, pastikan GPS HP/Laptop aktif dan klik Allow.")
+        gps_input = ""
 
-        st.components.v1.html("""
-        <script>
-        navigator.geolocation.getCurrentPosition(
-            function(pos){
-                const coords = pos.coords.latitude + "," + pos.coords.longitude;
-                const url = new URL(window.parent.location);
-                if(!url.searchParams.get("gps")){
-                    url.searchParams.set("gps", coords);
-                    window.parent.location.href = url.toString();
-                }
-            }
-        );
-        </script>
-        """, height=0)
+    # Simpan nilai gps ke variabel utama yang digunakan di fungsi simpan
+    gps = gps_value
 
-        params = st.query_params
-        if "gps" in params:
-            st.session_state.gps = params["gps"]
 
-        st.text_input("Koordinat GPS", st.session_state.gps, disabled=True)
 
     # ================= FORM =================
     with st.form("form"):
