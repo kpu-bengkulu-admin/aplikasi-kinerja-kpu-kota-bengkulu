@@ -200,40 +200,61 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
     st.subheader("📍 Input Kinerja")
-    lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
     
+    # Pilih Lokasi di awal
+    lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas Luar / SPT"])
+    
+    # Inisialisasi variabel tambahan agar tidak error
     foto = None
-    gps = ""  # Inisialisasi variabel GPS agar tidak error saat simpan
+    gps = ""
 
-    # ================= KHUSUS RUMAH =================
-from streamlit_js_eval import get_geolocation
-
-# ... (di dalam menu Input) ...
-if lokasi == "Rumah":
-    st.markdown("### 📡 GPS Otomatis")
-    
-    # Ambil data lokasi
-    loc = get_geolocation()
-    
-    # Inisialisasi variabel gps agar tidak kosong saat tombol simpan ditekan
-    gps_value = ""
-
-    if loc:
-        # Format loc dari streamlit_js_eval biasanya: {'coords': {'latitude': ..., 'longitude': ...}}
-        lat = loc['coords']['latitude']
-        lon = loc['coords']['longitude']
-        gps_value = f"{lat}, {lon}"
+    # ================= KHUSUS RUMAH (Menu Tambahan di Atas) =================
+    if lokasi == "Rumah":
+        st.markdown("### 📸 Verifikasi WFH")
+        foto = st.camera_input("Ambil Foto Langsung")
         
-        st.success(f"✅ GPS Berhasil: {gps_value}")
-        # Gunakan text_input tanpa 'disabled' agar nilainya bisa diproses oleh Streamlit
-        gps_input = st.text_input("Koordinat Terdeteksi", value=gps_value, key="gps_input")
-    else:
-        st.warning("📡 Menunggu izin lokasi... Jika tidak muncul, pastikan GPS HP/Laptop aktif dan klik Allow.")
-        gps_input = ""
+        from streamlit_js_eval import get_geolocation
+        loc = get_geolocation()
+        if loc:
+            lat = loc['coords']['latitude']
+            lon = loc['coords']['longitude']
+            gps = f"{lat}, {lon}"
+            st.success(f"✅ GPS Terkunci: {gps}")
+            st.text_input("Koordinat GPS (Otomatis)", value=gps, disabled=True)
+        else:
+            st.warning("📡 Menunggu GPS... Pastikan klik 'Allow' di browser.")
 
-    # Simpan nilai gps ke variabel utama yang digunakan di fungsi simpan
-    gps = gps_value
+    # ================= MENU STANDAR (Muncul untuk Semua) =================
+    st.markdown("### 📝 Detail Laporan")
+    tanggal = st.date_input("Tanggal")
+    jam_masuk = st.time_input("Jam Masuk")
+    jam_keluar = st.time_input("Jam Keluar")
+    uraian = st.text_area("Uraian Kegiatan")
+    output = st.text_input("Output/Hasil")
 
+    # ================= TOMBOL SIMPAN & VALIDASI =================
+    if st.button("Simpan Data"):
+        # List untuk menampung pesan error
+        errors = []
+        
+        # Cek isian standar
+        if not uraian: errors.append("Uraian Kegiatan")
+        if not output: errors.append("Output/Hasil")
+        
+        # Cek isian khusus Rumah
+        if lokasi == "Rumah":
+            if not foto: errors.append("Foto Langsung")
+            if not gps: errors.append("GPS (Harap tunggu sinyal)")
+
+        # Eksekusi Validasi
+        if errors:
+            st.error(f"⚠️ Gagal menyimpan! Mohon lengkapi: {', '.join(errors)}")
+        else:
+            # PROSES SIMPAN KE GSHEET
+            # (Pastikan fungsi simpan_ke_gsheet Anda menerima parameter ini)
+            # data_ke_sheet = [str(tanggal), str(jam_masuk), str(jam_keluar), uraian, output, lokasi, foto, gps]
+            
+            st.success(f"🎉 Data Kinerja ({lokasi}) berhasil disimpan!")
 
 
     # ================= FORM =================
