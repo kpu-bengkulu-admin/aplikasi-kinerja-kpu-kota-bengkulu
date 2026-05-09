@@ -224,30 +224,6 @@ elif menu == "Input":
         else:
             st.warning("📡 Menunggu GPS... Pastikan klik 'Allow' di browser.")
 
-    # ================= TOMBOL SIMPAN & VALIDASI =================
-    if st.button("Simpan Data"):
-        # List untuk menampung pesan error
-        errors = []
-        
-        # Cek isian standar
-        if not uraian: errors.append("Uraian Kegiatan")
-        if not output: errors.append("Output/Hasil")
-        
-        # Cek isian khusus Rumah
-        if lokasi == "Rumah":
-            if not foto: errors.append("Foto Langsung")
-            if not gps: errors.append("GPS (Harap tunggu sinyal)")
-
-        # Eksekusi Validasi
-        if errors:
-            st.error(f"⚠️ Gagal menyimpan! Mohon lengkapi: {', '.join(errors)}")
-        else:
-            # PROSES SIMPAN KE GSHEET
-            # (Pastikan fungsi simpan_ke_gsheet Anda menerima parameter ini)
-            # data_ke_sheet = [str(tanggal), str(jam_masuk), str(jam_keluar), uraian, output, lokasi, foto, gps]
-            
-            st.success(f"🎉 Data Kinerja ({lokasi}) berhasil disimpan!")
-
 
     # ================= FORM =================
     with st.form("form"):
