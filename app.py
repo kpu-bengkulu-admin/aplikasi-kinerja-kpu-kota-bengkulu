@@ -201,95 +201,76 @@ if menu == "Dashboard":
 elif menu == "Input":
     st.subheader("📍 Input Kinerja")
     
+    # 1. Pilih Lokasi
     lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas Luar / SPT"])
     
     foto = None
-    gps = "-"
+    koordinat = ""
 
-    # --- KHUSUS RUMAH ---
+    # 2. KHUSUS RUMAH (Hanya muncul jika pilih Rumah)
     if lokasi == "Rumah":
         st.markdown("### 📸 Verifikasi WFH")
-        foto = st.camera_input("Ambil Foto")
+        foto = st.camera_input("Ambil Foto Langsung")
+        
         from streamlit_js_eval import get_geolocation
         loc = get_geolocation()
         if loc:
-            gps = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
-            st.success(f"✅ GPS Terkunci: {gps}")
-        st.text_input("Koordinat GPS", value=gps, disabled=True)
+            koordinat = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
+            st.success(f"✅ GPS Terdeteksi: {koordinat}")
+        else:
+            st.warning("📡 Menunggu GPS... Pastikan klik 'Allow' di browser.")
+        
+        st.text_input("Koordinat GPS (Otomatis)", value=koordinat, disabled=True)
         st.divider()
 
-    # --- PINDAHKAN ISIAN LAPORAN KE SINI ---
-    # (Pastikan baris di bawah ini ada spasi di depannya/sejajar dengan 'lokasi')
-    tanggal = st.date_input("Tanggal")
-    jam_masuk = st.time_input("Jam Masuk")
-    jam_keluar = st.time_input("Jam Keluar")
+    # 3. ISIAN DETAIL LAPORAN (Muncul untuk semua lokasi)
+    tgl = st.date_input("Tanggal")
+    masuk = st.text_input("Jam Masuk", "07:30")
+    keluar = st.text_input("Jam Keluar", "16:00")
     uraian = st.text_area("Uraian Kegiatan")
     output = st.text_input("Output/Hasil")
 
-    # --- TOMBOL SIMPAN (HANYA SATU) ---
+    # 4. TOMBOL SIMPAN (Hanya Satu)
     if st.button("Simpan Data", type="primary"):
-        # Logika validasi dan simpan_ke_gsheet Anda di sini
-        st.success("🎉 Data Berhasil Disimpan!")
-        import time
-        time.sleep(2)
-        st.rerun()
-
-    # ================= FORM =================
-    with st.form("form"):
-        tgl = st.date_input("Tanggal")
-        masuk = st.text_input("Jam Masuk","07:30")
-        keluar = st.text_input("Jam Keluar","16:00")
-        uraian = st.text_area("Uraian")
-        output = st.text_area("Output")
-
-        submit = st.form_submit_button("💾 Simpan")
-
-    # ================= SIMPAN =================
-    if submit:
-
+        # Hitung durasi (Menggunakan fungsi Anda)
         dur = hitung_durasi(masuk, keluar)
 
-        if dur == 0:
-            st.error("Jam tidak valid")
-            st.stop()
-
-        if lokasi == "Rumah":
-
-            if not st.session_state.gps:
-                st.error("GPS wajib")
-                st.stop()
-
-            if foto is None:
-                st.error("Foto wajib")
-                st.stop()
-
-            link_foto = upload_foto(foto)
-            koordinat = st.session_state.gps
-
+        # VALIDASI
+        if not uraian or not output:
+            st.error("⚠️ Uraian dan Output wajib diisi!")
+        elif dur == 0:
+            st.error("⚠️ Jam tidak valid!")
+        elif lokasi == "Rumah" and (foto is None or koordinat == ""):
+            st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
         else:
+            # PROSES FOTO (Jika Rumah)
             link_foto = ""
-            koordinat = ""
+            if lokasi == "Rumah":
+                link_foto = upload_foto(foto) # Menggunakan fungsi Anda
 
-        sheet.append_row([
-            safe(st.session_state.nama),
-            safe(str(st.session_state.nip)),
-            safe(st.session_state.jabatan),
-            safe(tgl.strftime("%Y-%m-%d")),
-            safe(masuk),
-            safe(keluar),
-            dur,
-            safe(uraian),
-            safe(output),
-            safe(lokasi),
-            safe(koordinat),
-            safe(link_foto)
-        ])
+            # PROSES SIMPAN KE GOOGLE SHEETS
+            sheet.append_row([
+                safe(st.session_state.nama),
+                safe(str(st.session_state.nip)),
+                safe(st.session_state.jabatan),
+                safe(tgl.strftime("%Y-%m-%d")),
+                safe(masuk),
+                safe(keluar),
+                dur,
+                safe(uraian),
+                safe(output),
+                safe(lokasi),
+                safe(koordinat),
+                safe(link_foto)
+            ])
 
-        st.success("✅ Data tersimpan")
-        st.rerun()
-
-        # reset gps
-        st.session_state.gps = ""
+            st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
+            
+            # Reset state dan Refresh
+            st.session_state.gps = ""
+            import time
+            time.sleep(2)
+            st.rerun()
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
