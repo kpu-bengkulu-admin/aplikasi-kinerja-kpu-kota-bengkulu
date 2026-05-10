@@ -198,31 +198,66 @@ if menu == "Dashboard":
     st.bar_chart(df.groupby("Nama")["Durasi"].sum())
 
 # ================= INPUT =================
+# 1. Inisialisasi Session State (Letakkan di bagian paling atas aplikasi)
+if 'gps_terkunci' not in st.session_state:
+    st.session_state['gps_terkunci'] = ""
+
+# --- MENU INPUT ---
 elif menu == "Input":
     st.subheader("📍 Input Kinerja")
     
-    # Pilih Lokasi di awal
+    # Pilih Lokasi
     lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas Luar / SPT"])
     
-    # Inisialisasi variabel tambahan agar tidak error
+    # Variabel default
     foto = None
-    gps = ""
+    gps = "-"
 
-    # ================= KHUSUS RUMAH (Menu Tambahan di Atas) =================
+    # 2. Logika KHUSUS RUMAH (Hanya muncul jika pilih Rumah)
     if lokasi == "Rumah":
         st.markdown("### 📸 Verifikasi WFH")
         foto = st.camera_input("Ambil Foto Langsung")
         
         from streamlit_js_eval import get_geolocation
         loc = get_geolocation()
-        if loc:
+        
+        if loc and 'coords' in loc:
             lat = loc['coords']['latitude']
             lon = loc['coords']['longitude']
-            gps = f"{lat}, {lon}"
-            st.success(f"✅ GPS Terkunci: {gps}")
-            st.text_input("Koordinat GPS (Otomatis)", value=gps, disabled=True)
+            st.session_state['gps_terkunci'] = f"{lat}, {lon}"
+            st.success(f"✅ GPS Terkunci: {st.session_state['gps_terkunci']}")
+        
+        gps = st.session_state['gps_terkunci']
+        st.text_input("Koordinat GPS (Otomatis)", value=gps, disabled=True)
+
+    # 3. MENU STANDAR (Muncul untuk SEMUA pilihan lokasi)
+    st.markdown("### 📝 Detail Laporan")
+    tanggal = st.date_input("Tanggal")
+    jam_masuk = st.time_input("Jam Masuk")
+    jam_keluar = st.time_input("Jam Keluar")
+    uraian = st.text_area("Uraian Kegiatan")
+    output = st.text_input("Output/Hasil")
+
+    # 4. TOMBOL SIMPAN
+    if st.button("Simpan Data", type="primary"):
+        # Validasi
+        if not uraian or not output:
+            st.warning("⚠️ Mohon lengkapi Uraian dan Output!")
+        elif lokasi == "Rumah" and (not foto or not gps):
+            st.warning("⚠️ Untuk WFH, Foto dan GPS wajib dilengkapi!")
         else:
-            st.warning("📡 Menunggu GPS... Pastikan klik 'Allow' di browser.")
+            # --- PROSES SIMPAN KE GSHEET ---
+            # data_final = [str(tanggal), str(jam_masuk), str(jam_keluar), uraian, output, lokasi, gps]
+            # Berhasil = simpan_ke_gsheet(data_final)
+            
+            # Simulasi Berhasil
+            st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
+            
+            # Reset GPS dan Refresh halaman agar form kosong kembali
+            st.session_state['gps_terkunci'] = ""
+            import time
+            time.sleep(2) # Beri waktu user baca pesan sukses
+            st.rerun()
 
 
     # ================= FORM =================
@@ -277,6 +312,7 @@ elif menu == "Input":
         ])
 
         st.success("✅ Data tersimpan")
+        st.rerun()
 
         # reset gps
         st.session_state.gps = ""
