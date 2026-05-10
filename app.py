@@ -225,13 +225,6 @@ elif menu == "Input":
         st.text_input("Koordinat GPS", value=gps, disabled=True)
         st.divider()
 
-    # --- ISIAN STANDAR (Muncul untuk semua lokasi) ---
-    tanggal = st.date_input("Tanggal")
-    jam_masuk = st.time_input("Jam Masuk")
-    jam_keluar = st.time_input("Jam Keluar")
-    uraian = st.text_area("Uraian Kegiatan")
-    output = st.text_input("Output/Hasil")
-
     # --- TOMBOL SIMPAN ---
     if st.button("Simpan Data", type="primary"):
         if not uraian or not output:
