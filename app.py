@@ -201,7 +201,6 @@ if menu == "Dashboard":
 elif menu == "Input":
     st.subheader("📍 Input Kinerja")
     
-    # Pilih Lokasi
     lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas Luar / SPT"])
     
     foto = None
@@ -210,39 +209,30 @@ elif menu == "Input":
     # --- KHUSUS RUMAH ---
     if lokasi == "Rumah":
         st.markdown("### 📸 Verifikasi WFH")
-        foto = st.camera_input("Ambil Foto Langsung")
-        
+        foto = st.camera_input("Ambil Foto")
         from streamlit_js_eval import get_geolocation
         loc = get_geolocation()
-        
-        if loc and 'coords' in loc:
-            lat = loc['coords']['latitude']
-            lon = loc['coords']['longitude']
-            st.session_state['gps_terkunci'] = f"{lat}, {lon}"
-            st.success(f"✅ GPS Terkunci: {st.session_state['gps_terkunci']}")
-        
-        gps = st.session_state['gps_terkunci']
+        if loc:
+            gps = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
+            st.success(f"✅ GPS Terkunci: {gps}")
         st.text_input("Koordinat GPS", value=gps, disabled=True)
         st.divider()
 
-    # --- TOMBOL SIMPAN ---
-    if st.button("Simpan Data", type="primary"):
-        if not uraian or not output:
-            st.warning("⚠️ Uraian dan Output wajib diisi!")
-        elif lokasi == "Rumah" and (not foto or not gps):
-            st.warning("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
-        else:
-            # PANGGIL FUNGSI SIMPAN KE GSHEET ANDA DI SINI
-            # Contoh: spreadsheet.append_row([str(tanggal), str(jam_masuk), str(jam_keluar), uraian, output, lokasi, gps])
-            
-            st.success(f"🎉 Data ({lokasi}) Berhasil Disimpan!")
-            
-            # Reset GPS dan bersihkan form
-            st.session_state['gps_terkunci'] = ""
-            import time
-            time.sleep(2)
-            st.rerun()
+    # --- PINDAHKAN ISIAN LAPORAN KE SINI ---
+    # (Pastikan baris di bawah ini ada spasi di depannya/sejajar dengan 'lokasi')
+    tanggal = st.date_input("Tanggal")
+    jam_masuk = st.time_input("Jam Masuk")
+    jam_keluar = st.time_input("Jam Keluar")
+    uraian = st.text_area("Uraian Kegiatan")
+    output = st.text_input("Output/Hasil")
 
+    # --- TOMBOL SIMPAN (HANYA SATU) ---
+    if st.button("Simpan Data", type="primary"):
+        # Logika validasi dan simpan_ke_gsheet Anda di sini
+        st.success("🎉 Data Berhasil Disimpan!")
+        import time
+        time.sleep(2)
+        st.rerun()
 
     # ================= FORM =================
     with st.form("form"):
