@@ -38,7 +38,7 @@ def upload_foto(file):
     
     file_metadata = {
         "name": file.name,
-        "parents": [1XRppl-J-WLoy0FM38au_ypPmg7faH1T9]
+        "parents": ["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]
     }
 
     # Gunakan BytesIO untuk membungkus file agar aman saat upload
