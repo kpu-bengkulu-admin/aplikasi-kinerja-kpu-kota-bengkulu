@@ -48,26 +48,31 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= UI =================
+# ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
 <style>
+/* 1. Warna latar belakang sidebar */
 [data-testid="stSidebar"] {background:#0f172a;}
-[data-testid="stSidebar"] * {color:white !important;}
+
+/* 2. Warna teks label (Menu, Dashboard, Edit Data) tetap Putih */
+[data-testid="stSidebar"] .stText, 
+[data-testid="stSidebar"] label, 
+[data-testid="stSidebar"] p {
+    color: white !important;
+}
+
+/* 3. PERBAIKAN KOLOM EDIT: Teks di dalam kotak input wajib HITAM */
+[data-testid="stSidebar"] input, 
+[data-testid="stSidebar"] textarea {
+    color: #000000 !important; /* Warna Hitam */
+    background-color: #ffffff !important; /* Latar Putih */
+    -webkit-text-fill-color: #000000 !important; /* Paksa warna hitam di Chrome/Safari */
+}
+
+/* 4. Warna tombol */
 .stButton button {background:#ef4444;color:white;border-radius:8px;}
-.card {padding:15px;border-radius:12px;color:white;text-align:center;}
-.c1{background:#ef4444;} .c2{background:#22c55e;}
-.c3{background:#f59e0b;} .c4{background:#3b82f6;}
 </style>
 """, unsafe_allow_html=True)
-/* 3. MEMPERBAIKI KOTAK INPUT (PENTING): 
-   Memaksa latar belakang kotak putih dan teks di dalamnya HITAM */
-[data-testid="stSidebar"] input, 
-[data-testid="stSidebar"] textarea,
-[data-testid="stSidebar"] div[data-baseweb="input"] {
-    color: black !important;
-    background-color: white !important;
-    -webkit-text-fill-color: black !important;
-}
 
 # ================= GOOGLE =================
 @st.cache_resource
