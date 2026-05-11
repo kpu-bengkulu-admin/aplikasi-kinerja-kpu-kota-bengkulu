@@ -233,7 +233,7 @@ elif menu == "Input":
     masuk = st.text_input("Jam Masuk", "07:30")
     keluar = st.text_input("Jam Keluar", "16:00")
     uraian = st.text_area("Uraian Kegiatan")
-    output = st.text_input("Output/Hasil")
+    output = st.text_area("Output/Hasil")
 
     # 4. TOMBOL SIMPAN (Hanya Satu)
     if st.button("Simpan Data", type="primary"):
