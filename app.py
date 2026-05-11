@@ -16,50 +16,50 @@ if "gps" not in st.session_state:
 FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
 def upload_foto(file):
-    # Pastikan file tidak kosong
     if file is None:
         return ""
-
+    
     try:
-        # Ambil langsung seluruh blok gsheets sebagai dictionary
-        # Ini lebih aman daripada menyusun manual satu per satu
         info = dict(st.secrets["connections"]["gsheets"])
-        
-        # Perbaiki format private key
-        if "private_key" in info:
-            info["private_key"] = info["private_key"].replace("\\n", "\n")
-        
-        # Buat kredensial
+        info["private_key"] = info["private_key"].replace("\\n", "\n")
         creds = Credentials.from_service_account_info(info)
         service = build("drive", "v3", credentials=creds)
 
         file.seek(0)
+        
+        # 1. Metadata File
         file_metadata = {
             "name": file.name,
-            "parents": ["1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"]
+            "parents": [FOLDER_ID] 
         }
 
         media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
 
+        # 2. PROSES UPLOAD (PENTING: supportsAllDrives=True)
         uploaded = service.files().create(
             body=file_metadata,
             media_body=media,
             fields="id",
-            supportsAllDrives=True # Tambahan untuk bypass kuota robot
+            supportsAllDrives=True  # Mengizinkan upload ke folder bersama
         ).execute()
 
         file_id = uploaded.get("id")
-        
-        # Set permission agar bisa dilihat (opsional)
+
+        # 3. KUNCI UTAMA: Ubah Izin agar Anda menjadi Owner atau minimal 'Anyone' bisa lihat
+        # Ini mencegah error kuota karena file 'dipindahkan' kepemilikannya ke folder induk
         service.permissions().create(
             fileId=file_id,
-            body={"role": "reader", "type": "anyone"}
+            body={
+                'type': 'anyone',
+                'role': 'reader',
+            },
+            supportsAllDrives=True
         ).execute()
 
         return f"https://drive.google.com/uc?id={file_id}"
 
     except Exception as e:
-        st.error(f"Gagal saat proses upload: {str(e)}")
+        st.error(f"Gagal total saat upload: {str(e)}")
         return ""
 
 
