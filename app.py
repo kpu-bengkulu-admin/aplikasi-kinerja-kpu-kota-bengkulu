@@ -16,9 +16,24 @@ if "gps" not in st.session_state:
 FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
 
 def upload_foto(file):
-    creds = Credentials.from_service_account_info(
-        st.secrets["connections"]["gsheets"]
-    )
+    # 1. Kita susun ulang data rahasia ke dalam variabel 'info'
+    info = {
+        "type": st.secrets["connections"]["gsheets"]["type"],
+        "project_id": st.secrets["connections"]["gsheets"]["project_id"],
+        "private_key_id": st.secrets["connections"]["gsheets"]["private_key_id"],
+        "private_key": st.secrets["connections"]["gsheets"]["private_key"].replace("\\n", "\n"),
+        "client_email": st.secrets["connections"]["gsheets"]["client_email"],
+        "client_id": st.secrets["connections"]["gsheets"]["client_id"],
+        "auth_uri": st.secrets["connections"]["gsheets"]["auth_uri"],
+        "token_uri": st.secrets["connections"]["gsheets"]["token_uri"],
+        "auth_provider_x509_cert_url": st.secrets["connections"]["gsheets"]["auth_provider_x509_cert_url"],
+        "client_x509_cert_url": st.secrets["connections"]["gsheets"]["client_x509_cert_url"]
+    }
+    
+    # 2. Gunakan variabel 'info' di sini, BUKAN st.secrets langsung
+    st.write(f"Email robot: {info['client_email']}")
+    creds = Credentials.from_service_account_info(info)
+
     service = build("drive", "v3", credentials=creds)
 
     file_metadata = {
@@ -43,6 +58,7 @@ def upload_foto(file):
 
     return f"https://drive.google.com/uc?id={file_id}"
 
+
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU Kota Bengkulu",
@@ -63,27 +79,29 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= GOOGLE =================
+# ================= GOOGLE =================
 @st.cache_resource
 def connect():
+    # 1. Ambil data dari secrets (Blok gsheets)
+    info = dict(st.secrets["connections"]["gsheets"])
+    
+    # 2. Perbaiki format private_key agar tidak error (Sangat Penting!)
+    info["private_key"] = info["private_key"].replace("\\n", "\n")
+    
+    # 3. Gunakan 'info' tersebut untuk membuat kredensial
     creds = Credentials.from_service_account_info(
-        st.secrets["connections"]["gsheets"]["service_account"],
+        info, 
         scopes=[
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive"
         ],
     )
-    return gspread.authorize(creds).open_by_key(
-    st.secrets["SPREADSHEET_ID"]
-)
+    
+    # 4. Hubungkan ke Spreadsheet
+    return gspread.authorize(creds).open_by_key(st.secrets["SPREADSHEET_ID"])
 
+# Panggil fungsi connect
 spreadsheet = connect()
-sheet = spreadsheet.sheet1
-
-try:
-    user_sheet = spreadsheet.worksheet("users")
-except:
-    user_sheet = spreadsheet.add_worksheet("users", 100, 5)
-    user_sheet.append_row(["NIP","Nama","Jabatan","Password","Role"])
 
 # ================= HELPER =================
 def safe(x): return "" if x is None else str(x)
