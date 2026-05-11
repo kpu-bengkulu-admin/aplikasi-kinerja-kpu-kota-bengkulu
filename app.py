@@ -16,41 +16,50 @@ if "gps" not in st.session_state:
 FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
 
 def upload_foto(file):
-    # (Bagian info dan creds tetap sama seperti sebelumnya)
-    info = { ... } 
-    creds = Credentials.from_service_account_info(info)
-    service = build("drive", "v3", credentials=creds)
-
-    file.seek(0) 
-
-    file_metadata = {
-        "name": file.name,
-        "parents": [FOLDER_ID] 
-    }
-
-    media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
+    # Pastikan file tidak kosong
+    if file is None:
+        return ""
 
     try:
-        # Tambahkan supportsAllDrives=True untuk mengatasi masalah kuota
+        # Ambil langsung seluruh blok gsheets sebagai dictionary
+        # Ini lebih aman daripada menyusun manual satu per satu
+        info = dict(st.secrets["connections"]["gsheets"])
+        
+        # Perbaiki format private key
+        if "private_key" in info:
+            info["private_key"] = info["private_key"].replace("\\n", "\n")
+        
+        # Buat kredensial
+        creds = Credentials.from_service_account_info(info)
+        service = build("drive", "v3", credentials=creds)
+
+        file.seek(0)
+        file_metadata = {
+            "name": file.name,
+            "parents": [FOLDER_ID]
+        }
+
+        media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
+
         uploaded = service.files().create(
             body=file_metadata,
             media_body=media,
             fields="id",
-            supportsAllDrives=True
+            supportsAllDrives=True # Tambahan untuk bypass kuota robot
         ).execute()
 
         file_id = uploaded.get("id")
-
-        # Beri izin akses publik (opsional)
+        
+        # Set permission agar bisa dilihat (opsional)
         service.permissions().create(
             fileId=file_id,
             body={"role": "reader", "type": "anyone"}
         ).execute()
 
         return f"https://drive.google.com/uc?id={file_id}"
-    
+
     except Exception as e:
-        st.error(f"Gagal upload: {e}")
+        st.error(f"Gagal saat proses upload: {str(e)}")
         return ""
 
 
