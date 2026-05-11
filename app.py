@@ -79,16 +79,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================= GOOGLE =================
-# ================= GOOGLE =================
 @st.cache_resource
 def connect():
-    # 1. Ambil data dari secrets (Blok gsheets)
     info = dict(st.secrets["connections"]["gsheets"])
-    
-    # 2. Perbaiki format private_key agar tidak error (Sangat Penting!)
     info["private_key"] = info["private_key"].replace("\\n", "\n")
     
-    # 3. Gunakan 'info' tersebut untuk membuat kredensial
     creds = Credentials.from_service_account_info(
         info, 
         scopes=[
@@ -96,12 +91,22 @@ def connect():
             "https://www.googleapis.com/auth/drive"
         ],
     )
-    
-    # 4. Hubungkan ke Spreadsheet
     return gspread.authorize(creds).open_by_key(st.secrets["SPREADSHEET_ID"])
 
-# Panggil fungsi connect
+# Inisialisasi Spreadsheet dan Sheet
 spreadsheet = connect()
+sheet = spreadsheet.sheet1
+
+# DEFINISIKAN user_sheet DI SINI SEBELUM DIPANGGIL
+try:
+    user_sheet = spreadsheet.worksheet("users")
+except gspread.exceptions.WorksheetNotFound:
+    # Jika sheet "users" tidak ada, buat baru
+    user_sheet = spreadsheet.add_worksheet("users", 100, 5)
+    user_sheet.append_row(["NIP", "Nama", "Jabatan", "Password", "Role"])
+except Exception as e:
+    st.error(f"Gagal mengakses sheet users: {e}")
+    st.stop()
 
 # ================= HELPER =================
 def safe(x): return "" if x is None else str(x)
