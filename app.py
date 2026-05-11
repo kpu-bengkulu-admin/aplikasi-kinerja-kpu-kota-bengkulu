@@ -59,6 +59,15 @@ st.markdown("""
 .c3{background:#f59e0b;} .c4{background:#3b82f6;}
 </style>
 """, unsafe_allow_html=True)
+/* 3. MEMPERBAIKI KOTAK INPUT (PENTING): 
+   Memaksa latar belakang kotak putih dan teks di dalamnya HITAM */
+[data-testid="stSidebar"] input, 
+[data-testid="stSidebar"] textarea,
+[data-testid="stSidebar"] div[data-baseweb="input"] {
+    color: black !important;
+    background-color: white !important;
+    -webkit-text-fill-color: black !important;
+}
 
 # ================= GOOGLE =================
 @st.cache_resource
