@@ -19,6 +19,7 @@ from googleapiclient.http import MediaIoBaseUpload
 
 def upload_foto(file):
     if file is None: return ""
+    st.write(f"DEBUG: Mencoba upload ke Folder ID: {FOLDER_ID}")
     
     try:
         info = dict(st.secrets["connections"]["gsheets"])
