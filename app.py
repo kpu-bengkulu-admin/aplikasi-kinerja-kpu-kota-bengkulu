@@ -309,15 +309,20 @@ elif menu == "Data Kinerja":
 
         c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
         c1.caption(row["Uraian"])
+        
+        # PERBAIKAN 1: Menampilkan Output di daftar utama (agar Enter terlihat)
+        if "Output" in row and row["Output"]:
+            c1.markdown(f"**Output:** \n{row['Output']}")
 
         if "Koordinat" in row and row["Koordinat"]:
             c1.write(f"📍 {row['Koordinat']}")
 
-        # --- BAGIAN PERBAIKAN FOTO MULAI DI SINI ---
+        # --- BAGIAN PERBAIKAN FOTO ---
         if "Foto" in row and row.get("Foto"):
             foto_data = str(row["Foto"])
             if foto_data.startswith("data:image"):
-                c1.image(foto_data, width=250)
+                # Menambahkan caption agar lebih rapi
+                c1.image(foto_data, width=250, caption="Dokumentasi")
             elif foto_data.startswith("http"):
                 c1.markdown(f"[📸 Lihat Foto]({foto_data})")
         # --- SELESAI ---
@@ -335,24 +340,31 @@ elif menu == "Data Kinerja":
     if "edit" in st.session_state:
         ed = st.session_state.edit
 
+        st.divider() # Pemisah visual
         st.subheader("✏️ Edit Data")
 
+        # PERBAIKAN 2: Memastikan semua menggunakan text_area untuk teks panjang
         masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
         keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"])
-        output = st.text_area("Output", ed["Output"])
+        uraian = st.text_area("Uraian", ed["Uraian"], height=100)
+        output = st.text_area("Output", ed["Output"], height=100) # Bisa Enter
 
         if st.button("Update"):
             dur = hitung_durasi(masuk, keluar)
 
-            sheet.update(
-                f"E{int(ed['row'])}:J{int(ed['row'])}",
-                [[masuk, keluar, dur, uraian, output, ed["Lokasi"]]]
-            )
+            # PERBAIKAN 3: Memastikan update mencakup kolom yang tepat
+            # Pastikan range E:J sesuai dengan kolom: Masuk, Keluar, Durasi, Uraian, Output, Lokasi
+            try:
+                sheet.update(
+                    f"E{int(ed['row'])}:J{int(ed['row'])}",
+                    [[masuk, keluar, dur, uraian, output, ed["Lokasi"]]]
+                )
 
-            del st.session_state.edit
-            st.success("Update berhasil")
-            st.rerun()
+                del st.session_state.edit
+                st.success("Update berhasil")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Gagal update: {e}")
 
     # DOWNLOAD
     st.divider()
