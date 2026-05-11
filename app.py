@@ -13,7 +13,7 @@ if "gps" not in st.session_state:
     st.session_state.gps = ""
 
 # ================= DRIVE =================
-FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
+FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
 def upload_foto(file):
     # Pastikan file tidak kosong
@@ -36,7 +36,7 @@ def upload_foto(file):
         file.seek(0)
         file_metadata = {
             "name": file.name,
-            "parents": ["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]
+            "parents": ["1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"]
         }
 
         media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
