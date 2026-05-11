@@ -15,49 +15,29 @@ if "gps" not in st.session_state:
 # ================= DRIVE =================
 FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
-from googleapiclient.http import MediaIoBaseUpload
+import base64
+from PIL import Image
+import io
 
 def upload_foto(file):
     if file is None: return ""
-    st.write(f"DEBUG: Mencoba upload ke Folder ID: {FOLDER_ID}")
     
     try:
-        info = dict(st.secrets["connections"]["gsheets"])
-        info["private_key"] = info["private_key"].replace("\\n", "\n")
-        creds = Credentials.from_service_account_info(info)
-        service = build("drive", "v3", credentials=creds)
-
-        file.seek(0)
+        # 1. Buka foto dan perkecil ukurannya (agar tidak membebani Spreadsheet)
+        img = Image.open(file)
+        img.thumbnail((400, 400))  # Perkecil ke 400px
         
-        file_metadata = {
-            "name": file.name,
-            "parents": ["1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"] # Pastikan ID ini benar & sudah di-share
-        }
-
-        # MATIKAN resumable (Ganti True menjadi False)
-        media = MediaIoBaseUpload(file, mimetype=file.type, resumable=False)
-
-        uploaded = service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields="id",
-            supportsAllDrives=True # Harus tetap ada
-        ).execute()
-
-        file_id = uploaded.get("id")
+        # 2. Ubah foto menjadi teks (Base64)
+        buffered = io.BytesIO()
+        img.save(buffered, format="JPEG", quality=70) # Kompres kualitas ke 70%
+        img_str = base64.b64encode(buffered.getvalue()).decode()
         
-        # Beri izin akses
-        service.permissions().create(
-            fileId=file_id,
-            body={'type': 'anyone', 'role': 'reader'},
-            supportsAllDrives=True
-        ).execute()
-
-        return f"https://drive.google.com/uc?id={file_id}"
+        # 3. Kita tidak upload ke Drive, tapi kirim teks ini kembali
+        # Kita buat link tiruan yang isinya data foto
+        return f"data:image/jpeg;base64,{img_str}"
 
     except Exception as e:
-        # Menampilkan detail error asli untuk debugging
-        st.error(f"Gagal total: {str(e)}")
+        st.error(f"Gagal memproses foto: {e}")
         return ""
 
 
@@ -333,8 +313,14 @@ elif menu == "Data Kinerja":
         if "Koordinat" in row and row["Koordinat"]:
             c1.write(f"📍 {row['Koordinat']}")
 
-        if "Foto" in row and row["Foto"]:
-            c1.markdown(f"[📸 Lihat Foto]({row['Foto']})")
+        # --- BAGIAN PERBAIKAN FOTO MULAI DI SINI ---
+        if "Foto" in row and row.get("Foto"):
+            foto_data = str(row["Foto"])
+            if foto_data.startswith("data:image"):
+                c1.image(foto_data, width=250)
+            elif foto_data.startswith("http"):
+                c1.markdown(f"[📸 Lihat Foto]({foto_data})")
+        # --- SELESAI ---
 
         c2.write(f"{row['Durasi']:.2f} jam")
 
