@@ -15,9 +15,10 @@ if "gps" not in st.session_state:
 # ================= DRIVE =================
 FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
+from googleapiclient.http import MediaIoBaseUpload
+
 def upload_foto(file):
-    if file is None:
-        return ""
+    if file is None: return ""
     
     try:
         info = dict(st.secrets["connections"]["gsheets"])
@@ -27,39 +28,35 @@ def upload_foto(file):
 
         file.seek(0)
         
-        # 1. Metadata File
         file_metadata = {
             "name": file.name,
-            "parents": ["1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"] 
+            "parents": ["1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"] # Pastikan ID ini benar & sudah di-share
         }
 
-        media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
+        # MATIKAN resumable (Ganti True menjadi False)
+        media = MediaIoBaseUpload(file, mimetype=file.type, resumable=False)
 
-        # 2. PROSES UPLOAD (PENTING: supportsAllDrives=True)
         uploaded = service.files().create(
             body=file_metadata,
             media_body=media,
             fields="id",
-            supportsAllDrives=True  # Mengizinkan upload ke folder bersama
+            supportsAllDrives=True # Harus tetap ada
         ).execute()
 
         file_id = uploaded.get("id")
-
-        # 3. KUNCI UTAMA: Ubah Izin agar Anda menjadi Owner atau minimal 'Anyone' bisa lihat
-        # Ini mencegah error kuota karena file 'dipindahkan' kepemilikannya ke folder induk
+        
+        # Beri izin akses
         service.permissions().create(
             fileId=file_id,
-            body={
-                'type': 'anyone',
-                'role': 'reader',
-            },
+            body={'type': 'anyone', 'role': 'reader'},
             supportsAllDrives=True
         ).execute()
 
         return f"https://drive.google.com/uc?id={file_id}"
 
     except Exception as e:
-        st.error(f"Gagal total saat upload: {str(e)}")
+        # Menampilkan detail error asli untuk debugging
+        st.error(f"Gagal total: {str(e)}")
         return ""
 
 
