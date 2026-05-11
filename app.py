@@ -16,7 +16,7 @@ if "gps" not in st.session_state:
 FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
 
 def upload_foto(file):
-    # 1. Kita susun ulang data rahasia ke dalam variabel 'info'
+    # 1. Info (Sudah Benar)
     info = {
         "type": st.secrets["connections"]["gsheets"]["type"],
         "project_id": st.secrets["connections"]["gsheets"]["project_id"],
@@ -30,33 +30,40 @@ def upload_foto(file):
         "client_x509_cert_url": st.secrets["connections"]["gsheets"]["client_x509_cert_url"]
     }
     
-    # 2. Gunakan variabel 'info' di sini, BUKAN st.secrets langsung
-    st.write(f"Email robot: {info['client_email']}")
     creds = Credentials.from_service_account_info(info)
-
     service = build("drive", "v3", credentials=creds)
 
+    # --- PERBAIKAN DI SINI ---
+    file.seek(0) # Kembalikan pointer ke awal file
+    
     file_metadata = {
         "name": file.name,
         "parents": [FOLDER_ID]
     }
 
-    media = MediaIoBaseUpload(file, mimetype=file.type)
+    # Gunakan BytesIO untuk membungkus file agar aman saat upload
+    media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
 
-    uploaded = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields="id"
-    ).execute()
+    try:
+        uploaded = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields="id"
+        ).execute()
 
-    file_id = uploaded.get("id")
+        file_id = uploaded.get("id")
 
-    service.permissions().create(
-        fileId=file_id,
-        body={"role": "reader", "type": "anyone"}
-    ).execute()
+        # Set permission agar bisa dilihat publik lewat link
+        service.permissions().create(
+            fileId=file_id,
+            body={"role": "reader", "type": "anyone"}
+        ).execute()
 
-    return f"https://drive.google.com/uc?id={file_id}"
+        return f"https://drive.google.com/uc?id={file_id}"
+    
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat upload ke Drive: {e}")
+        return ""
 
 
 # ================= CONFIG =================
