@@ -337,34 +337,37 @@ elif menu == "Data Kinerja":
             st.rerun()
 
     # EDIT
-    if "edit" in st.session_state:
-        ed = st.session_state.edit
+if "edit" in st.session_state:
+    ed = st.session_state.edit
 
-        st.divider() # Pemisah visual
+    # Menggunakan Sidebar agar tampilan utama tetap bersih
+    with st.sidebar:
         st.subheader("✏️ Edit Data")
-
-        # PERBAIKAN 2: Memastikan semua menggunakan text_area untuk teks panjang
+        st.info(f"Mengedit data: {ed['Nama']}")
+        
         masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
         keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"], height=100)
-        output = st.text_area("Output", ed["Output"], height=100) # Bisa Enter
+        uraian = st.text_area("Uraian", ed["Uraian"], height=150)
+        output = st.text_area("Output", ed["Output"], height=150)
 
-        if st.button("Update"):
+        col_save, col_cancel = st.columns(2)
+        
+        if col_save.button("Update ✅"):
             dur = hitung_durasi(masuk, keluar)
-
-            # PERBAIKAN 3: Memastikan update mencakup kolom yang tepat
-            # Pastikan range E:J sesuai dengan kolom: Masuk, Keluar, Durasi, Uraian, Output, Lokasi
             try:
                 sheet.update(
                     f"E{int(ed['row'])}:J{int(ed['row'])}",
                     [[masuk, keluar, dur, uraian, output, ed["Lokasi"]]]
                 )
-
                 del st.session_state.edit
-                st.success("Update berhasil")
+                st.success("Update berhasil!")
                 st.rerun()
             except Exception as e:
-                st.error(f"Gagal update: {e}")
+                st.error(f"Gagal: {e}")
+
+        if col_cancel.button("Batal ❌"):
+            del st.session_state.edit
+            st.rerun()
 
     # DOWNLOAD
     st.divider()
