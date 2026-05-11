@@ -36,7 +36,7 @@ def upload_foto(file):
         file.seek(0)
         file_metadata = {
             "name": file.name,
-            "parents": [FOLDER_ID]
+            "parents": ["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]
         }
 
         media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
