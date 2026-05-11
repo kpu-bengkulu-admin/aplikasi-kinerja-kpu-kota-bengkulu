@@ -48,36 +48,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= UI CUSTOM (SIDEBAR FIX) =================
+# ================= UI =================
 st.markdown("""
 <style>
-/* 1. Mengatur latar belakang Sidebar menjadi gelap */
-[data-testid="stSidebar"] {
-    background-color: #0f172a;
-}
-
-/* 2. Memaksa semua teks label di sidebar berwarna putih agar terbaca */
-[data-testid="stSidebar"] .stText, 
-[data-testid="stSidebar"] label, 
-[data-testid="stSidebar"] .stMarkdown {
-    color: white !important;
-}
-
-/* 3. MEMPERBAIKI KOTAK INPUT (PENTING): 
-   Memaksa latar belakang kotak putih dan teks di dalamnya HITAM */
-[data-testid="stSidebar"] input, 
-[data-testid="stSidebar"] textarea,
-[data-testid="stSidebar"] div[data-baseweb="input"] {
-    color: black !important;
-    background-color: white !important;
-    -webkit-text-fill-color: black !important;
-}
-
-/* 4. Menyesuaikan tombol di sidebar */
-[data-testid="stSidebar"] .stButton button {
-    width: 100%;
-    border-radius: 5px;
-}
+[data-testid="stSidebar"] {background:#0f172a;}
+[data-testid="stSidebar"] * {color:white !important;}
+.stButton button {background:#ef4444;color:white;border-radius:8px;}
+.card {padding:15px;border-radius:12px;color:white;text-align:center;}
+.c1{background:#ef4444;} .c2{background:#22c55e;}
+.c3{background:#f59e0b;} .c4{background:#3b82f6;}
 </style>
 """, unsafe_allow_html=True)
 
