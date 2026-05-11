@@ -16,44 +16,32 @@ if "gps" not in st.session_state:
 FOLDER_ID = "1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"
 
 def upload_foto(file):
-    # 1. Info (Sudah Benar)
-    info = {
-        "type": st.secrets["connections"]["gsheets"]["type"],
-        "project_id": st.secrets["connections"]["gsheets"]["project_id"],
-        "private_key_id": st.secrets["connections"]["gsheets"]["private_key_id"],
-        "private_key": st.secrets["connections"]["gsheets"]["private_key"].replace("\\n", "\n"),
-        "client_email": st.secrets["connections"]["gsheets"]["client_email"],
-        "client_id": st.secrets["connections"]["gsheets"]["client_id"],
-        "auth_uri": st.secrets["connections"]["gsheets"]["auth_uri"],
-        "token_uri": st.secrets["connections"]["gsheets"]["token_uri"],
-        "auth_provider_x509_cert_url": st.secrets["connections"]["gsheets"]["auth_provider_x509_cert_url"],
-        "client_x509_cert_url": st.secrets["connections"]["gsheets"]["client_x509_cert_url"]
-    }
-    
+    # (Bagian info dan creds tetap sama seperti sebelumnya)
+    info = { ... } 
     creds = Credentials.from_service_account_info(info)
     service = build("drive", "v3", credentials=creds)
 
-    # --- PERBAIKAN DI SINI ---
-    file.seek(0) # Kembalikan pointer ke awal file
-    
+    file.seek(0) 
+
     file_metadata = {
         "name": file.name,
-        "parents": ["1XRppl-J-WLoy0FM38au_ypPmg7faH1T9"]
+        "parents": [FOLDER_ID] 
     }
 
-    # Gunakan BytesIO untuk membungkus file agar aman saat upload
     media = MediaIoBaseUpload(file, mimetype=file.type, resumable=True)
 
     try:
+        # Tambahkan supportsAllDrives=True untuk mengatasi masalah kuota
         uploaded = service.files().create(
             body=file_metadata,
             media_body=media,
-            fields="id"
+            fields="id",
+            supportsAllDrives=True
         ).execute()
 
         file_id = uploaded.get("id")
 
-        # Set permission agar bisa dilihat publik lewat link
+        # Beri izin akses publik (opsional)
         service.permissions().create(
             fileId=file_id,
             body={"role": "reader", "type": "anyone"}
@@ -62,7 +50,7 @@ def upload_foto(file):
         return f"https://drive.google.com/uc?id={file_id}"
     
     except Exception as e:
-        st.error(f"Terjadi kesalahan saat upload ke Drive: {e}")
+        st.error(f"Gagal upload: {e}")
         return ""
 
 
