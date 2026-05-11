@@ -372,38 +372,6 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
-    # EDIT
-if "edit" in st.session_state:
-    ed = st.session_state.edit
-
-    # Menggunakan Sidebar agar tampilan utama tetap bersih
-    with st.sidebar:
-        st.subheader("✏️ Edit Data")
-        st.info(f"Mengedit data: {ed['Nama']}")
-        
-        masuk = st.text_input("Jam Masuk", ed["Jam Masuk"])
-        keluar = st.text_input("Jam Keluar", ed["Jam Keluar"])
-        uraian = st.text_area("Uraian", ed["Uraian"], height=150)
-        output = st.text_area("Output", ed["Output"], height=150)
-
-        col_save, col_cancel = st.columns(2)
-        
-        if col_save.button("Update ✅"):
-            dur = hitung_durasi(masuk, keluar)
-            try:
-                sheet.update(
-                    f"E{int(ed['row'])}:J{int(ed['row'])}",
-                    [[masuk, keluar, dur, uraian, output, ed["Lokasi"]]]
-                )
-                del st.session_state.edit
-                st.success("Update berhasil!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Gagal: {e}")
-
-        if col_cancel.button("Batal ❌"):
-            del st.session_state.edit
-            st.rerun()
 
     # DOWNLOAD
     st.divider()
