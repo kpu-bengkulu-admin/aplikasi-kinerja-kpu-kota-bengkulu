@@ -45,8 +45,8 @@ def upload_foto(file):
 import streamlit as st
 
 st.set_page_config(
-    page_title="E-KINERJA KPU KOTA BENGKULU"
-    page_icon="logo.png"
+    page_title="E-KINERJA KPU KOTA BENGKULU",
+    page_icon="logo.png",
     layout="wide"
 )
 st.logo("logo.png")
