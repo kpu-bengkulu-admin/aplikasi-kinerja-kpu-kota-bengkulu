@@ -52,29 +52,23 @@ st.set_page_config(
 st.markdown("""
 <style>
 /* 1. Latar belakang sidebar */
-[data-testid="stSidebar"] {background:#0f172a;}
+[data-testid="stSidebar"] {background:#0f172a !important;}
 
-/* 2. NAMA USER (Evan Suryadi) */
-[data-testid="stSidebar"] h1 {
+/* 2. PAKSA SEMUA TEKS DI SIDEBAR MENJADI PUTIH */
+/* Ini akan menyasar semua jenis teks: label, radio button, markdown, dll */
+[data-testid="stSidebar"] * {
     color: white !important;
 }
 
-/* 3. TEKS MENU RADIO (Dashboard, Input, dll) */
-/* Kita targetkan label di dalam radio button agar menjadi putih */
-[data-testid="stSidebar"] .st-emotion-cache-6qob1r, 
-[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
-[data-testid="stSidebar"] label {
+/* 3. KHUSUS UNTUK MENU RADIO (DASHBOARD, INPUT, DLL) */
+/* Terkadang label radio butuh penanganan ekstra agar tidak transparan */
+div[data-testid="stSidebar"] .st-emotion-cache-6qob1r {
     color: white !important;
-    opacity: 1 !important; /* Memastikan tidak transparan */
+    opacity: 1 !important;
 }
 
-/* 4. TEKS KETERANGAN LAIN (Menu, Edit Data, dll) */
-[data-testid="stSidebar"] .stMarkdown p,
-[data-testid="stSidebar"] .stText {
-    color: white !important;
-}
-
-/* 5. KOTAK INPUT EDIT (Tetap Hitam agar terbaca di dalam kotak putih) */
+/* 4. KOTAK INPUT EDIT (Tetap Hitam agar terlihat di latar putih) */
+/* Kita kecualikan agar teks yang kita ketik tetap hitam di kotak putih */
 [data-testid="stSidebar"] input, 
 [data-testid="stSidebar"] textarea {
     color: black !important;
@@ -82,8 +76,11 @@ st.markdown("""
     -webkit-text-fill-color: black !important;
 }
 
-/* 6. Tombol Logout */
-.stButton button {background:#ef4444;color:white;border-radius:8px;}
+/* 5. Tombol Logout agar tetap merah terang */
+.stButton button {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
