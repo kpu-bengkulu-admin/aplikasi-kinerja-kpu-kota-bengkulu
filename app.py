@@ -169,106 +169,47 @@ if not st.session_state.login:
             st.error("Login gagal")
     st.stop()
 
-# --- BAGIAN EDIT SIDEBAR ---
+# ================= SIDEBAR =================
+st.sidebar.title(st.session_state.nama)
+menu = st.sidebar.radio("Menu", ["Dashboard", "Input", "Data Kinerja", "Admin"])
+
+if st.sidebar.button("Logout"):
+    st.session_state.clear()
+    st.rerun()
+
+# --- BAGIAN EDIT (TAMBAHKAN DI SINI AGAR MUNCUL DI SIDEBAR) ---
 if "edit" in st.session_state:
-
     ed = st.session_state.edit
-
+    
     st.sidebar.divider()
     st.sidebar.subheader("✏️ Edit Data")
     st.sidebar.info(f"Mengedit data baris: {ed['row']}")
 
-    # ================= INPUT EDIT =================
-    new_masuk = st.sidebar.text_input(
-        "Jam Masuk",
-        ed["Jam Masuk"],
-        key="edit_masuk"
-    )
+    # Gunakan kunci (key) unik agar Streamlit tidak bingung
+    new_masuk = st.sidebar.text_input("Jam Masuk", ed["Jam Masuk"], key="edit_masuk")
+    new_keluar = st.sidebar.text_input("Jam Keluar", ed["Jam Keluar"], key="edit_keluar")
+    new_uraian = st.sidebar.text_area("Uraian", ed["Uraian"], key="edit_uraian", height=150)
+    new_output = st.sidebar.text_area("Output", ed["Output"], key="edit_output", height=150)
 
-    new_keluar = st.sidebar.text_input(
-        "Jam Keluar",
-        ed["Jam Keluar"],
-        key="edit_keluar"
-    )
-
-    new_uraian = st.sidebar.text_area(
-        "Uraian",
-        ed["Uraian"],
-        key="edit_uraian",
-        height=150
-    )
-
-    new_output = st.sidebar.text_area(
-        "Output",
-        ed["Output"],
-        key="edit_output",
-        height=150
-    )
-
-    # ================= GPS KHUSUS RUMAH =================
-    new_lokasi = ed["Lokasi"]
-    new_koordinat = ed.get("Koordinat", "")
-
-    if new_lokasi == "Rumah":
-
-        from streamlit_js_eval import get_geolocation
-
-        edit_loc = get_geolocation(key="edit_gps")
-
-        if edit_loc:
-
-            new_koordinat = (
-                f"{edit_loc['coords']['latitude']}, "
-                f"{edit_loc['coords']['longitude']}"
-            )
-
-            st.sidebar.success("✅ GPS Baru Terdeteksi")
-
-        else:
-            st.sidebar.warning("📡 Menunggu GPS baru...")
-
-        st.sidebar.text_input(
-            "GPS Rumah",
-            value=new_koordinat,
-            disabled=True
-        )
-
-    # ================= TOMBOL =================
     col1, col2 = st.sidebar.columns(2)
-
+    
     if col1.button("Update ✅", key="update_final"):
-
         dur = hitung_durasi(new_masuk, new_keluar)
-
+        # Update ke Google Sheets (Kolom E sampai J)
         try:
             row_idx = int(ed['row'])
-
             sheet.update(
-                f"E{row_idx}:K{row_idx}",
-                [[
-                    new_masuk,
-                    new_keluar,
-                    dur,
-                    new_uraian,
-                    new_output,
-                    new_lokasi,
-                    new_koordinat
-                ]]
+                f"E{row_idx}:J{row_idx}",
+                [[new_masuk, new_keluar, dur, new_uraian, new_output, ed["Lokasi"]]]
             )
-
             st.sidebar.success("Data Berhasil Diperbarui!")
-
             del st.session_state.edit
-
             st.rerun()
-
         except Exception as e:
             st.sidebar.error(f"Error: {e}")
 
     if col2.button("Batal ❌", key="btn_batal"):
-
         del st.session_state.edit
-
         st.rerun()
 
 # ================= DASHBOARD =================
