@@ -397,36 +397,39 @@ elif menu == "Data Kinerja":
             st.rerun()
 
 
-    # DOWNLOAD
-    st.divider()
+# DOWNLOAD
+st.divider()
 
-    from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment
 
-    df["NIK"] = df["NIK"].astype(str)
+# Pastikan NIP tetap text
+df["NIP"] = df["NIP"].astype(str)
 
-    excel = io.BytesIO()
+excel = io.BytesIO()
 
-    with pd.ExcelWriter(excel, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Data")
+with pd.ExcelWriter(excel, engine="openpyxl") as writer:
+    df.to_excel(writer, index=False, sheet_name="Data")
 
-        workbook = writer.book
-        worksheet = writer.sheets["Data"]
+    workbook = writer.book
+    worksheet = writer.sheets["Data"]
 
-        for row in worksheet.iter_rows():
-            for cell in row:
-                cell.alignment = Alignment(
-                    wrap_text=True,
-                    vertical="top"
-                )
+    # Agar isi multiline tetap rapi
+    for row in worksheet.iter_rows():
+        for cell in row:
+            cell.alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
 
-    excel.seek(0)
+excel.seek(0)
 
-    st.download_button(
-        label="📥 Download Excel",
-        data=excel,
-        file_name="data_kinerja.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+st.download_button(
+    label="📥 Download Excel",
+    data=excel,
+    file_name="data_kinerja.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
 # ================= ADMIN =================
 elif menu == "Admin":
 
