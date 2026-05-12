@@ -54,22 +54,27 @@ st.markdown("""
 /* 1. Latar belakang sidebar */
 [data-testid="stSidebar"] {background:#0f172a;}
 
-/* 2. MEMPERBAIKI NAMA USER (st.sidebar.title) */
-/* Kita paksa warna Putih terang agar Evan Suryadi terlihat jelas */
-[data-testid="stSidebarNav"] + div h1, 
+/* 2. NAMA USER (Evan Suryadi) */
 [data-testid="stSidebar"] h1 {
     color: white !important;
-    font-size: 24px !important;
-    font-weight: bold !important;
 }
 
-/* 3. Teks Menu dan Label Edit tetap Putih */
-[data-testid="stSidebar"] label, 
-[data-testid="stSidebar"] .stMarkdown p {
+/* 3. TEKS MENU RADIO (Dashboard, Input, dll) */
+/* Kita targetkan label di dalam radio button agar menjadi putih */
+[data-testid="stSidebar"] .st-emotion-cache-6qob1r, 
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
+[data-testid="stSidebar"] label {
+    color: white !important;
+    opacity: 1 !important; /* Memastikan tidak transparan */
+}
+
+/* 4. TEKS KETERANGAN LAIN (Menu, Edit Data, dll) */
+[data-testid="stSidebar"] .stMarkdown p,
+[data-testid="stSidebar"] .stText {
     color: white !important;
 }
 
-/* 4. KOLOM INPUT EDIT: Teks di dalam kotak wajib HITAM */
+/* 5. KOTAK INPUT EDIT (Tetap Hitam agar terbaca di dalam kotak putih) */
 [data-testid="stSidebar"] input, 
 [data-testid="stSidebar"] textarea {
     color: black !important;
@@ -77,7 +82,7 @@ st.markdown("""
     -webkit-text-fill-color: black !important;
 }
 
-/* 5. Tombol Logout dan Update */
+/* 6. Tombol Logout */
 .stButton button {background:#ef4444;color:white;border-radius:8px;}
 </style>
 """, unsafe_allow_html=True)
