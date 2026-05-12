@@ -42,14 +42,11 @@ def upload_foto(file):
 
 
 # ================= CONFIG =================
-import streamlit as st
-
 st.set_page_config(
-    page_title="E-KINERJA KPU KOTA BENGKULU",
-    page_icon="logo.png",
+    page_title="E-Kinerja KPU Kota Bengkulu",
+    page_icon="📊",
     layout="wide"
 )
-st.logo("logo.png")
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
