@@ -51,25 +51,33 @@ st.set_page_config(
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
 <style>
-/* 1. Warna latar belakang sidebar */
+/* 1. Latar belakang sidebar */
 [data-testid="stSidebar"] {background:#0f172a;}
 
-/* 2. Warna teks label (Menu, Dashboard, Edit Data) tetap Putih */
-[data-testid="stSidebar"] .stText, 
+/* 2. MEMPERBAIKI NAMA USER (st.sidebar.title) */
+/* Kita paksa warna Putih terang agar Evan Suryadi terlihat jelas */
+[data-testid="stSidebarNav"] + div h1, 
+[data-testid="stSidebar"] h1 {
+    color: white !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+}
+
+/* 3. Teks Menu dan Label Edit tetap Putih */
 [data-testid="stSidebar"] label, 
-[data-testid="stSidebar"] p {
+[data-testid="stSidebar"] .stMarkdown p {
     color: white !important;
 }
 
-/* 3. PERBAIKAN KOLOM EDIT: Teks di dalam kotak input wajib HITAM */
+/* 4. KOLOM INPUT EDIT: Teks di dalam kotak wajib HITAM */
 [data-testid="stSidebar"] input, 
 [data-testid="stSidebar"] textarea {
-    color: #000000 !important; /* Warna Hitam */
-    background-color: #ffffff !important; /* Latar Putih */
-    -webkit-text-fill-color: #000000 !important; /* Paksa warna hitam di Chrome/Safari */
+    color: black !important;
+    background-color: white !important;
+    -webkit-text-fill-color: black !important;
 }
 
-/* 4. Warna tombol */
+/* 5. Tombol Logout dan Update */
 .stButton button {background:#ef4444;color:white;border-radius:8px;}
 </style>
 """, unsafe_allow_html=True)
