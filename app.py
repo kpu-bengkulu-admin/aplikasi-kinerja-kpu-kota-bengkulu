@@ -191,6 +191,29 @@ if "edit" in st.session_state:
     new_uraian = st.sidebar.text_area("Uraian", ed["Uraian"], key="edit_uraian", height=150)
     new_output = st.sidebar.text_area("Output", ed["Output"], key="edit_output", height=150)
 
+# ================= GPS EDIT KHUSUS RUMAH =================
+new_lokasi = ed["Lokasi"]
+new_koordinat = ed.get("Koordinat", "")
+
+if new_lokasi == "Rumah":
+
+    from streamlit_js_eval import get_geolocation
+
+    edit_loc = get_geolocation(key="edit_gps")
+
+    if edit_loc:
+        new_koordinat = f"{edit_loc['coords']['latitude']}, {edit_loc['coords']['longitude']}"
+        st.sidebar.success("✅ GPS Baru Terdeteksi")
+
+    else:
+        st.sidebar.warning("📡 Menunggu GPS baru...")
+
+    st.sidebar.text_input(
+        "GPS Rumah",
+        value=new_koordinat,
+        disabled=True
+    )
+
     col1, col2 = st.sidebar.columns(2)
     
     if col1.button("Update ✅", key="update_final"):
