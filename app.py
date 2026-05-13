@@ -209,6 +209,7 @@ if not st.session_state.login:
     st.stop()
 
 # ================= SIDEBAR =================
+st.sidebar.image("logo.png", width=100)
 st.sidebar.title(st.session_state.nama)
 
 st.sidebar.markdown(
