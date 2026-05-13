@@ -225,25 +225,11 @@ if menu == "Dashboard":
         color:white;
         margin-bottom:20px;
     ">
-        <img src="logo.png"
-             width="70">
-
-        <div>
-            <h2 style="margin:0;">Aplikasi E-Kinerja</h2>
-
-            <p style="margin-top:10px;">
-                {st.session_state.nama} - KPU Kota Bengkulu
-            </p>
-        </div>
-
+        <h2>📊 Aplikasi E-Kinerja</h2>
+        <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
     </div>
     """, unsafe_allow_html=True)
 
-    df = load_data()
-
-    if df.empty:
-        st.info("Belum ada data")
-        st.stop()
     df = load_data()
     if df.empty:
         st.info("Belum ada data")
