@@ -393,12 +393,12 @@ elif menu == "Data Kinerja":
     else:
         df = df[df["NIP"].astype(str)==st.session_state.nip]
 
-# FILTER TANGGAL
-df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
+    # FILTER TANGGAL
+    df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
 
-tanggal_valid = df["Tanggal"].dropna()
+    tanggal_valid = df["Tanggal"].dropna()
 
-if not tanggal_valid.empty:
+    if not tanggal_valid.empty:
 
     start_date, end_date = st.date_input(
         "Filter Tanggal",
@@ -410,8 +410,9 @@ if not tanggal_valid.empty:
         (df["Tanggal"].dt.date <= end_date)
     ]
 
-else:
+    else:
     st.warning("Data tanggal belum tersedia")
+
 
     # TAMPIL DATA
     for i,row in df.iterrows():
