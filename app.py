@@ -421,9 +421,20 @@ elif menu == "Data Kinerja":
             st.rerun()
 
         if c4.button("🗑", key=f"del{i}"):
-            sheet.delete_rows(int(row["row"]))
-            st.rerun()
+            try:
+        # Hapus berdasarkan row spreadsheet
+        sheet.delete_rows(int(row["row"]))
 
+        # Bersihkan cache
+        load_data.clear()
+
+        st.success("Data berhasil dihapus")
+
+        # Reload total aplikasi
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"Gagal menghapus data: {e}")
 
     # DOWNLOAD
     st.divider()
