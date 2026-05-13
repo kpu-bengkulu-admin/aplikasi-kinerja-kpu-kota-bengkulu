@@ -247,13 +247,27 @@ if menu == "Dashboard":
     if len(tgl)==2:
         df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
 
-    pegawai = st.multiselect("Pegawai", sorted(df["Nama"].unique()))
-    lokasi = st.multiselect("Lokasi", sorted(df["Lokasi"].unique()))
+    if st.session_state.role in ["admin", "pimpinan"]:
+
+    pegawai = st.multiselect(
+        "Pegawai",
+        sorted(df["Nama"].unique())
+    )
+
+    lokasi = st.multiselect(
+        "Lokasi",
+        sorted(df["Lokasi"].unique())
+    )
 
     if pegawai:
         df = df[df["Nama"].isin(pegawai)]
+
     if lokasi:
         df = df[df["Lokasi"].isin(lokasi)]
+
+else:
+    # Pegawai hanya melihat data sendiri
+    df = df[df["NIP"].astype(str) == st.session_state.nip]
 
     c1,c2,c3,c4 = st.columns(4)
     c1.markdown(f"<div class='card c1'><h3>{len(df)}</h3>Total</div>", unsafe_allow_html=True)
