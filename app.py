@@ -374,7 +374,6 @@ elif menu == "Input":
             time.sleep(2)
             st.rerun()
 
-
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
@@ -390,48 +389,40 @@ elif menu == "Data Kinerja":
     if st.session_state.role in ["admin","pimpinan"]:
         mode = st.radio("Mode Data", ["Semua Data","Data Saya"])
         if mode == "Data Saya":
-            df = df[df["NIP"].astype(str) == st.session_state.nip]
+            df = df[df["NIP"].astype(str)==st.session_state.nip]
     else:
-        df = df[df["NIP"].astype(str) == st.session_state.nip]
+        df = df[df["NIP"].astype(str)==st.session_state.nip]
 
     # FILTER TANGGAL
-    tanggal_valid = df["Tanggal"].dropna()
+    tgl = st.date_input("Filter Tanggal", value=(df["Tanggal"].min(), df["Tanggal"].max()))
 
-    if not tanggal_valid.empty:
+    if len(tgl)==2:
+        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
 
-        start_date, end_date = st.date_input(
-            "Filter Tanggal",
-            value=(tanggal_valid.min().date(), tanggal_valid.max().date())
-        )
+    # TAMPIL DATA
+    for i,row in df.iterrows():
 
-        df = df[
-            (df["Tanggal"].dt.date >= start_date) &
-            (df["Tanggal"].dt.date <= end_date)
-        ]
-
-    else:
-        st.warning("Data tanggal belum tersedia")
-
-    # ================= TAMPIL DATA =================
-    for i, row in df.iterrows():
-
-        c1, c2, c3, c4 = st.columns([5,2,1,1])
+        c1,c2,c3,c4 = st.columns([5,2,1,1])
 
         c1.write(f"**{row['Nama']}** - {row['Tanggal'].date()}")
         c1.caption(row["Uraian"])
-
+        
+        # PERBAIKAN 1: Menampilkan Output di daftar utama (agar Enter terlihat)
         if "Output" in row and row["Output"]:
             c1.markdown(f"**Output:** \n{row['Output']}")
 
         if "Koordinat" in row and row["Koordinat"]:
             c1.write(f"📍 {row['Koordinat']}")
 
+        # --- BAGIAN PERBAIKAN FOTO ---
         if "Foto" in row and row.get("Foto"):
             foto_data = str(row["Foto"])
             if foto_data.startswith("data:image"):
+                # Menambahkan caption agar lebih rapi
                 c1.image(foto_data, width=250, caption="Dokumentasi")
             elif foto_data.startswith("http"):
                 c1.markdown(f"[📸 Lihat Foto]({foto_data})")
+        # --- SELESAI ---
 
         c2.write(f"{row['Durasi']:.2f} jam")
 
@@ -443,7 +434,8 @@ elif menu == "Data Kinerja":
             sheet.delete_rows(int(row["row"]))
             st.rerun()
 
-    # ================= DOWNLOAD =================
+
+    # DOWNLOAD
     st.divider()
 
     from openpyxl.styles import Alignment
@@ -460,7 +452,10 @@ elif menu == "Data Kinerja":
 
         for row in worksheet.iter_rows():
             for cell in row:
-                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                cell.alignment = Alignment(
+                    wrap_text=True,
+                    vertical="top"
+                )
 
     excel.seek(0)
 
@@ -470,7 +465,6 @@ elif menu == "Data Kinerja":
         file_name="data_kinerja.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
 
 # ================= ADMIN =================
 elif menu == "Admin":
