@@ -266,36 +266,22 @@ if "edit" in st.session_state:
 # ================= DASHBOARD =================
 if menu == "Dashboard":
 
-st.markdown(f"""
-<div style="
-    background:linear-gradient(90deg,#ef4444,#f87171);
-    padding:20px;
-    border-radius:12px;
-    color:white;
-    margin-bottom:20px;
-">
-
-    <div style="display:flex; align-items:center; gap:12px;">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/81/Logo_KPU.png" width="45">
-
-        <h2 style="
-            margin:0;
-            color:white;
-        ">
+    st.markdown(f"""
+    <div style="
+        background:linear-gradient(90deg,#ef4444,#f87171);
+        padding:20px;
+        border-radius:12px;
+        color:white;
+        margin-bottom:20px;
+    ">
+        <h2 style="display:flex; align-items:center; gap:10px;">
+            <img src="logo.png" width="40">
             Aplikasi E-Kinerja
         </h2>
+
+        <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
     </div>
-
-    <p style="
-        margin-top:10px;
-        color:white;
-        font-size:16px;
-    ">
-        {st.session_state.nama} - KPU Kota Bengkulu
-    </p>
-
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
     df = load_data()
     if df.empty:
