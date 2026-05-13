@@ -101,17 +101,38 @@ def connect():
     )
     return gspread.authorize(creds).open_by_key(st.secrets["SPREADSHEET_ID"])
 
-# Inisialisasi Spreadsheet dan Sheet
-spreadsheet = connect()
-sheet = spreadsheet.sheet1
+# ================= SPREADSHEET =================
+try:
+    spreadsheet = connect()
 
-# DEFINISIKAN user_sheet DI SINI SEBELUM DIPANGGIL
+    # Ganti "Sheet1" sesuai nama sheet utama Anda
+    sheet = spreadsheet.worksheet("data_kinerja")
+
+except Exception as e:
+    st.error(f"Gagal koneksi Spreadsheet utama: {e}")
+    st.stop()
+
+# ================= USER SHEET =================
 try:
     user_sheet = spreadsheet.worksheet("users")
+
 except gspread.exceptions.WorksheetNotFound:
-    # Jika sheet "users" tidak ada, buat baru
-    user_sheet = spreadsheet.add_worksheet("users", 100, 5)
-    user_sheet.append_row(["NIP", "Nama", "Jabatan", "Password", "Role"])
+
+    # Jika sheet users belum ada
+    user_sheet = spreadsheet.add_worksheet(
+        title="users",
+        rows=100,
+        cols=5
+    )
+
+    user_sheet.append_row([
+        "NIP",
+        "Nama",
+        "Jabatan",
+        "Password",
+        "Role"
+    ])
+
 except Exception as e:
     st.error(f"Gagal mengakses sheet users: {e}")
     st.stop()
