@@ -421,16 +421,17 @@ elif menu == "Data Kinerja":
             st.rerun()
 
         if c4.button("🗑", key=f"del{i}"):
-            try:
-        # Hapus berdasarkan row spreadsheet
+
+    try:
+        # Hapus row di spreadsheet
         sheet.delete_rows(int(row["row"]))
 
-        # Bersihkan cache
+        # Clear cache
         load_data.clear()
 
         st.success("Data berhasil dihapus")
 
-        # Reload total aplikasi
+        # Reload aplikasi
         st.rerun()
 
     except Exception as e:
