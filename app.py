@@ -119,12 +119,14 @@ except Exception as e:
 # ================= HELPER =================
 def safe(x): return "" if x is None else str(x)
 
+@st.cache_data(ttl=60)
 def load_data():
     df = pd.DataFrame(sheet.get_all_records())
     if not df.empty:
         df["row"] = range(2, len(df)+2)
     return df
 
+@st.cache_data(ttl=60)
 def load_users():
     return pd.DataFrame(user_sheet.get_all_records())
 
@@ -204,6 +206,8 @@ if "edit" in st.session_state:
                 f"E{row_idx}:J{row_idx}",
                 [[new_masuk, new_keluar, dur, new_uraian, new_output, ed["Lokasi"]]]
             )
+            load_data.clear()
+
             st.sidebar.success("Data Berhasil Diperbarui!")
             del st.session_state.edit
             st.rerun()
@@ -329,6 +333,7 @@ elif menu == "Input":
                 safe(koordinat),
                 safe(link_foto)
             ])
+            load_data.clear()
 
             st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
             
