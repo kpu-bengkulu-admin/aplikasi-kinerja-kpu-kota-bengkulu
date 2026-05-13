@@ -279,91 +279,96 @@ if menu == "Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-df = load_data()
+        df = load_data()
 
-if df.empty:
-    st.info("Belum ada data")
-    st.stop()
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
 
-df["Durasi"] = df.apply(
-    lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]),
-    axis=1
-)
-
-df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
-
-# ================= ROLE FILTER =================
-if st.session_state.role == "Admin":
-
-    pilihan_data = st.selectbox(
-        "Pilih Data",
-        ["Semua Pegawai", "Data Pribadi"]
+    df["Durasi"] = df.apply(
+        lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]),
+        axis=1
     )
 
-    if pilihan_data == "Data Pribadi":
+    df["Tanggal"] = pd.to_datetime(
+        df["Tanggal"],
+        errors='coerce'
+    )
+
+    # ================= ROLE ADMIN =================
+    if st.session_state.role == "Admin":
+
+        pilihan_data = st.selectbox(
+            "Pilih Data",
+            ["Semua Pegawai", "Data Pribadi"]
+        )
+
+        if pilihan_data == "Data Pribadi":
+            df = df[df["Nama"] == st.session_state.nama]
+
+    else:
+        # Pegawai biasa hanya lihat data sendiri
         df = df[df["Nama"] == st.session_state.nama]
 
-else:
-    # Pegawai biasa hanya lihat data sendiri
-    df = df[df["Nama"] == st.session_state.nama]
+    # ================= RANGE OTOMATIS =================
+    start_default = df["Tanggal"].min()
+    end_default = df["Tanggal"].max()
 
-# ================= RANGE TANGGAL =================
-start_default = df["Tanggal"].min()
-end_default = df["Tanggal"].max()
+    tgl = st.date_input(
+        "Range Tanggal",
+        value=(start_default, end_default)
+    )
 
-tgl = st.date_input(
-    "Range Tanggal",
-    value=(start_default, end_default)
-)
+    if len(tgl) == 2:
+        df = df[
+            (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
+            (df["Tanggal"] <= pd.to_datetime(tgl[1]))
+        ]
 
-if len(tgl) == 2:
-    df = df[
-        (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
-        (df["Tanggal"] <= pd.to_datetime(tgl[1]))
-    ]
+    # ================= FILTER =================
+    pegawai = st.multiselect(
+        "Pegawai",
+        sorted(df["Nama"].unique())
+    )
 
-# ================= FILTER =================
-pegawai = st.multiselect(
-    "Pegawai",
-    sorted(df["Nama"].unique())
-)
+    lokasi = st.multiselect(
+        "Lokasi",
+        sorted(df["Lokasi"].unique())
+    )
 
-lokasi = st.multiselect(
-    "Lokasi",
-    sorted(df["Lokasi"].unique())
-)
+    if pegawai:
+        df = df[df["Nama"].isin(pegawai)]
 
-if pegawai:
-    df = df[df["Nama"].isin(pegawai)]
+    if lokasi:
+        df = df[df["Lokasi"].isin(lokasi)]
 
-if lokasi:
-    df = df[df["Lokasi"].isin(lokasi)]
+    # ================= CARD =================
+    c1, c2, c3, c4 = st.columns(4)
 
-# ================= CARD =================
-c1, c2, c3, c4 = st.columns(4)
+    c1.markdown(
+        f"<div class='card c1'><h3>{len(df)}</h3>Total</div>",
+        unsafe_allow_html=True
+    )
 
-c1.markdown(
-    f"<div class='card c1'><h3>{len(df)}</h3>Total</div>",
-    unsafe_allow_html=True
-)
+    c2.markdown(
+        f"<div class='card c2'><h3>{df['Durasi'].sum():.2f}</h3>Jam</div>",
+        unsafe_allow_html=True
+    )
 
-c2.markdown(
-    f"<div class='card c2'><h3>{df['Durasi'].sum():.2f}</h3>Jam</div>",
-    unsafe_allow_html=True
-)
+    c3.markdown(
+        f"<div class='card c3'><h3>{df['Tanggal'].nunique()}</h3>Hari</div>",
+        unsafe_allow_html=True
+    )
 
-c3.markdown(
-    f"<div class='card c3'><h3>{df['Tanggal'].nunique()}</h3>Hari</div>",
-    unsafe_allow_html=True
-)
+    c4.markdown(
+        f"<div class='card c4'><h3>{df['Nama'].nunique()}</h3>Pegawai</div>",
+        unsafe_allow_html=True
+    )
 
-c4.markdown(
-    f"<div class='card c4'><h3>{df['Nama'].nunique()}</h3>Pegawai</div>",
-    unsafe_allow_html=True
-)
-
-# ================= GRAFIK =================
-st.bar_chart(df.groupby("Nama")["Durasi"].sum())
+    # ================= GRAFIK =================
+    st.bar_chart(
+        df.groupby("Nama")["Durasi"].sum()
+    )
 
 # ================= INPUT =================
 elif menu == "Input":
