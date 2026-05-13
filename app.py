@@ -189,11 +189,8 @@ if not st.session_state.login:
     st.title("🔐 Login E-Kinerja KPU Kota Bengkulu")
 
     nip = st.text_input("NIP")
-    password = st.text_input(
-    "Password",
-    type="password",
-    autocomplete="new-password"
-
+    pw = st.text_input("Password", type="password")
+    
     if st.button("Login"):
         cek = users[
             (users["NIP"].astype(str)==str(nip)) &
