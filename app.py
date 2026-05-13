@@ -239,16 +239,21 @@ if menu == "Dashboard":
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
     # RANGE OTOMATIS (FIX)
-    start_default = df["Tanggal"].min()
-    end_default = df["Tanggal"].max()
+start_default = df["Tanggal"].min()
+end_default = df["Tanggal"].max()
 
-    tgl = st.date_input("Range Tanggal", value=(start_default, end_default))
+tgl = st.date_input(
+    "Range Tanggal",
+    value=(start_default, end_default)
+)
 
-    if len(tgl)==2:
-        df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
+if len(tgl) == 2:
+    df = df[
+        (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
+        (df["Tanggal"] <= pd.to_datetime(tgl[1]))
+    ]
 
 # ================= FILTER ROLE =================
-
 if st.session_state.role in ["admin", "pimpinan"]:
 
     pegawai = st.multiselect(
@@ -269,15 +274,35 @@ if st.session_state.role in ["admin", "pimpinan"]:
 
 else:
     # Pegawai hanya melihat data sendiri
-    df = df[df["NIP"].astype(str) == st.session_state.nip]
+    df = df[
+        df["NIP"].astype(str) == st.session_state.nip
+    ]
 
-    c1,c2,c3,c4 = st.columns(4)
-    c1.markdown(f"<div class='card c1'><h3>{len(df)}</h3>Total</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='card c2'><h3>{df['Durasi'].sum():.2f}</h3>Jam</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='card c3'><h3>{df['Tanggal'].nunique()}</h3>Hari</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='card c4'><h3>{df['Nama'].nunique()}</h3>Pegawai</div>", unsafe_allow_html=True)
+# ================= CARD DASHBOARD =================
+c1, c2, c3, c4 = st.columns(4)
 
-    st.bar_chart(df.groupby("Nama")["Durasi"].sum())
+c1.markdown(
+    f"<div class='card c1'><h3>{len(df)}</h3>Total</div>",
+    unsafe_allow_html=True
+)
+
+c2.markdown(
+    f"<div class='card c2'><h3>{df['Durasi'].sum():.2f}</h3>Jam</div>",
+    unsafe_allow_html=True
+)
+
+c3.markdown(
+    f"<div class='card c3'><h3>{df['Tanggal'].nunique()}</h3>Hari</div>",
+    unsafe_allow_html=True
+)
+
+c4.markdown(
+    f"<div class='card c4'><h3>{df['Nama'].nunique()}</h3>Pegawai</div>",
+    unsafe_allow_html=True
+)
+
+# ================= GRAFIK =================
+st.bar_chart(df.groupby("Nama")["Durasi"].sum())
 
 # ================= INPUT =================
 elif menu == "Input":
