@@ -279,7 +279,7 @@ if menu == "Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-        df = load_data()
+    df = load_data()
 
     if df.empty:
         st.info("Belum ada data")
