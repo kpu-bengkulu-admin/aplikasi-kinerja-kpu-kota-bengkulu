@@ -240,6 +240,11 @@ if menu == "Dashboard":
     """, unsafe_allow_html=True)
 
     df = load_data()
+
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
+    df = load_data()
     if df.empty:
         st.info("Belum ada data")
         st.stop()
