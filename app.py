@@ -48,7 +48,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.sidebar.image("logo_kpu.png", width=140)
+st.sidebar.image("logo.png", width=140)
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
