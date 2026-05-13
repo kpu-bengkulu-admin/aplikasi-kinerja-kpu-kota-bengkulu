@@ -266,7 +266,7 @@ if "edit" in st.session_state:
 # ================= DASHBOARD =================
 if menu == "Dashboard":
 
-    st.markdown(f"""
+st.markdown(f"""
 <div style="
     background:linear-gradient(90deg,#ef4444,#f87171);
     padding:20px;
