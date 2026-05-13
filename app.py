@@ -412,30 +412,18 @@ elif menu == "Data Kinerja":
                 c1.image(foto_data, width=250, caption="Dokumentasi")
             elif foto_data.startswith("http"):
                 c1.markdown(f"[📸 Lihat Foto]({foto_data})")
-# --- SELESAI ---
+        # --- SELESAI ---
 
-   c2.write(f"{row['Durasi']:.2f} jam")
+        c2.write(f"{row['Durasi']:.2f} jam")
 
-if c3.button("✏️", key=f"edit{i}"):
+        if c3.button("✏️", key=f"edit{i}"):
             st.session_state.edit = row
             st.rerun()
 
-if c4.button("🗑", key=f"del{i}"):
+        if c4.button("🗑", key=f"del{i}"):
+            sheet.delete_rows(int(row["row"]))
+            st.rerun()
 
-    try:
-        # Hapus row spreadsheet
-        sheet.delete_rows(int(row["row"]))
-
-        # Refresh cache
-        load_data.clear()
-
-        st.success("Data berhasil dihapus")
-
-        # Reload aplikasi
-        st.rerun()
-
-    except Exception as e:
-        st.error(f"Gagal menghapus data: {e}")
 
     # DOWNLOAD
     st.divider()
