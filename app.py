@@ -140,14 +140,14 @@ except Exception as e:
 # ================= HELPER =================
 def safe(x): return "" if x is None else str(x)
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=5)
 def load_data():
     df = pd.DataFrame(sheet.get_all_records())
     if not df.empty:
         df["row"] = range(2, len(df)+2)
     return df
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=5)
 def load_users():
     return pd.DataFrame(user_sheet.get_all_records())
 
