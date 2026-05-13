@@ -274,11 +274,7 @@ if menu == "Dashboard":
         color:white;
         margin-bottom:20px;
     ">
-        <h2 style="display:flex; align-items:center; gap:10px;">
-            <img src="logo.png" width="40">
-            Aplikasi E-Kinerja
-        </h2>
-
+        <h2>📊 Aplikasi E-Kinerja</h2>
         <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
     </div>
     """, unsafe_allow_html=True)
