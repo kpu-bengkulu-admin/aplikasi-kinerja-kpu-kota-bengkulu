@@ -44,9 +44,11 @@ def upload_foto(file):
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU Kota Bengkulu",
-    page_icon="📊",
+    page_icon="logo.png",
     layout="wide"
 )
+
+st.sidebar.image("logo_kpu.png", width=140)
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
