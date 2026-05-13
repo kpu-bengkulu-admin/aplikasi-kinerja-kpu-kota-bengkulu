@@ -247,7 +247,9 @@ if menu == "Dashboard":
     if len(tgl)==2:
         df = df[(df["Tanggal"]>=pd.to_datetime(tgl[0])) & (df["Tanggal"]<=pd.to_datetime(tgl[1]))]
 
-    if st.session_state.role in ["admin", "pimpinan"]:
+# ================= FILTER ROLE =================
+
+if st.session_state.role in ["admin", "pimpinan"]:
 
     pegawai = st.multiselect(
         "Pegawai",
