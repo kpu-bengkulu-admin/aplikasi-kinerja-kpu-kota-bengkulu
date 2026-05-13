@@ -196,12 +196,22 @@ if not st.session_state.login:
 
 # ================= SIDEBAR =================
 st.sidebar.title(st.session_state.nama)
-menu = st.sidebar.radio("Menu", ["Dashboard", "Input", "Data Kinerja", "Admin"])
+
+st.sidebar.markdown(
+    f"<p style='margin-top:-10px; color:gray;'>"
+    f"{st.session_state.role}"
+    f"</p>",
+    unsafe_allow_html=True
+)
+
+menu = st.sidebar.radio(
+    "Menu",
+    ["Dashboard", "Input", "Data Kinerja", "Admin"]
+)
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
-
 # --- BAGIAN EDIT (TAMBAHKAN DI SINI AGAR MUNCUL DI SIDEBAR) ---
 if "edit" in st.session_state:
     ed = st.session_state.edit
