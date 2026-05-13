@@ -49,6 +49,16 @@ st.set_page_config(
 )
 
 st.sidebar.image("logo.png", width=100)
+st.markdown("""
+<style>
+header {visibility: hidden;}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background:#0f172a !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
