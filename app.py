@@ -395,9 +395,11 @@ elif menu == "Data Kinerja":
 
     # FILTER TANGGAL
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
-    tanggal_valid = df["Tanggal"].dropna()
 
-    if not tanggal_valid.empty:
+tanggal_valid = df["Tanggal"].dropna()
+
+if not tanggal_valid.empty:
+
     start_date, end_date = st.date_input(
         "Filter Tanggal",
         value=(tanggal_valid.min().date(), tanggal_valid.max().date())
@@ -407,7 +409,8 @@ elif menu == "Data Kinerja":
         (df["Tanggal"].dt.date >= start_date) &
         (df["Tanggal"].dt.date <= end_date)
     ]
-    else:
+
+else:
     st.warning("Data tanggal belum tersedia")
 
 
