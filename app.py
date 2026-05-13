@@ -1,4 +1,28 @@
 import streamlit as st
+
+# ================= CONFIG =================
+st.set_page_config(
+    page_title="E-Kinerja KPU Kota Bengkulu",
+    page_icon="logo.png",
+    layout="wide"
+)
+st.markdown("""
+<style>
+header {visibility: hidden;}
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+import pandas as pd
+from datetime import date
+import gspread
+from google.oauth2.service_account import Credentials
+import io
+
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+import streamlit as st
 import pandas as pd
 from datetime import date
 import gspread
@@ -39,26 +63,6 @@ def upload_foto(file):
     except Exception as e:
         st.error(f"Gagal memproses foto: {e}")
         return ""
-
-
-# ================= CONFIG =================
-st.set_page_config(
-    page_title="E-Kinerja KPU Kota Bengkulu",
-    page_icon="logo.png",
-    layout="wide"
-)
-
-st.sidebar.image("logo.png", width=100)
-st.markdown("""
-<style>
-header {visibility: hidden;}
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background:#0f172a !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
@@ -185,7 +189,10 @@ if not st.session_state.login:
     st.title("🔐 Login E-Kinerja KPU Kota Bengkulu")
 
     nip = st.text_input("NIP")
-    pw = st.text_input("Password", type="password")
+    password = st.text_input(
+    "Password",
+    type="password",
+    autocomplete="new-password"
 
     if st.button("Login"):
         cek = users[
