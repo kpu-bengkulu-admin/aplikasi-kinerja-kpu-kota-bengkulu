@@ -458,7 +458,7 @@ elif menu == "Data Kinerja":
     df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors='coerce')
 
     # FILTER ROLE
-    if st.session_state.role in ["admin","pimpinan"]:
+    if st.session_state.role in ["Admin","pimpinan"]:
         mode = st.radio("Mode Data", ["Semua Data","Data Saya"])
         if mode == "Data Saya":
             df = df[df["NIP"].astype(str)==st.session_state.nip]
@@ -541,7 +541,7 @@ elif menu == "Data Kinerja":
 # ================= ADMIN =================
 elif menu == "Admin":
 
-    if st.session_state.role != "admin":
+    if st.session_state.role != "Admin":
         st.error("Akses ditolak")
         st.stop()
 
