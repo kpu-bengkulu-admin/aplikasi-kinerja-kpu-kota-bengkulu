@@ -4,7 +4,7 @@ import streamlit as st
 st.set_page_config(
     page_title="E-Kinerja KPU Kota Bengkulu",
     page_icon="logo.png",
-    layout="wide"
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
