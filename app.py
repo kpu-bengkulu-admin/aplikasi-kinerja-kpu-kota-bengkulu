@@ -10,11 +10,23 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-header {visibility: hidden;}
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-</style>
-""", unsafe_allow_html=True)
+
+/* Header */
+header {
+    visibility: visible !important;
+    height: 60px !important;
+    background: transparent !important;
+}
+
+/* Hilangkan menu dan footer */
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
 /* Sidebar mobile tetap muncul */
 section[data-testid="stSidebar"] {
     min-width: 260px !important;
@@ -32,11 +44,8 @@ button[kind="header"] {
     visibility: visible !important;
 }
 
-/* Jarak agar tombol tidak tertutup */
-header {
-    visibility: visible !important;
-    height: 60px !important;
-}
+</style>
+""", unsafe_allow_html=True)
 
 </style>
 """, unsafe_allow_html=True)
