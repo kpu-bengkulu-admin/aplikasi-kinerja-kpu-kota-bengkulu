@@ -5,6 +5,7 @@ st.set_page_config(
     page_title="E-Kinerja KPU Kota Bengkulu",
     page_icon="logo.png",
     layout="wide"
+    initial_sidebar_state="expanded"
 )
 st.markdown("""
 <style>
@@ -13,7 +14,31 @@ header {visibility: hidden;}
 footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
+/* Sidebar mobile tetap muncul */
+section[data-testid="stSidebar"] {
+    min-width: 260px !important;
+    width: 260px !important;
+}
 
+/* Tombol sidebar mobile */
+button[kind="header"] {
+    display: block !important;
+}
+
+/* Paksa tombol sidebar terlihat */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+/* Jarak agar tombol tidak tertutup */
+header {
+    visibility: visible !important;
+    height: 60px !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 import pandas as pd
 from datetime import date
 import gspread
