@@ -20,11 +20,11 @@ header {
 
 /* Hilangkan menu dan footer */
 #MainMenu {
-    visibility: hidden;
+    visibility: hidden !important;
 }
 
 footer {
-    visibility: hidden;
+    visibility: hidden !important;
 }
 
 /* Sidebar mobile tetap muncul */
