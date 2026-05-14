@@ -47,11 +47,7 @@ button[kind="header"] {
 </style>
 """, unsafe_allow_html=True)
 
-</style>
-""", unsafe_allow_html=True)
 
-</style>
-""", unsafe_allow_html=True)
 import pandas as pd
 from datetime import date
 import gspread
