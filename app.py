@@ -3,7 +3,7 @@ import streamlit as st
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU Kota Bengkulu",
-    page_icon="logo.png",
+    page_icon="logo_kpu.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -243,7 +243,7 @@ if not st.session_state.login:
     st.stop()
 
 # ================= SIDEBAR =================
-st.sidebar.image("logo.png", width=100)
+st.sidebar.image("logo_kpu.png", width=100)
 st.sidebar.title(st.session_state.nama)
 
 st.sidebar.markdown(
@@ -349,16 +349,23 @@ if menu == "Dashboard":
     start_default = df["Tanggal"].min()
     end_default = df["Tanggal"].max()
 
-    tgl = st.date_input(
-        "Range Tanggal",
-        value=(start_default, end_default)
-    )
+    today = date.today()
 
-    if len(tgl) == 2:
-        df = df[
-            (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
-            (df["Tanggal"] <= pd.to_datetime(tgl[1]))
-        ]
+    # Jika kosong / NaT
+if pd.isna(start_default):
+    start_default = today
+else:
+    start_default = pd.to_datetime(start_default).date()
+
+if pd.isna(end_default):
+    end_default = today
+else:
+    end_default = pd.to_datetime(end_default).date()
+
+tgl = st.date_input(
+    "Range Tanggal",
+    value=(start_default, end_default)
+)
 
     # ================= FILTER =================
     pegawai = st.multiselect(
