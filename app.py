@@ -329,6 +329,8 @@ if menu == "Dashboard":
         df["Tanggal"],
         errors='coerce'
     )
+    df = df.dropna(subset=["Tanggal"])
+
 
     # ================= ROLE ADMIN =================
     if st.session_state.role == "Admin":
@@ -352,20 +354,26 @@ if menu == "Dashboard":
     today = date.today()
 
     # Jika kosong / NaT
-if pd.isna(start_default):
-    start_default = today
-else:
-    start_default = pd.to_datetime(start_default).date()
+    if pd.isna(start_default):
+        start_default = today
+    else:
+        start_default = pd.to_datetime(start_default).date()
 
-if pd.isna(end_default):
-    end_default = today
-else:
-    end_default = pd.to_datetime(end_default).date()
+    if pd.isna(end_default):
+        end_default = today
+    else:
+        end_default = pd.to_datetime(end_default).date()
 
-tgl = st.date_input(
-    "Range Tanggal",
-    value=(start_default, end_default)
-)
+    tgl = st.date_input(
+        "Range Tanggal",
+        value=(start_default, end_default)
+    )
+
+    if len(tgl) == 2:
+        df = df[
+            (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
+            (df["Tanggal"] <= pd.to_datetime(tgl[1]))
+        ]
 
     # ================= FILTER =================
     pegawai = st.multiselect(
@@ -591,7 +599,7 @@ elif menu == "Admin":
     nama = st.text_input("Nama")
     jab = st.text_input("Jabatan")
     pw = st.text_input("Password")
-    role = st.selectbox("Role", ["pegawai","admin","pimpinan"])
+    role = st.selectbox("Role", ["pegawai","Admin","pimpinan"])
 
     if st.button("Tambah User"):
         user_sheet.append_row([nip,nama,jab,pw,role])
