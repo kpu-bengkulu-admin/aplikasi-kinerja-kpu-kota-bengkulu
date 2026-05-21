@@ -487,7 +487,7 @@ elif menu == "Input":
 
     lokasi = st.selectbox(
         "Lokasi",
-        ["Kantor", "Rumah", "Dinas Luar / SPT"]
+        ["Kantor", "Rumah", "Dinas Luar / SPT"],
         key="lokasi_input"
     )
 
