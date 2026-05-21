@@ -432,7 +432,7 @@ elif menu == "Input":
     waktu_absen = ""
 
     # 2. KHUSUS RUMAH (Hanya muncul jika pilih Rumah)
-    if lokasi == "Rumah":
+if lokasi == "Rumah":
 
     waktu_absen = st.selectbox(
         "Waktu Absen",
