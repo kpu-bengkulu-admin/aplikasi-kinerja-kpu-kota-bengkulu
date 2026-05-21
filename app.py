@@ -546,23 +546,23 @@ elif menu == "Input":
     )
     masuk = st.text_input(
         "Jam Masuk",
-        "07:30"
+        "07:30",
         key="jam_masuk"
     )
 
     keluar = st.text_input(
         "Jam Keluar",
-        "16:00"
+        "16:00",
         key="jam_masuk"
     )
 
     uraian = st.text_area(
-        "Uraian Kegiatan"
+        "Uraian Kegiatan",
         key="uraian_input"
     )
 
     output = st.text_area(
-        "Output / Hasil"
+        "Output / Hasil",
         key="output_input"
     )
 
