@@ -872,6 +872,8 @@ for i, row in df.iterrows():
         st.divider()
 
     # DOWNLOAD
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.divider()
 
     df["NIP"] = df["NIP"].astype(str)
