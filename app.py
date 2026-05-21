@@ -634,16 +634,16 @@ elif menu == "Input":
             st.rerun()
 
 # ================= DATA =================
+# ================= DATA =================
 elif menu == "Data Kinerja":
 
     df = load_data()
 
     if df.empty:
-
         st.info("Belum ada data")
-
         st.stop()
 
+    # ================= HITUNG =================
     df["Durasi"] = df.apply(
         lambda r: hitung_durasi(
             r["Jam Masuk"],
@@ -657,11 +657,8 @@ elif menu == "Data Kinerja":
         errors="coerce"
     )
 
-    # ROLE
-    if st.session_state.role in [
-        "Admin",
-        "pimpinan"
-    ]:
+    # ================= FILTER ROLE =================
+    if st.session_state.role in ["Admin", "pimpinan"]:
 
         mode = st.radio(
             "Mode Data",
@@ -682,12 +679,21 @@ elif menu == "Data Kinerja":
             == st.session_state.nip
         ]
 
-    # FILTER TANGGAL
+    # ================= FILTER TANGGAL =================
+    start_date = df["Tanggal"].min()
+    end_date = df["Tanggal"].max()
+
+    if pd.isna(start_date):
+        start_date = date.today()
+
+    if pd.isna(end_date):
+        end_date = date.today()
+
     tgl = st.date_input(
         "Filter Tanggal",
         value=(
-            df["Tanggal"].min(),
-            df["Tanggal"].max()
+            pd.to_datetime(start_date).date(),
+            pd.to_datetime(end_date).date()
         )
     )
 
@@ -698,25 +704,23 @@ elif menu == "Data Kinerja":
             (df["Tanggal"] <= pd.to_datetime(tgl[1]))
         ]
 
-    # ================= TAMPIL DATA MODERN =================
-for i, row in df.iterrows():
+    # ================= TAMPIL DATA =================
+    for i, row in df.iterrows():
 
-    lokasi_color = "#22c55e"
+        lokasi_color = "#22c55e"
 
-    if row["Lokasi"] == "Rumah":
-        lokasi_color = "#f59e0b"
+        if row["Lokasi"] == "Rumah":
+            lokasi_color = "#f59e0b"
 
-    elif row["Lokasi"] == "Dinas Luar / SPT":
-        lokasi_color = "#3b82f6"
-
-    with st.container():
+        elif row["Lokasi"] == "Dinas Luar / SPT":
+            lokasi_color = "#3b82f6"
 
         st.markdown(f"""
         <div style="
             background:white;
             padding:20px;
             border-radius:18px;
-            margin-bottom:18px;
+            margin-bottom:20px;
             border:1px solid #e5e7eb;
             box-shadow:0 2px 10px rgba(0,0,0,0.06);
         ">
@@ -725,14 +729,20 @@ for i, row in df.iterrows():
                 display:flex;
                 justify-content:space-between;
                 align-items:center;
+                flex-wrap:wrap;
+                gap:10px;
             ">
+
                 <div>
-                    <h3 style="margin:0; color:#111827;">
+                    <h3 style="
+                        margin:0;
+                        color:#111827;
+                    ">
                         👤 {row['Nama']}
                     </h3>
 
                     <p style="
-                        margin-top:5px;
+                        margin:4px 0 0 0;
                         color:#6b7280;
                         font-size:14px;
                     ">
@@ -750,115 +760,97 @@ for i, row in df.iterrows():
                 ">
                     📍 {row['Lokasi']}
                 </div>
-            </div>
-
-            <hr style="margin-top:15px; margin-bottom:15px;">
-
-            <div style="
-                display:grid;
-                grid-template-columns:1fr 1fr;
-                gap:20px;
-            ">
-
-                <div>
-                    <p style="
-                        font-weight:bold;
-                        color:#111827;
-                        margin-bottom:6px;
-                    ">
-                        📝 Uraian Kegiatan
-                    </p>
-
-                    <div style="
-                        background:#f9fafb;
-                        padding:12px;
-                        border-radius:10px;
-                        min-height:80px;
-                    ">
-                        {row['Uraian']}
-                    </div>
-                </div>
-
-                <div>
-                    <p style="
-                        font-weight:bold;
-                        color:#111827;
-                        margin-bottom:6px;
-                    ">
-                        📦 Output / Hasil
-                    </p>
-
-                    <div style="
-                        background:#f9fafb;
-                        padding:12px;
-                        border-radius:10px;
-                        min-height:80px;
-                    ">
-                        {row['Output']}
-                    </div>
-                </div>
 
             </div>
 
-            <div style="
-                margin-top:18px;
-                display:flex;
-                gap:15px;
-                flex-wrap:wrap;
+            <hr style="
+                margin-top:15px;
+                margin-bottom:15px;
             ">
-
-                <div style="
-                    background:#eff6ff;
-                    color:#1d4ed8;
-                    padding:8px 12px;
-                    border-radius:10px;
-                    font-size:13px;
-                ">
-                    ⏱ {row['Durasi']:.2f} Jam
-                </div>
 
         """, unsafe_allow_html=True)
 
-        # GPS
-        if "Koordinat" in row and row["Koordinat"]:
-            st.markdown(f"""
+        # ================= ISI =================
+        colA, colB = st.columns(2)
+
+        with colA:
+
+            st.markdown("""
             <div style="
-                background:#ecfeff;
-                color:#0f766e;
-                padding:8px 12px;
-                border-radius:10px;
-                font-size:13px;
-                margin-top:10px;
-                display:inline-block;
+                background:#f9fafb;
+                padding:15px;
+                border-radius:12px;
+                min-height:120px;
+                border:1px solid #e5e7eb;
             ">
-                📍 {row['Koordinat']}
-            </div>
             """, unsafe_allow_html=True)
 
-        # FOTO
-        if "Foto" in row and row.get("Foto"):
+            st.markdown("### 📝 Uraian Kegiatan")
+            st.write(row["Uraian"])
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with colB:
+
+            st.markdown("""
+            <div style="
+                background:#f9fafb;
+                padding:15px;
+                border-radius:12px;
+                min-height:120px;
+                border:1px solid #e5e7eb;
+            ">
+            """, unsafe_allow_html=True)
+
+            st.markdown("### 📦 Output / Hasil")
+            st.write(row["Output"])
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # ================= INFO =================
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        info1, info2, info3 = st.columns(3)
+
+        with info1:
+            st.info(f"⏱ {row['Durasi']:.2f} Jam")
+
+        with info2:
+
+            if "Waktu Absen" in row and row["Waktu Absen"]:
+                st.success(f"🕒 {row['Waktu Absen']}")
+
+        with info3:
+
+            if "Koordinat" in row and row["Koordinat"]:
+                st.warning(f"📍 GPS Terdeteksi")
+
+        # ================= FOTO =================
+        if "Foto" in row and row["Foto"]:
 
             foto_data = str(row["Foto"])
 
             if foto_data.startswith("data:image"):
+
                 st.image(
                     foto_data,
                     width=250,
-                    caption="📸 Dokumentasi Kegiatan"
+                    caption="📸 Dokumentasi"
                 )
 
             elif foto_data.startswith("http"):
+
                 st.markdown(
                     f"[📸 Lihat Foto]({foto_data})"
                 )
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # TOMBOL
+        # ================= TOMBOL =================
         col1, col2, col3 = st.columns([8,1,1])
 
         if col2.button("✏️", key=f"edit{i}"):
+
             st.session_state.edit = row
+
             st.rerun()
 
         if col3.button("🗑", key=f"del{i}"):
@@ -869,13 +861,11 @@ for i, row in df.iterrows():
 
             st.rerun()
 
-        st.divider()
-
-    # DOWNLOAD
         st.markdown("</div>", unsafe_allow_html=True)
 
-    st.divider()
+        st.divider()
 
+    # ================= DOWNLOAD =================
     df["NIP"] = df["NIP"].astype(str)
 
     excel = io.BytesIO()
@@ -891,13 +881,11 @@ for i, row in df.iterrows():
             sheet_name="Data"
         )
 
-        workbook = writer.book
-
         worksheet = writer.sheets["Data"]
 
-        for row in worksheet.iter_rows():
+        for row_excel in worksheet.iter_rows():
 
-            for cell in row:
+            for cell in row_excel:
 
                 cell.alignment = Alignment(
                     wrap_text=True,
