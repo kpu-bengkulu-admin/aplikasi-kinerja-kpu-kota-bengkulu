@@ -488,6 +488,7 @@ elif menu == "Input":
     lokasi = st.selectbox(
         "Lokasi",
         ["Kantor", "Rumah", "Dinas Luar / SPT"]
+        key="lokasi_input"
     )
 
     foto = None
@@ -500,6 +501,7 @@ elif menu == "Input":
         waktu_absen = st.selectbox(
             "Waktu Absen",
             ["Pagi", "Siang", "Sore"]
+            key="waktu_absen_input"
         )
 
         st.markdown("### 📸 Verifikasi WFH")
@@ -538,24 +540,30 @@ elif menu == "Input":
         st.divider()
 
     # ================= FORM =================
-    tgl = st.date_input("Tanggal")
-
+    tgl = st.date_input(
+        "Tanggal",
+        key="tgl_input"
+    )
     masuk = st.text_input(
         "Jam Masuk",
         "07:30"
+        key="jam_masuk"
     )
 
     keluar = st.text_input(
         "Jam Keluar",
         "16:00"
+        key="jam_masuk"
     )
 
     uraian = st.text_area(
         "Uraian Kegiatan"
+        key="uraian_input"
     )
 
     output = st.text_area(
         "Output / Hasil"
+        key="output_input"
     )
 
     # ================= SIMPAN =================
@@ -628,11 +636,26 @@ elif menu == "Input":
                 f"🎉 Data {lokasi} berhasil disimpan"
             )
 
+            # RESET INPUT
+            st.session_state.tgl_input = date.today()
+
+            st.session_state.jam_masuk = "07:30"
+
+            st.session_state.jam_keluar = "16:00"
+
+            st.session_state.uraian_input = ""
+
+            st.session_state.output_input = ""
+
+            st.session_state.lokasi_input = "Kantor"
+
+            if "waktu_absen_input" in st.session_state:
+                st.session_state.waktu_absen_input = "Pagi"
+
             import time
             time.sleep(1)
 
             st.rerun()
-
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
