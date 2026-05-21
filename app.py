@@ -485,172 +485,160 @@ elif menu == "Input":
 
     st.subheader("📍 Input Kinerja")
 
-    lokasi = st.selectbox(
-        "Lokasi",
-        ["Kantor", "Rumah", "Dinas Luar / SPT"],
-        key="lokasi_input"
-    )
+    with st.form("form_input", clear_on_submit=True):
 
-    foto = None
-    koordinat = ""
-    waktu_absen = "-"
-
-    # ================= WFH =================
-    if lokasi == "Rumah":
-
-        waktu_absen = st.selectbox(
-            "Waktu Absen",
-            ["Pagi", "Siang", "Sore"],
-            key="waktu_absen_input"
+        lokasi = st.selectbox(
+            "Lokasi",
+            ["Kantor", "Rumah", "Dinas Luar / SPT"]
         )
 
-        st.markdown("### 📸 Verifikasi WFH")
+        foto = None
+        koordinat = ""
+        waktu_absen = "-"
 
-        foto = st.camera_input(
-            "Ambil Foto Langsung"
+        # ================= WFH =================
+        if lokasi == "Rumah":
+
+            waktu_absen = st.selectbox(
+                "Waktu Absen",
+                ["Pagi", "Siang", "Sore"]
+            )
+
+            st.markdown("### 📸 Verifikasi WFH")
+
+            foto = st.camera_input(
+                "Ambil Foto Langsung"
+            )
+
+            from streamlit_js_eval import get_geolocation
+
+            loc = get_geolocation()
+
+            if loc:
+
+                koordinat = (
+                    f"{loc['coords']['latitude']}, "
+                    f"{loc['coords']['longitude']}"
+                )
+
+                st.success(
+                    f"✅ GPS Terdeteksi: {koordinat}"
+                )
+
+            else:
+
+                st.warning(
+                    "📡 Menunggu GPS..."
+                )
+
+            st.text_input(
+                "Koordinat GPS",
+                value=koordinat,
+                disabled=True
+            )
+
+            st.divider()
+
+        # ================= FORM =================
+        tgl = st.date_input(
+            "Tanggal",
+            value=date.today()
         )
 
-        from streamlit_js_eval import get_geolocation
-
-        loc = get_geolocation()
-
-        if loc:
-
-            koordinat = (
-                f"{loc['coords']['latitude']}, "
-                f"{loc['coords']['longitude']}"
-            )
-
-            st.success(
-                f"✅ GPS Terdeteksi: {koordinat}"
-            )
-
-        else:
-
-            st.warning(
-                "📡 Menunggu GPS..."
-            )
-
-        st.text_input(
-            "Koordinat GPS",
-            value=koordinat,
-            disabled=True
+        masuk = st.text_input(
+            "Jam Masuk",
+            value="07:30"
         )
 
-        st.divider()
-
-    # ================= FORM =================
-    tgl = st.date_input(
-        "Tanggal",
-        key="tgl_input"
-    )
-    masuk = st.text_input(
-        "Jam Masuk",
-        "07:30",
-        key="jam_masuk"
-    )
-
-    keluar = st.text_input(
-        "Jam Keluar",
-        "16:00",
-        key="jam_keluar"
-    )
-
-    uraian = st.text_area(
-        "Uraian Kegiatan",
-        key="uraian_input"
-    )
-
-    output = st.text_area(
-        "Output / Hasil",
-        key="output_input"
-    )
-
-    # ================= SIMPAN =================
-    if st.button(
-        "Simpan Data",
-        type="primary"
-    ):
-
-        dur = hitung_durasi(
-            masuk,
-            keluar
+        keluar = st.text_input(
+            "Jam Keluar",
+            value="16:00"
         )
 
-        if not uraian or not output:
+        uraian = st.text_area(
+            "Uraian Kegiatan"
+        )
 
-            st.error(
-                "⚠️ Uraian dan output wajib diisi"
+        output = st.text_area(
+            "Output / Hasil"
+        )
+
+        simpan = st.form_submit_button(
+            "💾 Simpan Data"
+        )
+
+        # ================= SIMPAN =================
+        if simpan:
+
+            dur = hitung_durasi(
+                masuk,
+                keluar
             )
 
-        elif dur == 0:
+            if not uraian or not output:
 
-            st.error(
-                "⚠️ Jam tidak valid"
-            )
+                st.error(
+                    "⚠️ Uraian dan output wajib diisi"
+                )
 
-        elif lokasi == "Rumah" and (
-            foto is None or koordinat == ""
-        ):
+            elif dur == 0:
 
-            st.error(
-                "⚠️ Foto dan GPS wajib untuk WFH"
-            )
+                st.error(
+                    "⚠️ Jam tidak valid"
+                )
 
-        else:
+            elif lokasi == "Rumah" and (
+                foto is None or koordinat == ""
+            ):
 
-            link_foto = ""
+                st.error(
+                    "⚠️ Foto dan GPS wajib untuk WFH"
+                )
 
-            if lokasi == "Rumah":
-                link_foto = upload_foto(foto)
+            else:
 
-            sheet.append_row([
+                link_foto = ""
 
-                safe(st.session_state.nama),
-                safe(str(st.session_state.nip)),
-                safe(st.session_state.jabatan),
+                if lokasi == "Rumah":
+                    link_foto = upload_foto(foto)
 
-                safe(tgl.strftime("%Y-%m-%d")),
+                sheet.append_row([
 
-                safe(masuk),
-                safe(keluar),
+                    safe(st.session_state.nama),
+                    safe(str(st.session_state.nip)),
+                    safe(st.session_state.jabatan),
 
-                dur,
+                    safe(tgl.strftime("%Y-%m-%d")),
 
-                safe(uraian),
-                safe(output),
+                    safe(masuk),
+                    safe(keluar),
 
-                safe(lokasi),
+                    dur,
 
-                safe(waktu_absen),
+                    safe(uraian),
+                    safe(output),
 
-                safe(koordinat),
+                    safe(lokasi),
 
-                safe(link_foto)
+                    safe(waktu_absen),
 
-            ])
+                    safe(koordinat),
 
-            load_data.clear()
+                    safe(link_foto)
 
-            st.success(
-                f"🎉 Data {lokasi} berhasil disimpan"
-            )
+                ])
 
-            # RESET INPUT
-            st.session_state.update({
-                "tgl_input": date.today(),
-                "jam_masuk": "07:30",
-                "jam_keluar": "16:00",
-                "uraian_input": "",
-                "output_input": "",
-                "lokasi_input": "Kantor",
-                "waktu_absen_input": "Pagi"
-            })
+                load_data.clear()
 
-            import time
-            time.sleep(1)
+                st.success(
+                    f"🎉 Data {lokasi} berhasil disimpan"
+                )
 
-            st.rerun()
+                import time
+                time.sleep(1)
+
+                st.rerun()
+
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
