@@ -818,41 +818,17 @@ elif menu == "Data Kinerja":
 
         with isi1:
 
-            st.markdown("""
-            <div style="
-                background:#f9fafb;
-                padding:15px;
-                border-radius:12px;
-                border:1px solid #e5e7eb;
-                min-height:130px;
-            ">
-            """, unsafe_allow_html=True)
-
             st.markdown("#### 📝 Uraian Kegiatan")
 
-            st.write(row["Uraian"])
+            st.info(row["Uraian"])
 
-            st.markdown("</div>", unsafe_allow_html=True)
-
+            
         with isi2:
-
-            st.markdown("""
-            <div style="
-                background:#f9fafb;
-                padding:15px;
-                border-radius:12px;
-                border:1px solid #e5e7eb;
-                min-height:130px;
-            ">
-            """, unsafe_allow_html=True)
 
             st.markdown("#### 📦 Output / Hasil")
 
-            st.write(row["Output"])
+            st.success(row["Output"])
 
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
 
         # ================= INFO =================
         info1, info2, info3 = st.columns(3)
