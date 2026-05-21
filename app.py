@@ -634,8 +634,9 @@ elif menu == "Input":
             st.rerun()
 
 # ================= DATA =================
-# ================= DATA =================
 elif menu == "Data Kinerja":
+
+    st.subheader("📋 Data Kinerja Pegawai")
 
     df = load_data()
 
@@ -643,7 +644,7 @@ elif menu == "Data Kinerja":
         st.info("Belum ada data")
         st.stop()
 
-    # ================= HITUNG =================
+    # ================= FORMAT DATA =================
     df["Durasi"] = df.apply(
         lambda r: hitung_durasi(
             r["Jam Masuk"],
@@ -657,12 +658,15 @@ elif menu == "Data Kinerja":
         errors="coerce"
     )
 
+    df = df.dropna(subset=["Tanggal"])
+
     # ================= FILTER ROLE =================
     if st.session_state.role in ["Admin", "pimpinan"]:
 
         mode = st.radio(
             "Mode Data",
-            ["Semua Data", "Data Saya"]
+            ["Semua Data", "Data Saya"],
+            horizontal=True
         )
 
         if mode == "Data Saya":
@@ -674,27 +678,35 @@ elif menu == "Data Kinerja":
 
     else:
 
+        # Pegawai hanya melihat data sendiri
         df = df[
             df["NIP"].astype(str)
             == st.session_state.nip
         ]
 
-    # ================= FILTER TANGGAL =================
-    start_date = df["Tanggal"].min()
-    end_date = df["Tanggal"].max()
+    # ================= RANGE TANGGAL =================
+    start_default = df["Tanggal"].min()
+    end_default = df["Tanggal"].max()
 
-    if pd.isna(start_date):
-        start_date = date.today()
+    today = date.today()
 
-    if pd.isna(end_date):
-        end_date = date.today()
+    if pd.isna(start_default):
+        start_default = today
+    else:
+        start_default = pd.to_datetime(
+            start_default
+        ).date()
+
+    if pd.isna(end_default):
+        end_default = today
+    else:
+        end_default = pd.to_datetime(
+            end_default
+        ).date()
 
     tgl = st.date_input(
-        "Filter Tanggal",
-        value=(
-            pd.to_datetime(start_date).date(),
-            pd.to_datetime(end_date).date()
-        )
+        "📅 Range Tanggal",
+        value=(start_default, end_default)
     )
 
     if len(tgl) == 2:
@@ -704,75 +716,52 @@ elif menu == "Data Kinerja":
             (df["Tanggal"] <= pd.to_datetime(tgl[1]))
         ]
 
-# ================= FILTER RANGE =================
-start_default = df["Tanggal"].min()
-end_default = df["Tanggal"].max()
+    # ================= FILTER PEGAWAI =================
+    if st.session_state.role in ["Admin", "pimpinan"]:
 
-today = date.today()
+        pegawai = st.multiselect(
+            "👤 Filter Pegawai",
+            sorted(df["Nama"].unique())
+        )
 
-if pd.isna(start_default):
-    start_default = today
-else:
-    start_default = pd.to_datetime(start_default).date()
+        if pegawai:
+            df = df[df["Nama"].isin(pegawai)]
 
-if pd.isna(end_default):
-    end_default = today
-else:
-    end_default = pd.to_datetime(end_default).date()
-
-tgl = st.date_input(
-    "📅 Range Tanggal",
-    value=(start_default, end_default)
-)
-
-if len(tgl) == 2:
-
-    df = df[
-        (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
-        (df["Tanggal"] <= pd.to_datetime(tgl[1]))
-    ]
-
-# ================= FILTER PEGAWAI =================
-if st.session_state.role in ["Admin", "pimpinan"]:
-
-    pegawai = st.multiselect(
-        "👤 Filter Pegawai",
-        sorted(df["Nama"].unique())
+    # ================= FILTER LOKASI =================
+    lokasi_filter = st.multiselect(
+        "📍 Filter Lokasi",
+        sorted(df["Lokasi"].unique())
     )
 
-    if pegawai:
-        df = df[df["Nama"].isin(pegawai)]
+    if lokasi_filter:
+        df = df[df["Lokasi"].isin(lokasi_filter)]
 
-# ================= FILTER LOKASI =================
-lokasi_filter = st.multiselect(
-    "📍 Filter Lokasi",
-    sorted(df["Lokasi"].unique())
-)
+    # ================= SUMMARY =================
+    c1, c2, c3, c4 = st.columns(4)
 
-if lokasi_filter:
-    df = df[df["Lokasi"].isin(lokasi_filter)]
+    c1.metric(
+        "Total Data",
+        len(df)
+    )
 
-# ================= TOTAL DATA =================
-c1, c2, c3 = st.columns(3)
+    c2.metric(
+        "Total Jam",
+        round(df["Durasi"].sum(), 2)
+    )
 
-c1.metric(
-    "Total Data",
-    len(df)
-)
+    c3.metric(
+        "Total Hari",
+        df["Tanggal"].nunique()
+    )
 
-c2.metric(
-    "Total Jam",
-    round(df["Durasi"].sum(), 2)
-)
+    c4.metric(
+        "Total Pegawai",
+        df["Nama"].nunique()
+    )
 
-c3.metric(
-    "Total Hari",
-    df["Tanggal"].nunique()
-)
+    st.divider()
 
-st.divider()
-
-    # ================= TAMPIL DATA =================
+    # ================= CARD DATA =================
     for i, row in df.iterrows():
 
         lokasi_color = "#22c55e"
@@ -792,96 +781,84 @@ st.divider()
             border:1px solid #e5e7eb;
             box-shadow:0 2px 10px rgba(0,0,0,0.06);
         ">
-
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                flex-wrap:wrap;
-                gap:10px;
-            ">
-
-                <div>
-                    <h3 style="
-                        margin:0;
-                        color:#111827;
-                    ">
-                        👤 {row['Nama']}
-                    </h3>
-
-                    <p style="
-                        margin:4px 0 0 0;
-                        color:#6b7280;
-                        font-size:14px;
-                    ">
-                        📅 {row['Tanggal'].date()}
-                    </p>
-                </div>
-
-                <div style="
-                    background:{lokasi_color};
-                    color:white;
-                    padding:8px 14px;
-                    border-radius:999px;
-                    font-size:13px;
-                    font-weight:bold;
-                ">
-                    📍 {row['Lokasi']}
-                </div>
-
-            </div>
-
-            <hr style="
-                margin-top:15px;
-                margin-bottom:15px;
-            ">
-
         """, unsafe_allow_html=True)
 
-        # ================= ISI =================
-        colA, colB = st.columns(2)
+        # ================= HEADER CARD =================
+        colA, colB = st.columns([6,2])
 
         with colA:
+
+            st.markdown(f"""
+            ### 👤 {row['Nama']}
+            📅 {row['Tanggal'].date()}
+            """)
+            
+            st.caption(f"NIP: {row['NIP']}")
+
+        with colB:
+
+            st.markdown(f"""
+            <div style="
+                background:{lokasi_color};
+                color:white;
+                padding:10px;
+                border-radius:999px;
+                text-align:center;
+                font-weight:bold;
+                margin-top:15px;
+            ">
+                📍 {row['Lokasi']}
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.divider()
+
+        # ================= ISI =================
+        isi1, isi2 = st.columns(2)
+
+        with isi1:
 
             st.markdown("""
             <div style="
                 background:#f9fafb;
                 padding:15px;
                 border-radius:12px;
-                min-height:120px;
                 border:1px solid #e5e7eb;
+                min-height:130px;
             ">
             """, unsafe_allow_html=True)
 
-            st.markdown("### 📝 Uraian Kegiatan")
+            st.markdown("#### 📝 Uraian Kegiatan")
+
             st.write(row["Uraian"])
 
             st.markdown("</div>", unsafe_allow_html=True)
 
-        with colB:
+        with isi2:
 
             st.markdown("""
             <div style="
                 background:#f9fafb;
                 padding:15px;
                 border-radius:12px;
-                min-height:120px;
                 border:1px solid #e5e7eb;
+                min-height:130px;
             ">
             """, unsafe_allow_html=True)
 
-            st.markdown("### 📦 Output / Hasil")
+            st.markdown("#### 📦 Output / Hasil")
+
             st.write(row["Output"])
 
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # ================= INFO =================
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # ================= INFO =================
         info1, info2, info3 = st.columns(3)
 
         with info1:
-            st.info(f"⏱ {row['Durasi']:.2f} Jam")
+            st.info(f"⏱ Durasi: {row['Durasi']:.2f} Jam")
 
         with info2:
 
@@ -891,7 +868,7 @@ st.divider()
         with info3:
 
             if "Koordinat" in row and row["Koordinat"]:
-                st.warning(f"📍 GPS Terdeteksi")
+                st.warning("📍 GPS Terdeteksi")
 
         # ================= FOTO =================
         if "Foto" in row and row["Foto"]:
@@ -903,7 +880,7 @@ st.divider()
                 st.image(
                     foto_data,
                     width=250,
-                    caption="📸 Dokumentasi"
+                    caption="📸 Dokumentasi Kegiatan"
                 )
 
             elif foto_data.startswith("http"):
@@ -913,17 +890,25 @@ st.divider()
                 )
 
         # ================= TOMBOL =================
-        col1, col2, col3 = st.columns([8,1,1])
+        btn1, btn2, btn3 = st.columns([8,1,1])
 
-        if col2.button("✏️", key=f"edit{i}"):
+        if btn2.button(
+            "✏️",
+            key=f"edit{i}"
+        ):
 
             st.session_state.edit = row
 
             st.rerun()
 
-        if col3.button("🗑", key=f"del{i}"):
+        if btn3.button(
+            "🗑",
+            key=f"del{i}"
+        ):
 
-            sheet.delete_rows(int(row["row"]))
+            sheet.delete_rows(
+                int(row["row"])
+            )
 
             load_data.clear()
 
@@ -933,7 +918,9 @@ st.divider()
 
         st.divider()
 
-    # ================= DOWNLOAD =================
+    # ================= DOWNLOAD EXCEL =================
+    st.subheader("📥 Download Data")
+
     df["NIP"] = df["NIP"].astype(str)
 
     excel = io.BytesIO()
