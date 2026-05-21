@@ -698,74 +698,178 @@ elif menu == "Data Kinerja":
             (df["Tanggal"] <= pd.to_datetime(tgl[1]))
         ]
 
-    # TAMPIL DATA
-    for i, row in df.iterrows():
+    # ================= TAMPIL DATA MODERN =================
+for i, row in df.iterrows():
 
-        c1, c2, c3, c4 = st.columns([5,2,1,1])
+    lokasi_color = "#22c55e"
 
-        c1.write(
-            f"**{row['Nama']}** - "
-            f"{row['Tanggal'].date()}"
-        )
+    if row["Lokasi"] == "Rumah":
+        lokasi_color = "#f59e0b"
 
-        c1.caption(row["Uraian"])
+    elif row["Lokasi"] == "Dinas Luar / SPT":
+        lokasi_color = "#3b82f6"
 
-        # OUTPUT
-        if "Output" in row and row["Output"]:
+    with st.container():
 
-            c1.markdown(
-                f"**Output:** \n{row['Output']}"
-            )
+        st.markdown(f"""
+        <div style="
+            background:white;
+            padding:20px;
+            border-radius:18px;
+            margin-bottom:18px;
+            border:1px solid #e5e7eb;
+            box-shadow:0 2px 10px rgba(0,0,0,0.06);
+        ">
 
-        # WAKTU ABSEN
-        if (
-            "Waktu Absen" in row and
-            row["Waktu Absen"] not in ["", "-"]
-        ):
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+            ">
+                <div>
+                    <h3 style="margin:0; color:#111827;">
+                        👤 {row['Nama']}
+                    </h3>
 
-            c1.write(
-                f"🕒 {row['Waktu Absen']}"
-            )
+                    <p style="
+                        margin-top:5px;
+                        color:#6b7280;
+                        font-size:14px;
+                    ">
+                        📅 {row['Tanggal'].date()}
+                    </p>
+                </div>
 
-        # KOORDINAT
+                <div style="
+                    background:{lokasi_color};
+                    color:white;
+                    padding:8px 14px;
+                    border-radius:999px;
+                    font-size:13px;
+                    font-weight:bold;
+                ">
+                    📍 {row['Lokasi']}
+                </div>
+            </div>
+
+            <hr style="margin-top:15px; margin-bottom:15px;">
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:20px;
+            ">
+
+                <div>
+                    <p style="
+                        font-weight:bold;
+                        color:#111827;
+                        margin-bottom:6px;
+                    ">
+                        📝 Uraian Kegiatan
+                    </p>
+
+                    <div style="
+                        background:#f9fafb;
+                        padding:12px;
+                        border-radius:10px;
+                        min-height:80px;
+                    ">
+                        {row['Uraian']}
+                    </div>
+                </div>
+
+                <div>
+                    <p style="
+                        font-weight:bold;
+                        color:#111827;
+                        margin-bottom:6px;
+                    ">
+                        📦 Output / Hasil
+                    </p>
+
+                    <div style="
+                        background:#f9fafb;
+                        padding:12px;
+                        border-radius:10px;
+                        min-height:80px;
+                    ">
+                        {row['Output']}
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="
+                margin-top:18px;
+                display:flex;
+                gap:15px;
+                flex-wrap:wrap;
+            ">
+
+                <div style="
+                    background:#eff6ff;
+                    color:#1d4ed8;
+                    padding:8px 12px;
+                    border-radius:10px;
+                    font-size:13px;
+                ">
+                    ⏱ {row['Durasi']:.2f} Jam
+                </div>
+
+        """, unsafe_allow_html=True)
+
+        # GPS
         if "Koordinat" in row and row["Koordinat"]:
-
-            c1.write(
-                f"📍 {row['Koordinat']}"
-            )
+            st.markdown(f"""
+            <div style="
+                background:#ecfeff;
+                color:#0f766e;
+                padding:8px 12px;
+                border-radius:10px;
+                font-size:13px;
+                margin-top:10px;
+                display:inline-block;
+            ">
+                📍 {row['Koordinat']}
+            </div>
+            """, unsafe_allow_html=True)
 
         # FOTO
-        if "Foto" in row and row["Foto"]:
+        if "Foto" in row and row.get("Foto"):
 
             foto_data = str(row["Foto"])
 
             if foto_data.startswith("data:image"):
-
-                c1.image(
+                st.image(
                     foto_data,
                     width=250,
-                    caption="Dokumentasi"
+                    caption="📸 Dokumentasi Kegiatan"
                 )
 
-        c2.write(
-            f"{row['Durasi']:.2f} jam"
-        )
+            elif foto_data.startswith("http"):
+                st.markdown(
+                    f"[📸 Lihat Foto]({foto_data})"
+                )
 
-        # EDIT
-        if c3.button("✏️", key=f"edit{i}"):
+        st.markdown("</div>", unsafe_allow_html=True)
 
+        # TOMBOL
+        col1, col2, col3 = st.columns([8,1,1])
+
+        if col2.button("✏️", key=f"edit{i}"):
             st.session_state.edit = row
+            st.rerun()
+
+        if col3.button("🗑", key=f"del{i}"):
+
+            sheet.delete_rows(int(row["row"]))
+
+            load_data.clear()
 
             st.rerun()
 
-        # HAPUS
-        if c4.button("🗑", key=f"del{i}"):
-
-            sheet.delete_rows(
-                int(row["row"])
-            )
-
-            st.rerun()
+        st.divider()
 
     # DOWNLOAD
     st.divider()
