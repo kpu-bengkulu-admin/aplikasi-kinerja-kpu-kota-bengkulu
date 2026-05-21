@@ -500,7 +500,7 @@ elif menu == "Input":
 
         waktu_absen = st.selectbox(
             "Waktu Absen",
-            ["Pagi", "Siang", "Sore"]
+            ["Pagi", "Siang", "Sore"],
             key="waktu_absen_input"
         )
 
