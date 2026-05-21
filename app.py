@@ -704,6 +704,74 @@ elif menu == "Data Kinerja":
             (df["Tanggal"] <= pd.to_datetime(tgl[1]))
         ]
 
+# ================= FILTER RANGE =================
+start_default = df["Tanggal"].min()
+end_default = df["Tanggal"].max()
+
+today = date.today()
+
+if pd.isna(start_default):
+    start_default = today
+else:
+    start_default = pd.to_datetime(start_default).date()
+
+if pd.isna(end_default):
+    end_default = today
+else:
+    end_default = pd.to_datetime(end_default).date()
+
+tgl = st.date_input(
+    "📅 Range Tanggal",
+    value=(start_default, end_default)
+)
+
+if len(tgl) == 2:
+
+    df = df[
+        (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
+        (df["Tanggal"] <= pd.to_datetime(tgl[1]))
+    ]
+
+# ================= FILTER PEGAWAI =================
+if st.session_state.role in ["Admin", "pimpinan"]:
+
+    pegawai = st.multiselect(
+        "👤 Filter Pegawai",
+        sorted(df["Nama"].unique())
+    )
+
+    if pegawai:
+        df = df[df["Nama"].isin(pegawai)]
+
+# ================= FILTER LOKASI =================
+lokasi_filter = st.multiselect(
+    "📍 Filter Lokasi",
+    sorted(df["Lokasi"].unique())
+)
+
+if lokasi_filter:
+    df = df[df["Lokasi"].isin(lokasi_filter)]
+
+# ================= TOTAL DATA =================
+c1, c2, c3 = st.columns(3)
+
+c1.metric(
+    "Total Data",
+    len(df)
+)
+
+c2.metric(
+    "Total Jam",
+    round(df["Durasi"].sum(), 2)
+)
+
+c3.metric(
+    "Total Hari",
+    df["Tanggal"].nunique()
+)
+
+st.divider()
+
     # ================= TAMPIL DATA =================
     for i, row in df.iterrows():
 
