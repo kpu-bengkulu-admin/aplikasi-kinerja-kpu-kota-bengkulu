@@ -637,20 +637,15 @@ elif menu == "Input":
             )
 
             # RESET INPUT
-            st.session_state.tgl_input = date.today()
-
-            st.session_state.jam_masuk = "07:30"
-
-            st.session_state.jam_keluar = "16:00"
-
-            st.session_state.uraian_input = ""
-
-            st.session_state.output_input = ""
-
-            st.session_state.lokasi_input = "Kantor"
-
-            if "waktu_absen_input" in st.session_state:
-                st.session_state.waktu_absen_input = "Pagi"
+            st.session_state.update({
+                "tgl_input": date.today(),
+                "jam_masuk": "07:30",
+                "jam_keluar": "16:00",
+                "uraian_input": "",
+                "output_input": "",
+                "lokasi_input": "Kantor",
+                "waktu_absen_input": "Pagi"
+            })
 
             import time
             time.sleep(1)
