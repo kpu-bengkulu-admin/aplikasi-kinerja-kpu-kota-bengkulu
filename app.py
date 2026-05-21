@@ -553,7 +553,7 @@ elif menu == "Input":
     keluar = st.text_input(
         "Jam Keluar",
         "16:00",
-        key="jam_masuk"
+        key="jam_keluar"
     )
 
     uraian = st.text_area(
