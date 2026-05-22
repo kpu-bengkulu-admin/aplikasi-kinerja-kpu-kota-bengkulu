@@ -430,21 +430,46 @@ elif menu == "Input":
     foto = None
     koordinat = ""
 
-    # 2. KHUSUS RUMAH (Hanya muncul jika pilih Rumah)
-    if lokasi == "Rumah":
-        st.markdown("### 📸 Verifikasi WFH")
-        foto = st.camera_input("Ambil Foto Langsung")
-        
-        from streamlit_js_eval import get_geolocation
-        loc = get_geolocation()
-        if loc:
-            koordinat = f"{loc['coords']['latitude']}, {loc['coords']['longitude']}"
-            st.success(f"✅ GPS Terdeteksi: {koordinat}")
-        else:
-            st.warning("📡 Menunggu GPS... Pastikan klik 'Allow' di browser.")
-        
-        st.text_input("Koordinat GPS (Otomatis)", value=koordinat, disabled=True)
-        st.divider()
+# 2. KHUSUS RUMAH
+waktu_absen = "-"
+
+if lokasi == "Rumah":
+
+    waktu_absen = st.selectbox(
+        "Waktu Absen",
+        ["Pagi", "Siang", "Sore"]
+    )
+
+    st.markdown("### 📸 Verifikasi WFH")
+
+    foto = st.camera_input("Ambil Foto Langsung")
+
+    from streamlit_js_eval import get_geolocation
+
+    loc = get_geolocation()
+
+    if loc:
+
+        koordinat = (
+            f"{loc['coords']['latitude']}, "
+            f"{loc['coords']['longitude']}"
+        )
+
+        st.success(f"✅ GPS Terdeteksi: {koordinat}")
+
+    else:
+
+        st.warning(
+            "📡 Menunggu GPS... Pastikan klik Allow"
+        )
+
+    st.text_input(
+        "Koordinat GPS",
+        value=koordinat,
+        disabled=True
+    )
+
+    st.divider()
 
     # 3. ISIAN DETAIL LAPORAN (Muncul untuk semua lokasi)
     tgl = st.date_input("Tanggal")
@@ -483,6 +508,7 @@ elif menu == "Input":
                 safe(uraian),
                 safe(output),
                 safe(lokasi),
+                safe(waktu_absen if lokasi == "Rumah" else "-"),
                 safe(koordinat),
                 safe(link_foto)
             ])
