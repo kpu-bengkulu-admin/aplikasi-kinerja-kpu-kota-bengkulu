@@ -1,5 +1,3 @@
-import streamlit as st
-
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU KOTA BENGKULU",
@@ -48,7 +46,6 @@ button[kind="header"] {
 """, unsafe_allow_html=True)
 
 
-import pandas as pd
 from datetime import date
 import gspread
 from google.oauth2.service_account import Credentials
@@ -62,6 +59,11 @@ from datetime import date
 import gspread
 from google.oauth2.service_account import Credentials
 import io
+import base64
+
+from PIL import Image
+
+from openpyxl.styles import Alignment
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
