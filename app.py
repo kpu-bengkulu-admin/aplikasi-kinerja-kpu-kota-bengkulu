@@ -422,13 +422,17 @@ if menu == "Dashboard":
 
 # ================= INPUT =================
 elif menu == "Input":
+
     st.subheader("📍 Input Kinerja")
-    
-    # 1. Pilih Lokasi
-    lokasi = st.selectbox("Lokasi", ["Kantor", "Rumah", "Dinas Luar / SPT"])
-    
+
+    lokasi = st.selectbox(
+        "Lokasi",
+        ["Kantor", "Rumah", "Dinas Luar / SPT"]
+    )
+
     foto = None
     koordinat = ""
+    waktu_absen = "-"
 
 # 2. KHUSUS RUMAH
 waktu_absen = "-"
