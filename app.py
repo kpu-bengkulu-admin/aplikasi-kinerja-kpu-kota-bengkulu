@@ -500,14 +500,7 @@ elif menu == "Input":
         "Output/Hasil"
     )
 
-    # 3. ISIAN DETAIL LAPORAN (Muncul untuk semua lokasi)
-    tgl = st.date_input("Tanggal")
-    masuk = st.text_input("Jam Masuk", "07:30")
-    keluar = st.text_input("Jam Keluar", "16:00")
-    uraian = st.text_area("Uraian Kegiatan")
-    output = st.text_area("Output/Hasil")
-
-    # 4. TOMBOL SIMPAN (Hanya Satu)
+    # 3. TOMBOL SIMPAN (Hanya Satu)
     if st.button("Simpan Data", type="primary"):
         # Hitung durasi (Menggunakan fungsi Anda)
         dur = hitung_durasi(masuk, keluar)
