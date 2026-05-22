@@ -2,7 +2,7 @@ import streamlit as st
 
 # ================= CONFIG =================
 st.set_page_config(
-    page_title="E-Kinerja KPU Kota Bengkulu",
+    page_title="E-Kinerja KPU KOTA BENGKULU",
     page_icon="logo_kpu.png",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -220,7 +220,7 @@ if "login" not in st.session_state:
 users = load_users()
 
 if not st.session_state.login:
-    st.title("🔐 Login E-Kinerja KPU Kota Bengkulu")
+    st.title("🔐 Login E-Kinerja KPU KOTA BENGKULU")
 
     nip = st.text_input("NIP")
     pw = st.text_input("Password", type="password")
@@ -310,7 +310,7 @@ if menu == "Dashboard":
         margin-bottom:20px;
     ">
         <h2>📊 Aplikasi E-Kinerja</h2>
-        <p>{st.session_state.nama} - KPU Kota Bengkulu</p>
+        <p>{st.session_state.nama} - KPU KOTA BENGKULU</p>
     </div>
     """, unsafe_allow_html=True)
 
