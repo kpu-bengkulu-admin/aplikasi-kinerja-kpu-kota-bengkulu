@@ -434,46 +434,71 @@ elif menu == "Input":
     koordinat = ""
     waktu_absen = "-"
 
-# 2. KHUSUS RUMAH
-waktu_absen = "-"
+    # ================= KHUSUS WFH =================
+    if lokasi == "Rumah":
 
-if lokasi == "Rumah":
-
-    waktu_absen = st.selectbox(
-        "Waktu Absen",
-        ["Pagi", "Siang", "Sore"]
-    )
-
-    st.markdown("### 📸 Verifikasi WFH")
-
-    foto = st.camera_input("Ambil Foto Langsung")
-
-    from streamlit_js_eval import get_geolocation
-
-    loc = get_geolocation()
-
-    if loc:
-
-        koordinat = (
-            f"{loc['coords']['latitude']}, "
-            f"{loc['coords']['longitude']}"
+        waktu_absen = st.selectbox(
+            "Waktu Absen",
+            ["Pagi", "Siang", "Sore"]
         )
 
-        st.success(f"✅ GPS Terdeteksi: {koordinat}")
+        st.markdown("### 📸 Verifikasi WFH")
 
-    else:
-
-        st.warning(
-            "📡 Menunggu GPS... Pastikan klik Allow"
+        foto = st.camera_input(
+            "Ambil Foto Langsung"
         )
 
-    st.text_input(
-        "Koordinat GPS",
-        value=koordinat,
-        disabled=True
+        from streamlit_js_eval import get_geolocation
+
+        loc = get_geolocation()
+
+        if loc:
+
+            koordinat = (
+                f"{loc['coords']['latitude']}, "
+                f"{loc['coords']['longitude']}"
+            )
+
+            st.success(
+                f"✅ GPS Terdeteksi: {koordinat}"
+            )
+
+        else:
+
+            st.warning(
+                "📡 Menunggu GPS..."
+            )
+
+        st.text_input(
+            "Koordinat GPS",
+            value=koordinat,
+            disabled=True
+        )
+
+        st.divider()
+
+    # ================= FORM UTAMA =================
+    # INI HARUS DI LUAR IF RUMAH
+
+    tgl = st.date_input("Tanggal")
+
+    masuk = st.text_input(
+        "Jam Masuk",
+        "07:30"
     )
 
-    st.divider()
+    keluar = st.text_input(
+        "Jam Keluar",
+        "16:00"
+    )
+
+    uraian = st.text_area(
+        "Uraian Kegiatan"
+    )
+
+    output = st.text_area(
+        "Output/Hasil"
+    )
 
     # 3. ISIAN DETAIL LAPORAN (Muncul untuk semua lokasi)
     tgl = st.date_input("Tanggal")
