@@ -328,15 +328,112 @@ if menu == "Dashboard":
         background-color: #f1f5f9;
     }
 
-    /* HERO */
+/* HERO */
+.hero {
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    padding: 10px 16px;
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* Judul hero */
+.hero h1 {
+    font-size: 24px !important;
+    margin-bottom: 2px !important;
+}
+
+/* Subjudul */
+.hero h4 {
+    font-size: 15px !important;
+    margin-bottom: 2px !important;
+}
+
+/* Text kecil */
+.hero p {
+    font-size: 12px !important;
+    margin-bottom: 0px !important;
+}
+
+/* KPI CARD */
+.kpi-card {
+    background: white;
+    padding: 12px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 4px solid #ef4444;
+}
+
+/* Judul KPI */
+.kpi-title {
+    font-size: 11px;
+    color: gray;
+}
+
+/* Angka KPI */
+.kpi-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #0f172a;
+}
+
+/* Filter */
+.filter-box {
+    padding: 12px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+}
+
+/* Grafik */
+.js-plotly-plot {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+/* RESPONSIVE HP */
+@media (max-width: 768px) {
+
     .hero {
-        background: linear-gradient(135deg,#0f172a,#1e293b);
-        padding: 12px 20px;
-        border-radius: 15px;
-        color: white;
-        margin-bottom: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        padding: 8px 12px;
+        border-radius: 10px;
     }
+
+    .hero h1 {
+        font-size: 18px !important;
+    }
+
+    .hero h4 {
+        font-size: 13px !important;
+    }
+
+    .hero p {
+        font-size: 11px !important;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .kpi-title {
+        font-size: 10px;
+    }
+
+    .kpi-value {
+        font-size: 18px;
+    }
+
+    .filter-box {
+        padding: 10px;
+    }
+
+    /* Rapatkan dashboard */
+    .block-container {
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
+    }
+}
 
     /* CARD KPI */
     .kpi-card {
@@ -555,7 +652,7 @@ if menu == "Dashboard":
         fig.update_layout(
             plot_bgcolor='white',
             paper_bgcolor='white',
-            height=450
+            height=300
         )
 
         st.plotly_chart(
@@ -580,7 +677,7 @@ if menu == "Dashboard":
         )
 
         fig2.update_layout(
-            height=450
+            height=300
         )
 
         st.plotly_chart(
