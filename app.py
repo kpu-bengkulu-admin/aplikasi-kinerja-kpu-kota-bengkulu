@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
+import plotly.express as px
+from datetime import date, datetime
 import gspread
 from google.oauth2.service_account import Credentials
 import io
@@ -58,7 +59,7 @@ button[kind="header"] {
 """, unsafe_allow_html=True)
 
 
-from datetime import date
+from datetime import date, datetime
 import gspread
 from google.oauth2.service_account import Credentials
 import io
@@ -301,27 +302,91 @@ if "edit" in st.session_state:
 # ================= DASHBOARD =================
 if menu == "Dashboard":
 
+    # ================= CUSTOM CSS =================
+    st.markdown("""
+    <style>
+
+    .stApp {
+        background-color: #f1f5f9;
+    }
+
+    /* HERO */
+    .hero {
+        background: linear-gradient(135deg,#0f172a,#1e293b);
+        padding: 35px;
+        border-radius: 25px;
+        color: white;
+        margin-bottom: 25px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    }
+
+    /* CARD KPI */
+    .kpi-card {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        transition: 0.3s;
+        border-left: 6px solid #ef4444;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .kpi-title {
+        color: gray;
+        font-size: 14px;
+    }
+
+    .kpi-value {
+        font-size: 35px;
+        font-weight: bold;
+        color: #0f172a;
+    }
+
+    /* FILTER BOX */
+    .filter-box {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    }
+
+    /* TABLE */
+    .stDataFrame {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ================= HERO =================
     st.markdown(f"""
-    <div style="
-        background:linear-gradient(90deg,#ef4444,#f87171);
-        padding:20px;
-        border-radius:12px;
-        color:white;
-        margin-bottom:20px;
-    ">
-        <h2>📊 Aplikasi E-Kinerja</h2>
-        <p>{st.session_state.nama} - KPU KOTA BENGKULU</p>
+    <div class="hero">
+        <h1>📊 E-Kinerja KPU Kota Bengkulu</h1>
+        <h4>Selamat Datang, {st.session_state.nama}</h4>
+        <p>
+            {datetime.now().strftime("%A, %d %B %Y")}
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
+    # ================= LOAD DATA =================
     df = load_data()
 
     if df.empty:
         st.info("Belum ada data")
         st.stop()
 
+    # ================= FORMAT DATA =================
     df["Durasi"] = df.apply(
-        lambda r: hitung_durasi(r["Jam Masuk"], r["Jam Keluar"]),
+        lambda r: hitung_durasi(
+            r["Jam Masuk"],
+            r["Jam Keluar"]
+        ),
         axis=1
     )
 
@@ -329,10 +394,10 @@ if menu == "Dashboard":
         df["Tanggal"],
         errors='coerce'
     )
+
     df = df.dropna(subset=["Tanggal"])
 
-
-    # ================= ROLE ADMIN =================
+    # ================= ROLE =================
     if st.session_state.role == "Admin":
 
         pilihan_data = st.selectbox(
@@ -341,84 +406,218 @@ if menu == "Dashboard":
         )
 
         if pilihan_data == "Data Pribadi":
-            df = df[df["Nama"] == st.session_state.nama]
+            df = df[
+                df["Nama"]
+                == st.session_state.nama
+            ]
 
     else:
-        # Pegawai biasa hanya lihat data sendiri
-        df = df[df["Nama"] == st.session_state.nama]
 
-    # ================= RANGE OTOMATIS =================
-    start_default = df["Tanggal"].min()
-    end_default = df["Tanggal"].max()
+        df = df[
+            df["Nama"]
+            == st.session_state.nama
+        ]
 
-    today = date.today()
-
-    # Jika kosong / NaT
-    if pd.isna(start_default):
-        start_default = today
-    else:
-        start_default = pd.to_datetime(start_default).date()
-
-    if pd.isna(end_default):
-        end_default = today
-    else:
-        end_default = pd.to_datetime(end_default).date()
-
-    tgl = st.date_input(
-        "Range Tanggal",
-        value=(start_default, end_default)
+    # ================= FILTER =================
+    st.markdown(
+        '<div class="filter-box">',
+        unsafe_allow_html=True
     )
 
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        start_default = df["Tanggal"].min().date()
+        end_default = df["Tanggal"].max().date()
+
+        tgl = st.date_input(
+            "📅 Range Tanggal",
+            value=(start_default, end_default)
+        )
+
+    with col2:
+
+        pegawai = st.multiselect(
+            "👤 Pegawai",
+            sorted(df["Nama"].unique())
+        )
+
+    with col3:
+
+        lokasi = st.multiselect(
+            "📍 Lokasi",
+            sorted(df["Lokasi"].unique())
+        )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    # ================= FILTER PROSES =================
     if len(tgl) == 2:
+
         df = df[
             (df["Tanggal"] >= pd.to_datetime(tgl[0])) &
             (df["Tanggal"] <= pd.to_datetime(tgl[1]))
         ]
 
-    # ================= FILTER =================
-    pegawai = st.multiselect(
-        "Pegawai",
-        sorted(df["Nama"].unique())
-    )
-
-    lokasi = st.multiselect(
-        "Lokasi",
-        sorted(df["Lokasi"].unique())
-    )
-
     if pegawai:
-        df = df[df["Nama"].isin(pegawai)]
+        df = df[
+            df["Nama"].isin(pegawai)
+        ]
 
     if lokasi:
-        df = df[df["Lokasi"].isin(lokasi)]
+        df = df[
+            df["Lokasi"].isin(lokasi)
+        ]
 
-    # ================= CARD =================
-    c1, c2, c3, c4 = st.columns(4)
+    # ================= KPI =================
+    k1, k2, k3, k4 = st.columns(4)
 
-    c1.markdown(
-        f"<div class='card c1'><h3>{len(df)}</h3>Total</div>",
-        unsafe_allow_html=True
-    )
+    with k1:
 
-    c2.markdown(
-        f"<div class='card c2'><h3>{df['Durasi'].sum():.2f}</h3>Jam</div>",
-        unsafe_allow_html=True
-    )
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">
+                📄 Total Kinerja
+            </div>
 
-    c3.markdown(
-        f"<div class='card c3'><h3>{df['Tanggal'].nunique()}</h3>Hari</div>",
-        unsafe_allow_html=True
-    )
+            <div class="kpi-value">
+                {len(df)}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    c4.markdown(
-        f"<div class='card c4'><h3>{df['Nama'].nunique()}</h3>Pegawai</div>",
-        unsafe_allow_html=True
-    )
+    with k2:
+
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">
+                ⏱ Total Jam
+            </div>
+
+            <div class="kpi-value">
+                {df['Durasi'].sum():.2f}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with k3:
+
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">
+                📅 Hari Aktif
+            </div>
+
+            <div class="kpi-value">
+                {df['Tanggal'].nunique()}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with k4:
+
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">
+                👥 Pegawai
+            </div>
+
+            <div class="kpi-value">
+                {df['Nama'].nunique()}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # ================= GRAFIK =================
-    st.bar_chart(
-        df.groupby("Nama")["Durasi"].sum()
+    g1, g2 = st.columns(2)
+
+    with g1:
+
+        chart1 = (
+            df.groupby("Nama")["Durasi"]
+            .sum()
+            .reset_index()
+        )
+
+        fig = px.bar(
+            chart1,
+            x="Nama",
+            y="Durasi",
+            text_auto=True,
+            title="📊 Produktivitas Pegawai"
+        )
+
+        fig.update_layout(
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            height=450
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    with g2:
+
+        chart2 = (
+            df.groupby("Lokasi")
+            .size()
+            .reset_index(name="Total")
+        )
+
+        fig2 = px.pie(
+            chart2,
+            names="Lokasi",
+            values="Total",
+            hole=0.5,
+            title="📍 Distribusi Lokasi Kerja"
+        )
+
+        fig2.update_layout(
+            height=450
+        )
+
+        st.plotly_chart(
+            fig2,
+            use_container_width=True
+        )
+
+    # ================= RANKING =================
+    st.markdown("## 🏆 Ranking Pegawai")
+
+    ranking = (
+        df.groupby("Nama")["Durasi"]
+        .sum()
+        .sort_values(ascending=False)
+        .reset_index()
     )
+
+    ranking.columns = [
+        "Nama Pegawai",
+        "Total Jam"
+    ]
+
+    ranking.index += 1
+
+    st.dataframe(
+        ranking,
+        use_container_width=True
+    )
+
+    # ================= FOOTER =================
+    st.markdown("""
+    <hr>
+    <center>
+    © 2026 KPU Kota Bengkulu | Sistem E-Kinerja Digital
+    </center>
+    """, unsafe_allow_html=True)
 
 # ================= INPUT =================
 elif menu == "Input":
