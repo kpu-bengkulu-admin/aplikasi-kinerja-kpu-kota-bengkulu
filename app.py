@@ -21,6 +21,25 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+/* Hilangkan Fork / GitHub */
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+/* Hilangkan deploy button */
+.stDeployButton {
+    display: none !important;
+}
+
+/* Hilangkan toolbar kanan atas */
+button[kind="header"] {
+    display: none !important;
+}
+
+/* Hilangkan decoration */
+[data-testid="stDecoration"] {
+    display: none !important;
+}
 
 /* Hilangkan jarak atas halaman */
 .block-container {
