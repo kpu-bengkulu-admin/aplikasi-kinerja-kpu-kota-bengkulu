@@ -22,10 +22,28 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* Hilangkan jarak atas halaman */
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Hilangkan ruang kosong header streamlit */
+[data-testid="stHeader"] {
+    height: 0rem;
+    background: rgba(0,0,0,0);
+}
+
+/* Hilangkan padding container utama */
+.main .block-container {
+    padding-top: 0rem !important;
+    margin-top: 0rem !important;
+}
+
 /* Header */
 header {
     visibility: visible !important;
-    height: 60px !important;
+    height: 0px !important;
     background: transparent !important;
 }
 
@@ -535,7 +553,7 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-        # ================= GRAFIK =================
+    HERO    # ================= GRAFIK =================
     g1, g2 = st.columns(2)
 
     with g1:
