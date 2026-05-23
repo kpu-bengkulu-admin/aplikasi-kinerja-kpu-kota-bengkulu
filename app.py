@@ -399,9 +399,11 @@ if menu == "Dashboard":
 
 /* Filter */
 .filter-box {
-    padding: 12px;
-    border-radius: 14px;
-    margin-bottom: 10px;
+    background: #e2e8f0;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #cbd5e1;
 }
 
 /* Grafik */
