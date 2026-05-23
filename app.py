@@ -399,11 +399,9 @@ if menu == "Dashboard":
 
 /* Filter */
 .filter-box {
-    background: #e2e8f0;
-    padding: 20px;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #cbd5e1;
+    padding: 12px;
+    border-radius: 14px;
+    margin-bottom: 10px;
 }
 
 /* Grafik */
@@ -481,6 +479,14 @@ if menu == "Dashboard":
         color: #0f172a;
     }
 
+    /* FILTER BOX */
+    .filter-box {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+    }
 
     /* TABLE */
     .stDataFrame {
