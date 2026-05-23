@@ -553,7 +553,7 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-    HERO    # ================= GRAFIK =================
+    # ================= GRAFIK =================
     g1, g2 = st.columns(2)
 
     with g1:
