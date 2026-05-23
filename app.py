@@ -368,6 +368,9 @@ if menu == "Dashboard":
     <div class="hero">
         <h1>📊 E-Kinerja KPU Kota Bengkulu</h1>
         <h4>Selamat Datang, {st.session_state.nama}</h4>
+        <p style="opacity:0.8;">
+        Sistem Monitoring & Evaluasi Kinerja Pegawai
+        </p>
         <p>
             {datetime.now().strftime("%A, %d %B %Y")}
         </p>
