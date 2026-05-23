@@ -561,68 +561,66 @@ if menu == "Dashboard":
         unsafe_allow_html=True
     )
 
-col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(
+        3,
+        gap="medium"
+    )
 
-# ================= FILTER TANGGAL =================
-with col1:
+    # ================= COL 1 =================
+    with col1:
 
-    today = date.today()
+        today = date.today()
 
-    if df.empty:
-        start_default = today
-        end_default = today
-
-    else:
-
-        if "Tanggal" not in df.columns:
+        if df.empty:
             start_default = today
             end_default = today
 
         else:
 
-            df["Tanggal"] = pd.to_datetime(
-                df["Tanggal"],
-                errors="coerce"
-            )
-
-            start_default = df["Tanggal"].min()
-            end_default = df["Tanggal"].max()
-
-            if pd.isna(start_default):
+            if "Tanggal" not in df.columns:
                 start_default = today
-            else:
-                start_default = start_default.date()
-
-            if pd.isna(end_default):
                 end_default = today
+
             else:
-                end_default = end_default.date()
 
-    tgl = st.date_input(
-        "📅 Range Tanggal",
-        value=(start_default, end_default)
-    )
+                df["Tanggal"] = pd.to_datetime(
+                    df["Tanggal"],
+                    errors="coerce"
+                )
 
-# ================= FILTER PEGAWAI =================
-with col2:
+                start_default = df["Tanggal"].min()
+                end_default = df["Tanggal"].max()
 
-    pegawai = st.multiselect(
-        "👤 Pegawai",
-        sorted(df["Nama"].unique())
-    )
+                if pd.isna(start_default):
+                    start_default = today
+                else:
+                    start_default = start_default.date()
 
-# ================= FILTER LOKASI =================
-with col3:
+                if pd.isna(end_default):
+                    end_default = today
+                else:
+                    end_default = end_default.date()
 
-    lokasi = st.multiselect(
-        "📍 Lokasi",
-        sorted(df["Lokasi"].unique())
-    )
+        tgl = st.date_input(
+            "📅 Range Tanggal",
+            value=(start_default, end_default)
+        )
 
-st.markdown(
-    '</div>',
-    unsafe_allow_html=True
-)
+    # ================= COL 2 =================
+    with col2:
+
+        pegawai = st.multiselect(
+            "👤 Pegawai",
+            sorted(df["Nama"].unique())
+        )
+
+    # ================= COL 3 =================
+    with col3:
+
+        lokasi = st.multiselect(
+            "📍 Lokasi",
+            sorted(df["Lokasi"].unique())
+        )
 
     st.markdown(
         '</div>',
