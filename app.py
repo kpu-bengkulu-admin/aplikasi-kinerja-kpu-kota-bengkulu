@@ -359,7 +359,7 @@ if menu == "Dashboard":
 
 /* Judul hero */
 .hero h1 {
-    font-size: 24px !important;
+    font-size: 30px !important;
     margin-bottom: 2px !important;
 }
 
