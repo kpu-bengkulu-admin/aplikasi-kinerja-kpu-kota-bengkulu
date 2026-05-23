@@ -24,8 +24,8 @@ st.markdown("""
 
 /* Hilangkan jarak atas halaman */
 .block-container {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
 }
 
 /* Hilangkan ruang kosong header streamlit */
