@@ -22,6 +22,81 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* ================= HEADER ================= */
+
+header {
+    visibility: visible !important;
+    height: 0px !important;
+    background: transparent !important;
+}
+
+/* ================= HILANGKAN MENU ================= */
+
+#MainMenu {
+    visibility: hidden !important;
+}
+
+footer {
+    visibility: hidden !important;
+}
+
+/* ================= CONTAINER UTAMA ================= */
+
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    max-width: 100% !important;
+}
+
+/* Naikkan dashboard ke atas */
+.main .block-container {
+    margin-top: -35px;
+}
+
+/* ================= SIDEBAR ================= */
+
+section[data-testid="stSidebar"] {
+    min-width: 220px !important;
+    width: 220px !important;
+    background: #0f172a !important;
+}
+
+/* Tombol sidebar mobile */
+button[kind="header"] {
+    display: block !important;
+}
+
+/* Tombol collapse */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+/* ================= FONT ================= */
+
+html, body, [class*="css"] {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* ================= KPI ================= */
+
+.kpi-value {
+    font-size: 42px;
+    font-weight: bold;
+    color: #0f172a;
+    margin-top: 10px;
+}
+
+/* ================= HERO ================= */
+
+.hero {
+    padding: 25px !important;
+    margin-bottom: 15px !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 /* Header */
 header {
     visibility: visible !important;
