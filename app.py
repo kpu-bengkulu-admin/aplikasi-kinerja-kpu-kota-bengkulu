@@ -40,7 +40,7 @@ footer {
     visibility: hidden !important;
 }
 
-/* ================= CONTAINER UTAMA ================= */
+/* ================= CONTAINER ================= */
 
 .block-container {
     padding-top: 1rem !important;
@@ -48,7 +48,7 @@ footer {
     max-width: 100% !important;
 }
 
-/* Naikkan dashboard ke atas */
+/* Naikkan dashboard */
 .main .block-container {
     margin-top: -35px;
 }
