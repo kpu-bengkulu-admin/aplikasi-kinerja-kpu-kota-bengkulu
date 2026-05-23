@@ -535,9 +535,7 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # ================= GRAFIK =================
+        # ================= GRAFIK =================
     g1, g2 = st.columns(2)
 
     with g1:
@@ -618,7 +616,7 @@ if menu == "Dashboard":
     st.markdown("""
     <hr>
     <center>
-    © 2026 KPU Kota Bengkulu | Sistem E-Kinerja Digital
+    © 2025 KPU Kota Bengkulu | Sistem E-Kinerja Digital
     </center>
     """, unsafe_allow_html=True)
 
