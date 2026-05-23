@@ -19,19 +19,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ================= CSS =================
 st.markdown("""
 <style>
 
-/* ================= HEADER ================= */
-
+/* HEADER */
 header {
     visibility: visible !important;
     height: 0px !important;
     background: transparent !important;
 }
 
-/* ================= HILANGKAN MENU ================= */
-
+/* HILANGKAN MENU */
 #MainMenu {
     visibility: hidden !important;
 }
@@ -40,8 +39,7 @@ footer {
     visibility: hidden !important;
 }
 
-/* ================= CONTAINER ================= */
-
+/* CONTAINER */
 .block-container {
     padding-top: 1rem !important;
     padding-bottom: 1rem !important;
@@ -53,15 +51,14 @@ footer {
     margin-top: -35px;
 }
 
-/* ================= SIDEBAR ================= */
-
+/* SIDEBAR */
 section[data-testid="stSidebar"] {
     min-width: 220px !important;
     width: 220px !important;
     background: #0f172a !important;
 }
 
-/* Tombol sidebar mobile */
+/* Tombol sidebar */
 button[kind="header"] {
     display: block !important;
 }
@@ -72,14 +69,12 @@ button[kind="header"] {
     visibility: visible !important;
 }
 
-/* ================= FONT ================= */
-
+/* FONT */
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
 
-/* ================= KPI ================= */
-
+/* KPI */
 .kpi-value {
     font-size: 42px;
     font-weight: bold;
@@ -87,8 +82,7 @@ html, body, [class*="css"] {
     margin-top: 10px;
 }
 
-/* ================= HERO ================= */
-
+/* HERO */
 .hero {
     padding: 25px !important;
     margin-bottom: 15px !important;
