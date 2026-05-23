@@ -494,40 +494,44 @@ if menu == "Dashboard":
             df["Lokasi"].isin(lokasi)
         ]
 
-# ================= KPI =================
-k1, k2, k3, k4 = st.columns(4)
+    # ================= KPI =================
+    k1, k2, k3, k4 = st.columns(4)
 
-with k1:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">📄 Total Kinerja</div>
-        <div class="kpi-value">{len(df)}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    with k1:
 
-with k2:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">⏱ Total Jam</div>
-        <div class="kpi-value">{df['Durasi'].sum():.2f}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">📄 Total Kinerja</div>
+            <div class="kpi-value">{len(df)}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-with k3:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">📅 Hari Aktif</div>
-        <div class="kpi-value">{df['Tanggal'].nunique()}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    with k2:
 
-with k4:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">👥 Pegawai</div>
-        <div class="kpi-value">{df['Nama'].nunique()}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">⏱ Total Jam</div>
+            <div class="kpi-value">{df['Durasi'].sum():.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with k3:
+
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">📅 Hari Aktif</div>
+            <div class="kpi-value">{df['Tanggal'].nunique()}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with k4:
+
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">👥 Pegawai</div>
+            <div class="kpi-value">{df['Nama'].nunique()}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # ================= GRAFIK =================
     g1, g2 = st.columns(2)
