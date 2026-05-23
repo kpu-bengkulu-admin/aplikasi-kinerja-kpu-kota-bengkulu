@@ -19,18 +19,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ================= CSS =================
 st.markdown("""
 <style>
 
-/* HEADER */
+/* ================= HEADER ================= */
+
 header {
     visibility: visible !important;
     height: 0px !important;
     background: transparent !important;
 }
 
-/* HILANGKAN MENU */
+/* ================= HILANGKAN MENU ================= */
+
 #MainMenu {
     visibility: hidden !important;
 }
@@ -39,26 +40,28 @@ footer {
     visibility: hidden !important;
 }
 
-/* CONTAINER */
+/* ================= CONTAINER UTAMA ================= */
+
 .block-container {
     padding-top: 1rem !important;
     padding-bottom: 1rem !important;
     max-width: 100% !important;
 }
 
-/* Naikkan dashboard */
+/* Naikkan dashboard ke atas */
 .main .block-container {
     margin-top: -35px;
 }
 
-/* SIDEBAR */
+/* ================= SIDEBAR ================= */
+
 section[data-testid="stSidebar"] {
     min-width: 220px !important;
     width: 220px !important;
     background: #0f172a !important;
 }
 
-/* Tombol sidebar */
+/* Tombol sidebar mobile */
 button[kind="header"] {
     display: block !important;
 }
@@ -69,12 +72,14 @@ button[kind="header"] {
     visibility: visible !important;
 }
 
-/* FONT */
+/* ================= FONT ================= */
+
 html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
 
-/* KPI */
+/* ================= KPI ================= */
+
 .kpi-value {
     font-size: 42px;
     font-weight: bold;
@@ -82,7 +87,8 @@ html, body, [class*="css"] {
     margin-top: 10px;
 }
 
-/* HERO */
+/* ================= HERO ================= */
+
 .hero {
     padding: 25px !important;
     margin-bottom: 15px !important;
@@ -91,6 +97,118 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
+/* Header */
+header {
+    visibility: visible !important;
+    height: 60px !important;
+    background: transparent !important;
+}
+
+/* Hilangkan menu dan footer */
+#MainMenu {
+    visibility: hidden !important;
+}
+
+footer {
+    visibility: hidden !important;
+}
+
+/* Sidebar mobile tetap muncul */
+section[data-testid="stSidebar"] {
+    min-width: 260px !important;
+    width: 260px !important;
+}
+
+/* Tombol sidebar mobile */
+button[kind="header"] {
+    display: block !important;
+}
+
+/* Paksa tombol sidebar terlihat */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+from datetime import date, datetime
+import gspread
+from google.oauth2.service_account import Credentials
+import io
+
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+
+# ================= SESSION =================
+if "gps" not in st.session_state:
+    st.session_state.gps = ""
+
+# ================= DRIVE =================
+FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
+
+import base64
+from PIL import Image
+import io
+
+def upload_foto(file):
+    if file is None: return ""
+    
+    try:
+        # 1. Buka foto dan perkecil ukurannya (agar tidak membebani Spreadsheet)
+        img = Image.open(file)
+        img.thumbnail((400, 400))  # Perkecil ke 400px
+        
+        # 2. Ubah foto menjadi teks (Base64)
+        buffered = io.BytesIO()
+        img.save(buffered, format="JPEG", quality=70) # Kompres kualitas ke 70%
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        # 3. Kita tidak upload ke Drive, tapi kirim teks ini kembali
+        # Kita buat link tiruan yang isinya data foto
+        return f"data:image/jpeg;base64,{img_str}"
+
+    except Exception as e:
+        st.error(f"Gagal memproses foto: {e}")
+        return ""
+
+# ================= UI CUSTOM (SIDEBAR FIX) =================
+st.markdown("""
+<style>
+/* 1. Latar belakang sidebar */
+[data-testid="stSidebar"] {background:#0f172a !important;}
+
+/* 2. PAKSA SEMUA TEKS DI SIDEBAR MENJADI PUTIH */
+/* Ini akan menyasar semua jenis teks: label, radio button, markdown, dll */
+[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* 3. KHUSUS UNTUK MENU RADIO (DASHBOARD, INPUT, DLL) */
+/* Terkadang label radio butuh penanganan ekstra agar tidak transparan */
+div[data-testid="stSidebar"] .st-emotion-cache-6qob1r {
+    color: white !important;
+    opacity: 1 !important;
+}
+
+/* 4. KOTAK INPUT EDIT (Tetap Hitam agar terlihat di latar putih) */
+/* Kita kecualikan agar teks yang kita ketik tetap hitam di kotak putih */
+[data-testid="stSidebar"] input, 
+[data-testid="stSidebar"] textarea {
+    color: black !important;
+    background-color: white !important;
+    -webkit-text-fill-color: black !important;
+}
+
+/* 5. Tombol Logout agar tetap merah terang */
+.stButton button {
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ================= GOOGLE =================
 @st.cache_resource
