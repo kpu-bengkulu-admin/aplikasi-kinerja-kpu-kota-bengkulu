@@ -331,10 +331,10 @@ if menu == "Dashboard":
     /* HERO */
     .hero {
         background: linear-gradient(135deg,#0f172a,#1e293b);
-        padding: 18px 24px;
-        border-radius: 18px;
+        padding: 12px 20px;
+        border-radius: 15px;
         color: white;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
 
