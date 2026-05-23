@@ -331,11 +331,11 @@ if menu == "Dashboard":
     /* HERO */
     .hero {
         background: linear-gradient(135deg,#0f172a,#1e293b);
-        padding: 35px;
-        border-radius: 25px;
+        padding: 18px 24px;
+        border-radius: 18px;
         color: white;
-        margin-bottom: 25px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
 
     /* CARD KPI */
