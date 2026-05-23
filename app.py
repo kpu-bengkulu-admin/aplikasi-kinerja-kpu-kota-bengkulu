@@ -479,14 +479,6 @@ if menu == "Dashboard":
         color: #0f172a;
     }
 
-    /* FILTER BOX */
-    .filter-box {
-        background: white;
-        padding: 20px;
-        border-radius: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-    }
 
     /* TABLE */
     .stDataFrame {
