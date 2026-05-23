@@ -565,13 +565,38 @@ if menu == "Dashboard":
 
     with col1:
 
-        start_default = df["Tanggal"].min().date()
-        end_default = df["Tanggal"].max().date()
+    today = date.today()
 
-        tgl = st.date_input(
-            "📅 Range Tanggal",
-            value=(start_default, end_default)
-        )
+    # Jika data kosong
+    if df.empty or df["Tanggal"].isna().all():
+
+        start_default = today
+        end_default = today
+
+    else:
+
+        start_default = df["Tanggal"].min()
+        end_default = df["Tanggal"].max()
+
+        # Jika NaT
+        if pd.isna(start_default):
+            start_default = today
+        else:
+            start_default = pd.to_datetime(
+                start_default
+            ).date()
+
+        if pd.isna(end_default):
+            end_default = today
+        else:
+            end_default = pd.to_datetime(
+                end_default
+            ).date()
+
+    tgl = st.date_input(
+        "📅 Range Tanggal",
+        value=(start_default, end_default)
+    )
 
     with col2:
 
