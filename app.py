@@ -1137,3 +1137,93 @@ elif menu == "Data Kinerja":
         file_name="data_kinerja.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+# ================= ADMIN =================
+elif menu == "Admin":
+
+    # Hanya admin yang boleh akses
+    if st.session_state.role != "Admin":
+        st.error("❌ Anda tidak memiliki akses.")
+        st.stop()
+
+    st.title("⚙️ Admin Panel")
+
+    df = load_data()
+    users_df = load_users()
+
+    # ================= KPI ADMIN =================
+    a1, a2, a3, a4 = st.columns(4)
+
+    a1.metric(
+        "👥 Total Pegawai",
+        users_df["Nama"].nunique()
+    )
+
+    a2.metric(
+        "📄 Total Kinerja",
+        len(df)
+    )
+
+    a3.metric(
+        "⏱ Total Jam",
+        round(df["Durasi"].sum(), 2)
+        if "Durasi" in df.columns else 0
+    )
+
+    a4.metric(
+        "📅 Total Hari",
+        df["Tanggal"].nunique()
+        if "Tanggal" in df.columns else 0
+    )
+
+    st.divider()
+
+    # ================= DATA USER =================
+    st.subheader("👤 Data User")
+
+    st.dataframe(
+        users_df,
+        use_container_width=True
+    )
+
+    st.divider()
+
+    # ================= TAMBAH USER =================
+    st.subheader("➕ Tambah User")
+
+    with st.form("form_user"):
+
+        nip_baru = st.text_input("NIP")
+        nama_baru = st.text_input("Nama")
+        jabatan_baru = st.text_input("Jabatan")
+        password_baru = st.text_input(
+            "Password",
+            type="password"
+        )
+
+        role_baru = st.selectbox(
+            "Role",
+            ["pegawai", "pimpinan", "Admin"]
+        )
+
+        simpan_user = st.form_submit_button(
+            "Simpan User"
+        )
+
+        if simpan_user:
+
+            if not nip_baru or not nama_baru:
+                st.error("⚠️ Lengkapi data user")
+            else:
+
+                user_sheet.append_row([
+                    nip_baru,
+                    nama_baru,
+                    jabatan_baru,
+                    password_baru,
+                    role_baru
+                ])
+
+                load_users.clear()
+
+                st.success("✅ User berhasil ditambahkan")
+                st.rerun()
