@@ -561,9 +561,10 @@ if menu == "Dashboard":
         unsafe_allow_html=True
     )
 
-    col1, col2, col3 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 
-    with col1:
+# ================= FILTER TANGGAL =================
+with col1:
 
     today = date.today()
 
@@ -602,20 +603,26 @@ if menu == "Dashboard":
         value=(start_default, end_default)
     )
 
+# ================= FILTER PEGAWAI =================
+with col2:
 
-    with col2:
+    pegawai = st.multiselect(
+        "👤 Pegawai",
+        sorted(df["Nama"].unique())
+    )
 
-        pegawai = st.multiselect(
-            "👤 Pegawai",
-            sorted(df["Nama"].unique())
-        )
+# ================= FILTER LOKASI =================
+with col3:
 
-    with col3:
+    lokasi = st.multiselect(
+        "📍 Lokasi",
+        sorted(df["Lokasi"].unique())
+    )
 
-        lokasi = st.multiselect(
-            "📍 Lokasi",
-            sorted(df["Lokasi"].unique())
-        )
+st.markdown(
+    '</div>',
+    unsafe_allow_html=True
+)
 
     st.markdown(
         '</div>',
