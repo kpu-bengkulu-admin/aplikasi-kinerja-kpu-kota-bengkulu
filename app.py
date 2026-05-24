@@ -1265,7 +1265,7 @@ elif menu == "Admin":
     st.divider()
 
     # ================= TAMBAH USER =================
-    if st.session_state.role == "admin":
+    if st.session_state.role == "Admin":
 
         st.subheader("➕ Tambah User")
 
@@ -1284,7 +1284,7 @@ elif menu == "Admin":
 
             role_baru = st.selectbox(
                 "Role",
-                ["pegawai", "pimpinan", "admin"]
+                ["pegawai", "pimpinan", "Admin"]
             )
 
             simpan_user = st.form_submit_button(
