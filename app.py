@@ -1251,6 +1251,10 @@ elif menu == "Admin":
     # ================= DATA USER =================
     st.subheader("👤 Data User")
 
+    users_tampil = users_df.drop(
+        columns=["Password"],
+        errors="ignore"
+    )
     st.dataframe(
         users_df,
         use_container_width=True
