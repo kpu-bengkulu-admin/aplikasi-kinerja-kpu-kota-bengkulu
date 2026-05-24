@@ -838,29 +838,29 @@ elif menu == "Input":
     # ================= FORM INPUT =================
     tgl = st.date_input(
         "Tanggal",
-        key=f"tgl_input_{st.session_state.form_id}"
+        key="tgl_" + form_key
     )
 
     masuk = st.text_input(
         "Jam Masuk",
         "07:30",
-        key=f"masuk_input_{st.session_state.form_id}"
+        key="masuk_" + form_key
     )
 
     keluar = st.text_input(
         "Jam Keluar",
         "16:00",
-        key=f"uraian_input_{st.session_state.form_id}"
+        key="keluar_" + form_key
     )
 
     uraian = st.text_area(
         "Uraian Kegiatan",
-        key=f"output_input_{st.session_state.form_id}"
+        key="uraian_" + form_key
     )
 
     output = st.text_area(
         "Output/Hasil",
-        key=f"output_input_{st.session_state.form_id}"
+        key="output_" + form_key
     )
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
@@ -905,7 +905,7 @@ elif menu == "Input":
             st.session_state.form_id += 1
             st.session_state.gps = ""
             import time
-            time.sleep(2)
+            time.sleep(1)
             st.rerun()
 
 # ================= DATA =================
