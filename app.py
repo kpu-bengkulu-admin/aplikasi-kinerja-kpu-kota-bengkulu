@@ -1259,42 +1259,46 @@ elif menu == "Admin":
     st.divider()
 
     # ================= TAMBAH USER =================
-    st.subheader("➕ Tambah User")
+    if st.session_state.role == "admin":
 
-    with st.form("form_user"):
+        st.subheader("➕ Tambah User")
 
-        nip_baru = st.text_input("NIP")
-        nama_baru = st.text_input("Nama")
-        jabatan_baru = st.text_input("Jabatan")
-        password_baru = st.text_input(
-            "Password",
-            type="password"
-        )
+        with st.form("form_user"):
 
-        role_baru = st.selectbox(
-            "Role",
-            ["pegawai", "Pimpinan", "Admin"]
-        )
+            nip_baru = st.text_input("NIP")
+            nama_baru = st.text_input("Nama")
+            jabatan_baru = st.text_input("Jabatan")
 
-        simpan_user = st.form_submit_button(
-            "Simpan User"
-        )
+            password_baru = st.text_input(
+                "Password",
+                type="password"
+            )
 
-        if simpan_user:
+            role_baru = st.selectbox(
+                "Role",
+                ["pegawai", "pimpinan", "admin"]
+            )
 
-            if not nip_baru or not nama_baru:
-                st.error("⚠️ Lengkapi data user")
-            else:
+            simpan_user = st.form_submit_button(
+                "Simpan User"
+            )
 
-                user_sheet.append_row([
-                    nip_baru,
-                    nama_baru,
-                    jabatan_baru,
-                    password_baru,
-                    role_baru
-                ])
+            if simpan_user:
 
-                load_users.clear()
+                if not nip_baru or not nama_baru:
+                    st.error("⚠️ Lengkapi data user")
 
-                st.success("✅ User berhasil ditambahkan")
-                st.rerun()
+                else:
+
+                    user_sheet.append_row([
+                        nip_baru,
+                        nama_baru,
+                        jabatan_baru,
+                        password_baru,
+                        role_baru
+                    ])
+
+                    load_users.clear()
+
+                    st.success("✅ User berhasil ditambahkan")
+                    st.rerun()
