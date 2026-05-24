@@ -829,16 +829,19 @@ elif menu == "Input":
     # ================= FORM UTAMA =================
     # INI HARUS DI LUAR IF RUMAH
 
-if "reset_form" not in st.session_state:
-    st.session_state.reset_form = False
+    # ================= RESET FORM =================
+    if "reset_form" not in st.session_state:
+        st.session_state.reset_form = False
 
-if st.session_state.reset_form:
+    # Reset isi form
+    if st.session_state.reset_form:
 
-    st.session_state["uraian_input"] = ""
-    st.session_state["output_input"] = ""
+        st.session_state["uraian_input"] = ""
+        st.session_state["output_input"] = ""
 
-    st.session_state.reset_form = False
+        st.session_state.reset_form = False
 
+    # ================= FORM INPUT =================
     tgl = st.date_input(
         "Tanggal",
         key="tgl_input"
