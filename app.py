@@ -829,8 +829,10 @@ elif menu == "Input":
     # ================= FORM UTAMA =================
     # INI HARUS DI LUAR IF RUMAH
 
-    tgl = st.date_input("Tanggal")
+    tgl = st.date_input(
+        "Tanggal",
         key="tgl_input"
+    )
 
     masuk = st.text_input(
         "Jam Masuk",
