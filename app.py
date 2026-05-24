@@ -830,8 +830,8 @@ elif menu == "Input":
     # INI HARUS DI LUAR IF RUMAH
 
     # ================= RESET FORM =================
-    if "reset_form" not in st.session_state:
-        st.session_state.reset_form = False
+    if "form_id" not in st.session_state:
+        st.session_state.form_id = 0
 
     # Reset isi form sebelum widget dibuat
     if st.session_state.reset_form:
@@ -847,24 +847,24 @@ elif menu == "Input":
     # ================= FORM INPUT =================
     tgl = st.date_input(
         "Tanggal",
-        key="tgl_input"
+        key=f"tgl_input_{st.session_state.form_id}"
     )
 
     masuk = st.text_input(
         "Jam Masuk",
         "07:30",
-        key="masuk_input"
+        key=f"masuk_input_{st.session_state.form_id}"
     )
 
     keluar = st.text_input(
         "Jam Keluar",
         "16:00",
-        key="keluar_input"
+        key=f"uraian_input_{st.session_state.form_id}"
     )
 
     uraian = st.text_area(
         "Uraian Kegiatan",
-        key="uraian_input"
+        key=f"output_input_{st.session_state.form_id}"
     )
 
     output = st.text_area(
@@ -911,7 +911,7 @@ elif menu == "Input":
             st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
             
             # Reset state dan Refresh
-            st.session_state.reset_form = True
+            st.session_state.form_id += 1
             st.session_state.gps = ""
             import time
             time.sleep(2)
