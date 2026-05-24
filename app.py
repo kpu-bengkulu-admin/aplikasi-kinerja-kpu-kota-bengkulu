@@ -293,7 +293,7 @@ st.sidebar.markdown(
 
 menu = st.sidebar.radio(
     "Menu",
-    ["Dashboard", "Input", "Data Kinerja", "Admin"]
+    ["Dashboard", "Input", "Data Kinerja"]
 )
 
 if st.sidebar.button("Logout"):
