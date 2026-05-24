@@ -830,23 +830,28 @@ elif menu == "Input":
     # INI HARUS DI LUAR IF RUMAH
 
     tgl = st.date_input("Tanggal")
+        key="tgl_input"
 
     masuk = st.text_input(
         "Jam Masuk",
         "07:30"
+        key="masuk_input"
     )
 
     keluar = st.text_input(
         "Jam Keluar",
         "16:00"
+        key="keluar_input"
     )
 
     uraian = st.text_area(
         "Uraian Kegiatan"
+        key="uraian_input"
     )
 
     output = st.text_area(
         "Output/Hasil"
+        key="output_input"
     )
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
@@ -888,9 +893,11 @@ elif menu == "Input":
             st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
             
             # Reset state dan Refresh
+            st.session_state.uraian_input = ""
+            st.session_state.output_input = ""
             st.session_state.gps = ""
             import time
-            time.sleep(2)
+            time.sleep(1)
             st.rerun()
 
 # ================= DATA =================
