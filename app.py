@@ -1251,15 +1251,16 @@ elif menu == "Admin":
     # ================= DATA USER =================
     st.subheader("👤 Data User")
 
+    # Hilangkan kolom password
     users_tampil = users_df.drop(
         columns=["Password"],
         errors="ignore"
     )
+
     st.dataframe(
-        users_df,
+        users_tampil,
         use_container_width=True
     )
-
     st.divider()
 
     # ================= TAMBAH USER =================
