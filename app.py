@@ -901,7 +901,10 @@ elif menu == "Input":
             ])
             load_data.clear()
 
-            st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
+            st.toast(
+                f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!",
+                icon="✅"
+            )
             
             # Reset state dan Refresh
             st.session_state.form_id += 1
