@@ -1212,7 +1212,7 @@ elif menu == "Data Kinerja":
 elif menu == "Admin":
 
     # Hanya admin yang boleh akses
-    if st.session_state.role != "Admin":
+    if st.session_state.role not in ["Admin", "pimpinan"]:
         st.error("❌ Anda tidak memiliki akses.")
         st.stop()
 
