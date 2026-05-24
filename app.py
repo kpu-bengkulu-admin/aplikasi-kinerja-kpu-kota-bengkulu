@@ -829,6 +829,16 @@ elif menu == "Input":
     # ================= FORM UTAMA =================
     # INI HARUS DI LUAR IF RUMAH
 
+if "reset_form" not in st.session_state:
+    st.session_state.reset_form = False
+
+if st.session_state.reset_form:
+
+    st.session_state["uraian_input"] = ""
+    st.session_state["output_input"] = ""
+
+    st.session_state.reset_form = False
+
     tgl = st.date_input(
         "Tanggal",
         key="tgl_input"
@@ -897,6 +907,7 @@ elif menu == "Input":
             # Reset state dan Refresh
             st.session_state.uraian_input = ""
             st.session_state.output_input = ""
+            st.session_state.reset_form = True
             st.session_state.gps = ""
             import time
             time.sleep(1)
