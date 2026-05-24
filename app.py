@@ -535,7 +535,7 @@ if menu == "Dashboard":
     df = df.dropna(subset=["Tanggal"])
 
     # ================= ROLE =================
-    if st.session_state.role in ["Admin", "pimpinan"]:
+    if st.session_state.role in ["Admin", "Pimpinan"]:
 
         pilihan_data = st.selectbox(
             "Pilih Data",
@@ -740,7 +740,7 @@ if menu == "Dashboard":
         )
 
         # ================= RANKING =================
-    if st.session_state.role in ["Admin", "pimpinan"]:
+    if st.session_state.role in ["Admin", "Pimpinan"]:
 
         st.markdown("## 🏆 Ranking Pegawai")
 
@@ -938,7 +938,7 @@ elif menu == "Data Kinerja":
     df = df.dropna(subset=["Tanggal"])
 
     # ================= FILTER ROLE =================
-    if st.session_state.role in ["Admin", "pimpinan"]:
+    if st.session_state.role in ["Admin", "Pimpinan"]:
 
         mode = st.radio(
             "Mode Data",
@@ -994,7 +994,7 @@ elif menu == "Data Kinerja":
         ]
 
     # ================= FILTER PEGAWAI =================
-    if st.session_state.role in ["Admin", "pimpinan"]:
+    if st.session_state.role in ["Admin", "Pimpinan"]:
 
         pegawai = st.multiselect(
             "👤 Filter Pegawai",
@@ -1212,7 +1212,7 @@ elif menu == "Data Kinerja":
 elif menu == "Admin":
 
     # Hanya admin yang boleh akses
-    if st.session_state.role not in ["Admin", "pimpinan"]:
+    if st.session_state.role not in ["Admin", "Pimpinan"]:
         st.error("❌ Anda tidak memiliki akses.")
         st.stop()
 
@@ -1273,7 +1273,7 @@ elif menu == "Admin":
 
         role_baru = st.selectbox(
             "Role",
-            ["pegawai", "pimpinan", "Admin"]
+            ["pegawai", "Pimpinan", "Admin"]
         )
 
         simpan_user = st.form_submit_button(
