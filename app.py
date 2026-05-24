@@ -739,27 +739,29 @@ if menu == "Dashboard":
             use_container_width=True
         )
 
-    # ================= RANKING =================
-    st.markdown("## 🏆 Ranking Pegawai")
+        # ================= RANKING =================
+    if st.session_state.role in ["Admin", "pimpinan"]:
 
-    ranking = (
-        df.groupby("Nama")["Durasi"]
-        .sum()
-        .sort_values(ascending=False)
-        .reset_index()
-    )
+        st.markdown("## 🏆 Ranking Pegawai")
 
-    ranking.columns = [
-        "Nama Pegawai",
-        "Total Jam"
-    ]
+        ranking = (
+            df.groupby("Nama")["Durasi"]
+            .sum()
+            .sort_values(ascending=False)
+            .reset_index()
+        )
 
-    ranking.index += 1
+        ranking.columns = [
+            "Nama Pegawai",
+            "Total Jam"
+        ]
 
-    st.dataframe(
-        ranking,
-        use_container_width=True
-    )
+        ranking.index += 1
+
+        st.dataframe(
+            ranking,
+            use_container_width=True
+        )
 
     # ================= FOOTER =================
     st.markdown("""
