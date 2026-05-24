@@ -833,11 +833,14 @@ elif menu == "Input":
     if "reset_form" not in st.session_state:
         st.session_state.reset_form = False
 
-    # Reset isi form
+    # Reset isi form sebelum widget dibuat
     if st.session_state.reset_form:
 
-        st.session_state["uraian_input"] = ""
-        st.session_state["output_input"] = ""
+        if "uraian_input" in st.session_state:
+            del st.session_state["uraian_input"]
+
+        if "output_input" in st.session_state:
+            del st.session_state["output_input"]
 
         st.session_state.reset_form = False
 
@@ -908,12 +911,10 @@ elif menu == "Input":
             st.success(f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!")
             
             # Reset state dan Refresh
-            st.session_state.uraian_input = ""
-            st.session_state.output_input = ""
             st.session_state.reset_form = True
             st.session_state.gps = ""
             import time
-            time.sleep(1)
+            time.sleep(2)
             st.rerun()
 
 # ================= DATA =================
