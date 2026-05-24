@@ -293,7 +293,7 @@ st.sidebar.markdown(
 
 menu = st.sidebar.radio(
     "Menu",
-    ["Dashboard", "Input", "Data Kinerja"]
+    ["Dashboard", "Input", "Data Kinerja", "Admin"]
 )
 
 if st.sidebar.button("Logout"):
@@ -535,7 +535,7 @@ if menu == "Dashboard":
     df = df.dropna(subset=["Tanggal"])
 
     # ================= ROLE =================
-    if st.session_state.role == "Admin":
+    if st.session_state.role in ["Admin", "pimpinan"]:
 
         pilihan_data = st.selectbox(
             "Pilih Data",
