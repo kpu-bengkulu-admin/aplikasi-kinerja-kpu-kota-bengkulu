@@ -833,16 +833,7 @@ elif menu == "Input":
     if "form_id" not in st.session_state:
         st.session_state.form_id = 0
 
-    # Reset isi form sebelum widget dibuat
-    if st.session_state.reset_form:
-
-        if "uraian_input" in st.session_state:
-            del st.session_state["uraian_input"]
-
-        if "output_input" in st.session_state:
-            del st.session_state["output_input"]
-
-        st.session_state.reset_form = False
+    form_key = str(st.session_state.form_id)
 
     # ================= FORM INPUT =================
     tgl = st.date_input(
