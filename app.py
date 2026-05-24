@@ -860,7 +860,7 @@ elif menu == "Input":
 
     output = st.text_area(
         "Output/Hasil",
-        key="output_input"
+        key=f"output_input_{st.session_state.form_id}"
     )
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
