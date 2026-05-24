@@ -1261,6 +1261,7 @@ elif menu == "Admin":
         users_tampil,
         use_container_width=True
     )
+
     st.divider()
 
     # ================= TAMBAH USER =================
@@ -1271,7 +1272,9 @@ elif menu == "Admin":
         with st.form("form_user"):
 
             nip_baru = st.text_input("NIP")
+
             nama_baru = st.text_input("Nama")
+
             jabatan_baru = st.text_input("Jabatan")
 
             password_baru = st.text_input(
@@ -1291,6 +1294,7 @@ elif menu == "Admin":
             if simpan_user:
 
                 if not nip_baru or not nama_baru:
+
                     st.error("⚠️ Lengkapi data user")
 
                 else:
@@ -1306,4 +1310,5 @@ elif menu == "Admin":
                     load_users.clear()
 
                     st.success("✅ User berhasil ditambahkan")
+
                     st.rerun()
