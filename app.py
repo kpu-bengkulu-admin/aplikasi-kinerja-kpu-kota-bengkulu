@@ -325,6 +325,17 @@ if menu == "Dashboard":
         background-color: #f1f5f9;
     }
 
+/* NAIKKAN SELURUH CONTAINER KE ATAS */
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Hilangkan jarak kosong atas */
+[data-testid="stAppViewContainer"] {
+    padding-top: 0rem !important;
+}
+
 /* HERO */
 .hero {
     background: linear-gradient(135deg,#0f172a,#1e293b);
