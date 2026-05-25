@@ -46,10 +46,9 @@ st.markdown("""
     padding-bottom: 0rem !important;
 }
 
-/* Hilangkan ruang kosong header streamlit */
+/* Header tetap tampil agar tombol sidebar muncul */
 [data-testid="stHeader"] {
-    height: 0rem;
-    background: rgba(0,0,0,0);
+    background: transparent !important;
 }
 
 /* Hilangkan padding container utama */
@@ -61,7 +60,6 @@ st.markdown("""
 /* Header */
 header {
     visibility: visible !important;
-    height: 0px !important;
     background: transparent !important;
 }
 
@@ -89,6 +87,13 @@ button[kind="header"] {
 [data-testid="collapsedControl"] {
     display: flex !important;
     visibility: visible !important;
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    z-index: 999999 !important;
+    background: white !important;
+    border-radius: 10px !important;
+    padding: 4px !important;
 }
 
 </style>
