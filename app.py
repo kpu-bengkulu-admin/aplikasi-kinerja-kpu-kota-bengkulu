@@ -19,38 +19,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-
-}
-
-CSS itu justru menyembunyikan tombol panah sidebar Streamlit.
-
-Lalu di bawahnya Anda mencoba memunculkan lagi:
-
-button[kind="header"] {
-    display: block !important;
-}
-
-Tetapi Streamlit versi terbaru sering gagal membaca override itu karena urutan render.
-
-Solusinya:
-HAPUS TOTAL bagian ini:
-
-/* Hilangkan toolbar kanan atas */
-button[kind="header"] {
-    display: none !important;
-}
-
-dan ganti seluruh CSS awal Anda menjadi ini:
-
 st.markdown("""
 <style>
 
-/* Hilangkan Fork / GitHub */
+/* Hilangkan toolbar */
 [data-testid="stToolbar"] {
     display: none !important;
 }
 
-/* Hilangkan deploy button */
+/* Hilangkan deploy */
 .stDeployButton {
     display: none !important;
 }
@@ -60,34 +37,34 @@ st.markdown("""
     display: none !important;
 }
 
-/* Header transparan */
+/* Header */
 [data-testid="stHeader"] {
     background: transparent !important;
-    height: auto !important;
 }
 
-/* Jarak halaman */
+/* Main menu */
+#MainMenu {
+    visibility: hidden !important;
+}
+
+/* Footer */
+footer {
+    visibility: hidden !important;
+}
+
+/* Rapikan halaman */
 .block-container {
     padding-top: 0rem !important;
     padding-bottom: 0rem !important;
 }
 
-/* Main menu dan footer */
-#MainMenu {
-    visibility: hidden !important;
-}
-
-footer {
-    visibility: hidden !important;
-}
-
-/* Sidebar */
+/* Sidebar tetap muncul */
 section[data-testid="stSidebar"] {
     min-width: 260px !important;
     width: 260px !important;
 }
 
-/* Tombol collapse sidebar */
+/* Tombol sidebar */
 [data-testid="collapsedControl"] {
     display: flex !important;
     visibility: visible !important;
@@ -100,26 +77,6 @@ button[kind="header"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-/* Sidebar mobile tetap muncul */
-section[data-testid="stSidebar"] {
-    min-width: 260px !important;
-    width: 260px !important;
-}
-
-/* Tombol sidebar mobile */
-button[kind="header"] {
-    display: block !important;
-}
-
-/* Paksa tombol sidebar terlihat */
-[data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
 }
 
 </style>
