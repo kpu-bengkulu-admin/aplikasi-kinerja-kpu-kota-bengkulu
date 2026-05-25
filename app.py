@@ -69,24 +69,24 @@ section[data-testid="stSidebar"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    z-index: 99999 !important;
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    z-index: 999999 !important;
+    background: white !important;
+    border-radius: 10px !important;
+    padding: 4px !important;
 }
 
 /* Tombol header */
-button[kind="header"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+[data-testid="stHeader"] {
+    height: 50px !important;
+    background: transparent !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-
-from datetime import date, datetime
-import gspread
-from google.oauth2.service_account import Credentials
-import io
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
@@ -238,9 +238,21 @@ def hitung_durasi(masuk, keluar):
         return round((jk-jm)/60,2)
     return 0
 
-# ================= LOGIN =================
+# ================= SESSION LOGIN =================
 if "login" not in st.session_state:
-    st.session_state.login=False
+    st.session_state.login = False
+
+if "nama" not in st.session_state:
+    st.session_state.nama = ""
+
+if "nip" not in st.session_state:
+    st.session_state.nip = ""
+
+if "jabatan" not in st.session_state:
+    st.session_state.jabatan = ""
+
+if "role" not in st.session_state:
+    st.session_state.role = ""
 
 users = load_users()
 
@@ -269,7 +281,9 @@ if not st.session_state.login:
 
 # ================= SIDEBAR =================
 st.sidebar.image("logo_kpu.png", width=100)
-st.sidebar.title(st.session_state.nama)
+st.sidebar.title(
+    st.session_state.get("nama", "Guest")
+)
 
 st.sidebar.markdown(
     f"<p style='margin-top:-10px; color:gray;'>"
