@@ -39,28 +39,33 @@ st.markdown("""
 [data-testid="stDecoration"] {
     display: none !important;
 }
-
-/* Hilangkan jarak atas halaman */
+/* Rapatkan halaman TANPA menghilangkan header */
 .block-container {
-    padding-top: 0rem !important;
+    padding-top: 1rem !important;
     padding-bottom: 0rem !important;
 }
 
-/* Header tetap tampil agar tombol sidebar muncul */
+/* Header transparan */
 [data-testid="stHeader"] {
     background: transparent !important;
 }
 
-/* Hilangkan padding container utama */
-.main .block-container {
-    padding-top: 0rem !important;
-    margin-top: 0rem !important;
-}
-
-/* Header */
-header {
+/* Tombol sidebar */
+[data-testid="collapsedControl"] {
+    display: flex !important;
     visibility: visible !important;
-    background: transparent !important;
+    opacity: 1 !important;
+
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    z-index: 999999 !important;
+
+    background: white !important;
+    border-radius: 10px !important;
+    padding: 6px !important;
+
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
 
 /* Hilangkan menu dan footer */
