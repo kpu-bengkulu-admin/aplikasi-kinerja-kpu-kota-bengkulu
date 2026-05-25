@@ -31,9 +31,8 @@ st.markdown("""
     display: none !important;
 }
 
-/* Hilangkan toolbar kanan atas */
-button[kind="header"] {
-    display: none !important;
+[data-testid="stHeader"] {
+    background: transparent !important;
 }
 
 /* Hilangkan decoration */
