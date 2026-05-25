@@ -44,7 +44,7 @@ st.markdown("""
 
 /* Main menu */
 #MainMenu {
-    visibility: hidden !important;
+    display: none !important;
 }
 
 /* Footer */
@@ -64,23 +64,22 @@ section[data-testid="stSidebar"] {
     width: 260px !important;
 }
 
-/* Tombol sidebar */
-[data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
+/* Tombol sidebar tetap tampil */
+button[kind="header"] {
+    display: block !important;
     opacity: 1 !important;
+    visibility: visible !important;
     position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
+    top: 12px !important;
+    left: 12px !important;
     z-index: 999999 !important;
-    background: white !important;
+    background-color: white !important;
     border-radius: 10px !important;
-    padding: 4px !important;
+    padding: 6px !important;
 }
 
-/* Tombol header */
+/* Header transparan */
 [data-testid="stHeader"] {
-    height: 50px !important;
     background: transparent !important;
 }
 
