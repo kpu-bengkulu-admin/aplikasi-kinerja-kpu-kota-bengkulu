@@ -21,41 +21,59 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-/* Toolbar */
+/* Hilangkan Fork / GitHub */
 [data-testid="stToolbar"] {
     display: none !important;
 }
 
-/* Decoration */
+/* Hilangkan deploy button */
+.stDeployButton {
+    display: none !important;
+}
+
+/* Hilangkan toolbar kanan atas */
+button[kind="header"] {
+    display: none !important;
+}
+
+/* Hilangkan decoration */
 [data-testid="stDecoration"] {
     display: none !important;
 }
 
-/* Footer */
-footer {
-    visibility: hidden !important;
+/* Hilangkan jarak atas halaman */
+.block-container {
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
 }
 
-/* Sidebar tetap normal */
-section[data-testid="stSidebar"] {
-    min-width: 260px !important;
-    width: 260px !important;
+/* Hilangkan ruang kosong header streamlit */
+[data-testid="stHeader"] {
+    height: 0rem;
+    background: rgba(0,0,0,0);
 }
 
-/* Tombol buka sidebar */
-[data-testid="collapsedControl"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+/* Hilangkan padding container utama */
+.main .block-container {
+    padding-top: 0rem !important;
+    margin-top: 0rem !important;
 }
 
-/* Header JANGAN dihilangkan */
+/* Header */
 header {
+    visibility: visible !important;
+    height: 0px !important;
     background: transparent !important;
 }
 
-</style>
-""", unsafe_allow_html=True)
+/* Hilangkan menu dan footer */
+#MainMenu {
+    visibility: hidden !important;
+}
+
+footer {
+    visibility: hidden !important;
+}
 
 /* Sidebar mobile tetap muncul */
 section[data-testid="stSidebar"] {
@@ -72,17 +90,6 @@ button[kind="header"] {
 [data-testid="collapsedControl"] {
     display: flex !important;
     visibility: visible !important;
-    position: fixed !important;
-    top: 10px !important;
-    left: 10px !important;
-    z-index: 999999 !important;
-    background: white !important;
-    border-radius: 10px !important;
-    padding: 4px !important;
-}
-/* Paksa sidebar tetap bisa dibuka */
-section[data-testid="stSidebar"] {
-    transition: all 0.3s ease !important;
 }
 
 </style>
@@ -897,8 +904,7 @@ elif menu == "Input":
             st.toast(
                 f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!",
                 icon="✅"
-            )
-            
+            )            
             # Reset state dan Refresh
             st.session_state.form_id += 1
             st.session_state.gps = ""
