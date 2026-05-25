@@ -18,69 +18,32 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+st.sidebar.empty()
 
 st.markdown("""
 <style>
 
-/* Hilangkan toolbar */
-[data-testid="stToolbar"] {
-    display: none !important;
-}
-
-/* Hilangkan deploy */
-.stDeployButton {
-    display: none !important;
-}
-
-/* Decoration */
-[data-testid="stDecoration"] {
-    display: none !important;
-}
-
-/* Header */
-[data-testid="stHeader"] {
+/* Header transparan tapi tetap aktif */
+header {
     background: transparent !important;
 }
 
-/* Main menu */
-#MainMenu {
-    display: none !important;
-}
-
-/* Footer */
-footer {
-    visibility: hidden !important;
-}
-
-/* Rapikan halaman */
-.block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem !important;
-}
-
-/* Sidebar tetap muncul */
+/* Sidebar */
 section[data-testid="stSidebar"] {
-    min-width: 260px !important;
+    background-color: #0f172a !important;
     width: 260px !important;
 }
 
-/* Tombol sidebar tetap tampil */
+/* Tombol sidebar JANGAN disembunyikan */
 button[kind="header"] {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
-    z-index: 999999 !important;
-    background-color: white !important;
-    border-radius: 10px !important;
-    padding: 6px !important;
 }
 
-/* Header transparan */
-[data-testid="stHeader"] {
-    background: transparent !important;
+/* Footer */
+footer {
+    visibility: hidden;
 }
 
 </style>
@@ -154,6 +117,21 @@ div[data-testid="stSidebar"] .st-emotion-cache-6qob1r {
 .stButton button {
     background-color: #ef4444 !important;
     color: white !important;
+    border-radius: 10px !important;
+    border: none !important;
+}
+/* PERBAIKI DROPDOWN */
+[data-baseweb="select"] {
+    background: white !important;
+    border-radius: 10px !important;
+}
+
+[data-baseweb="select"] svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    fill: #0f172a !important;
+    color: #0f172a !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -556,10 +534,6 @@ if menu == "Dashboard":
         ]
 
     # ================= FILTER =================
-    st.markdown(
-        '<div class="filter-box">',
-        unsafe_allow_html=True
-    )
 
     col1, col2, col3 = st.columns(
         3,
@@ -622,10 +596,6 @@ if menu == "Dashboard":
             sorted(df["Lokasi"].unique())
         )
 
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
 
     # ================= FILTER PROSES =================
     if len(tgl) == 2:
