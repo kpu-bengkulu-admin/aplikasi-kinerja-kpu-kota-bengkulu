@@ -21,61 +21,41 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-/* Hilangkan Fork / GitHub */
+/* Toolbar */
 [data-testid="stToolbar"] {
     display: none !important;
 }
 
-/* Hilangkan deploy button */
-.stDeployButton {
-    display: none !important;
-}
-
-[data-testid="stHeader"] {
-    background: transparent !important;
-}
-
-/* Hilangkan decoration */
+/* Decoration */
 [data-testid="stDecoration"] {
     display: none !important;
 }
-/* Rapatkan halaman TANPA menghilangkan header */
-.block-container {
-    padding-top: 1rem !important;
-    padding-bottom: 0rem !important;
+
+/* Footer */
+footer {
+    visibility: hidden !important;
 }
 
-/* Header transparan */
-[data-testid="stHeader"] {
-    background: transparent !important;
+/* Sidebar tetap normal */
+section[data-testid="stSidebar"] {
+    min-width: 260px !important;
+    width: 260px !important;
 }
 
-/* Tombol sidebar */
+/* Tombol buka sidebar */
 [data-testid="collapsedControl"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
-    z-index: 999999 !important;
-
-    background: white !important;
-    border-radius: 10px !important;
-    padding: 6px !important;
-
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
 }
 
-/* Hilangkan menu dan footer */
-#MainMenu {
-    visibility: hidden !important;
+/* Header JANGAN dihilangkan */
+header {
+    background: transparent !important;
 }
 
-footer {
-    visibility: hidden !important;
-}
+</style>
+""", unsafe_allow_html=True)
 
 /* Sidebar mobile tetap muncul */
 section[data-testid="stSidebar"] {
