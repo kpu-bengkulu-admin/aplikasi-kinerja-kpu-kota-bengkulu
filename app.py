@@ -19,8 +19,32 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
+}
+
+CSS itu justru menyembunyikan tombol panah sidebar Streamlit.
+
+Lalu di bawahnya Anda mencoba memunculkan lagi:
+
+button[kind="header"] {
+    display: block !important;
+}
+
+Tetapi Streamlit versi terbaru sering gagal membaca override itu karena urutan render.
+
+Solusinya:
+HAPUS TOTAL bagian ini:
+
+/* Hilangkan toolbar kanan atas */
+button[kind="header"] {
+    display: none !important;
+}
+
+dan ganti seluruh CSS awal Anda menjadi ini:
+
 st.markdown("""
 <style>
+
 /* Hilangkan Fork / GitHub */
 [data-testid="stToolbar"] {
     display: none !important;
@@ -31,42 +55,24 @@ st.markdown("""
     display: none !important;
 }
 
-/* Hilangkan toolbar kanan atas */
-button[kind="header"] {
-    display: none !important;
-}
-
-/* Hilangkan decoration */
+/* Decoration */
 [data-testid="stDecoration"] {
     display: none !important;
 }
 
-/* Hilangkan jarak atas halaman */
+/* Header transparan */
+[data-testid="stHeader"] {
+    background: transparent !important;
+    height: auto !important;
+}
+
+/* Jarak halaman */
 .block-container {
     padding-top: 0rem !important;
     padding-bottom: 0rem !important;
 }
 
-/* Hilangkan ruang kosong header streamlit */
-[data-testid="stHeader"] {
-    height: 0rem;
-    background: rgba(0,0,0,0);
-}
-
-/* Hilangkan padding container utama */
-.main .block-container {
-    padding-top: 0rem !important;
-    margin-top: 0rem !important;
-}
-
-/* Header */
-header {
-    visibility: visible !important;
-    height: 0px !important;
-    background: transparent !important;
-}
-
-/* Hilangkan menu dan footer */
+/* Main menu dan footer */
 #MainMenu {
     visibility: hidden !important;
 }
@@ -74,6 +80,30 @@ header {
 footer {
     visibility: hidden !important;
 }
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    min-width: 260px !important;
+    width: 260px !important;
+}
+
+/* Tombol collapse sidebar */
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 99999 !important;
+}
+
+/* Tombol header */
+button[kind="header"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 /* Sidebar mobile tetap muncul */
 section[data-testid="stSidebar"] {
