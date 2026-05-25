@@ -34,6 +34,18 @@ section[data-testid="stSidebar"] {
     width: 260px !important;
 }
 
+/* GLOBAL CONTAINER */
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}
+
+[data-testid="stAppViewContainer"] {
+    padding-top: 0rem !important;
+}
+
 /* Tombol sidebar JANGAN disembunyikan */
 button[kind="header"] {
     display: block !important;
@@ -324,17 +336,6 @@ if menu == "Dashboard":
     .stApp {
         background-color: #f1f5f9;
     }
-
-/* NAIKKAN SELURUH CONTAINER KE ATAS */
-.block-container {
-    padding-top: 0rem !important;
-    padding-bottom: 1rem !important;
-}
-
-/* Hilangkan jarak kosong atas */
-[data-testid="stAppViewContainer"] {
-    padding-top: 0rem !important;
-}
 
 /* HERO */
 .hero {
