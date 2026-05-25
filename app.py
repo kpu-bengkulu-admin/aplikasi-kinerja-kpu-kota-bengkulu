@@ -100,6 +100,10 @@ button[kind="header"] {
     border-radius: 10px !important;
     padding: 4px !important;
 }
+/* Paksa sidebar tetap bisa dibuka */
+section[data-testid="stSidebar"] {
+    transition: all 0.3s ease !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
