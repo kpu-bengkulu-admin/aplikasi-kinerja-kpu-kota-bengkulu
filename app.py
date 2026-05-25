@@ -327,7 +327,7 @@ if menu == "Dashboard":
 
 /* NAIKKAN SELURUH CONTAINER KE ATAS */
 .block-container {
-    padding-top: 1rem !important;
+    padding-top: 0rem !important;
     padding-bottom: 1rem !important;
 }
 
