@@ -334,8 +334,14 @@ if menu == "Dashboard":
     <style>
 
     .stApp {
-        background-color: #f1f5f9;
-    }
+
+    background: linear-gradient(
+        180deg,
+        #dbeafe 0%,
+        #eff6ff 40%,
+        #f8fafc 100%
+    ) !important;
+}
 
 /* HERO */
 .hero {
