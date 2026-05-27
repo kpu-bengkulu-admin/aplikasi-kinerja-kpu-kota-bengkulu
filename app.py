@@ -18,103 +18,42 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+st.sidebar.empty()
 
 st.markdown("""
 <style>
 
-/* HEADER */
+/* Header transparan tapi tetap aktif */
 header {
     background: transparent !important;
 }
 
-/* SIDEBAR */
+/* Sidebar */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(
-        180deg,
-        #08142b 0%,
-        #0d2247 100%
-    ) !important;
-
+    background-color: #0f172a !important;
     width: 260px !important;
 }
 
-/* SEMUA TEKS SIDEBAR */
-section[data-testid="stSidebar"] * {
-    color: white !important;
-}
-
-/* MENU */
-div[role="radiogroup"] label {
-
-    background: rgba(255,255,255,0.05);
-
-    padding: 12px 15px;
-
-    border-radius: 14px;
-
-    margin-bottom: 10px;
-
-    font-size: 16px;
-
-    font-weight: 500;
-
-    transition: 0.3s;
-}
-
-/* HOVER */
-div[role="radiogroup"] label:hover {
-
-    background: linear-gradient(
-        90deg,
-        #2563eb,
-        #7c3aed
-    );
-
-    transform: translateX(4px);
-
-    box-shadow: 0 4px 12px rgba(37,99,235,0.35);
-}
-
-/* MENU AKTIF */
-div[role="radiogroup"] label[data-selected="true"] {
-
-    background: linear-gradient(
-        90deg,
-        #2563eb,
-        #7c3aed
-    ) !important;
-
-    color: white !important;
-
-    font-weight: bold;
-
-    box-shadow: 0 6px 16px rgba(124,58,237,0.4);
-}
-
-/* TOMBOL */
-.stButton button {
-
-    background: linear-gradient(
-        90deg,
-        #ef4444,
-        #dc2626
-    ) !important;
-
-    color: white !important;
-
-    border-radius: 14px !important;
-
-    border: none !important;
-
-    font-weight: bold !important;
-}
-
-/* CONTAINER */
+/* GLOBAL CONTAINER */
 .block-container {
     padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
-/* FOOTER */
+[data-testid="stAppViewContainer"] {
+    padding-top: 0rem !important;
+}
+
+/* Tombol sidebar JANGAN disembunyikan */
+button[kind="header"] {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Footer */
 footer {
     visibility: hidden;
 }
@@ -123,85 +62,59 @@ footer {
 """, unsafe_allow_html=True)
 
 
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+
 # ================= SESSION =================
 if "gps" not in st.session_state:
     st.session_state.gps = ""
 
 # ================= DRIVE =================
-
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
-
 FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
+import base64
+from PIL import Image
+import io
+
 def upload_foto(file):
-
-    if file is None:
-        return ""
-
+    if file is None: return ""
+    
     try:
-        info = dict(st.secrets["connections"]["gsheets"])
-        info["private_key"] = info["private_key"].replace("\\n", "\n")
-
-        creds = Credentials.from_service_account_info(
-            info,
-            scopes=[
-                "https://www.googleapis.com/auth/drive"
-            ],
-        )
-
-        drive_service = build(
-            "drive",
-            "v3",
-            credentials=creds
-        )
-
-        # Compress gambar
+        # 1. Buka foto dan perkecil ukurannya (agar tidak membebani Spreadsheet)
         img = Image.open(file)
-        img.thumbnail((800, 800))
-
-        buffer = io.BytesIO()
-        img.save(buffer, format="JPEG", quality=75)
-        buffer.seek(0)
-
-        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
-
-        file_metadata = {
-            "name": filename,
-            "parents": [FOLDER_ID]
-        }
-
-        media = MediaIoBaseUpload(
-            buffer,
-            mimetype="image/jpeg"
-        )
-
-        uploaded = drive_service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields="id"
-        ).execute()
-
-        file_id = uploaded.get("id")
-
-        # Public akses
-        drive_service.permissions().create(
-            fileId=file_id,
-            body={
-                "type": "anyone",
-                "role": "reader"
-            }
-        ).execute()
-
-        return f"https://drive.google.com/uc?id={file_id}"
+        img.thumbnail((400, 400))  # Perkecil ke 400px
+        
+        # 2. Ubah foto menjadi teks (Base64)
+        buffered = io.BytesIO()
+        img.save(buffered, format="JPEG", quality=70) # Kompres kualitas ke 70%
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        # 3. Kita tidak upload ke Drive, tapi kirim teks ini kembali
+        # Kita buat link tiruan yang isinya data foto
+        return f"data:image/jpeg;base64,{img_str}"
 
     except Exception as e:
-        st.error(f"Gagal upload foto: {e}")
+        st.error(f"Gagal memproses foto: {e}")
         return ""
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
 <style>
+/* 1. Latar belakang sidebar */
+[data-testid="stSidebar"] {background:#0f172a !important;}
+
+/* 2. PAKSA SEMUA TEKS DI SIDEBAR MENJADI PUTIH */
+/* Ini akan menyasar semua jenis teks: label, radio button, markdown, dll */
+[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* 3. KHUSUS UNTUK MENU RADIO (DASHBOARD, INPUT, DLL) */
+/* Terkadang label radio butuh penanganan ekstra agar tidak transparan */
+div[data-testid="stSidebar"] .st-emotion-cache-6qob1r {
+    color: white !important;
+    opacity: 1 !important;
+}
 
 /* 4. KOTAK INPUT EDIT (Tetap Hitam agar terlihat di latar putih) */
 /* Kita kecualikan agar teks yang kita ketik tetap hitam di kotak putih */
@@ -1209,10 +1122,8 @@ elif menu == "Data Kinerja":
 
             elif foto_data.startswith("http"):
 
-                st.image(
-                    foto_data,
-                    width=250,
-                    caption="📸 Dokumentasi Kegiatan"
+                st.markdown(
+                    f"[📸 Lihat Foto]({foto_data})"
                 )
 
         # ================= TOMBOL =================
@@ -1357,7 +1268,7 @@ elif menu == "Admin":
 
             role_baru = st.selectbox(
                 "Role",
-                ["pegawai", "Pimpinan", "Admin"]
+                ["pegawai", "pimpinan", "Admin"]
             )
 
             simpan_user = st.form_submit_button(
