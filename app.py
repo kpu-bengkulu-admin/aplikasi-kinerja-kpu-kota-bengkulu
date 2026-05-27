@@ -444,16 +444,6 @@ if menu == "Dashboard":
     }
 }
 
-    /* CARD KPI */
-    .kpi-card {
-        background: white;
-        padding: 25px;
-        border-radius: 20px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-        transition: 0.3s;
-        border-left: 6px solid #ef4444;
-    }
-
     .kpi-card:hover {
         transform: translateY(-5px);
     }
