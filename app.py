@@ -334,27 +334,8 @@ if menu == "Dashboard":
     <style>
 
     .stApp {
-
-    background: linear-gradient(
-        180deg,
-        #dbeafe 0%,
-        #eff6ff 40%,
-        #f8fafc 100%
-    ) !important;
-}
-/* HILANGKAN PUTIH STREAMLIT */
-.main .block-container {
-
-    background: transparent !important;
-
-    padding-top: 1rem !important;
-}
-
-/* SEMUA CONTAINER */
-div[data-testid="stVerticalBlock"] {
-
-    background: transparent !important;
-}
+        background-color: #f1f5f9;
+    }
 
 /* HERO */
 .hero {
@@ -413,86 +394,13 @@ div[data-testid="stVerticalBlock"] {
     margin-bottom: 10px;
 }
 
-/* CONTAINER GRAFIK */
-[data-testid="stPlotlyChart"] {
-
-    background: linear-gradient(
-        135deg,
-        #ffffff,
-        #f8fafc
-    ) !important;
-
-    padding: 15px;
-
-    border-radius: 22px;
-
-    box-shadow:
-        0 6px 18px rgba(0,0,0,0.08);
-
-    margin-top: 10px;
-}
-
-/* GRAFIK */
+/* Grafik */
 .js-plotly-plot {
-
-    border-radius: 18px;
-
+    border-radius: 14px;
     overflow: hidden;
 }
 
-/* HILANGKAN BACKGROUND PUTIH */
-.element-container {
-
-    background: transparent !important;
-}
-
-    /* KPI CARD DESKTOP */
-    .kpi-card {
-
-        background: linear-gradient(
-            135deg,
-            #ffffff,
-            #f8fafc
-        );
-
-        padding: 22px;
-
-        border-radius: 20px;
-
-        box-shadow:
-            0 6px 18px rgba(0,0,0,0.08);
-
-        border-left: 6px solid #ef4444;
-
-        transition: 0.3s;
-    }
-
-    .kpi-card:hover {
-
-        transform: translateY(-4px);
-
-        box-shadow:
-            0 12px 24px rgba(0,0,0,0.12);
-    }
-
-    .kpi-title {
-
-        color: #64748b;
-
-        font-size: 14px;
-    }
-
-    .kpi-value {
-
-        font-size: 35px;
-
-        font-weight: bold;
-
-        color: #0f172a;
-    }
-
 /* RESPONSIVE HP */
-
 @media (max-width: 768px) {
 
     .hero {
@@ -768,8 +676,8 @@ div[data-testid="stVerticalBlock"] {
         )
 
         fig.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='white',
+            paper_bgcolor='white',
             height=300
         )
 
@@ -795,8 +703,6 @@ div[data-testid="stVerticalBlock"] {
         )
 
         fig2.update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
             height=300
         )
 
