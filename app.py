@@ -355,22 +355,6 @@ div[data-testid="stVerticalBlock"] {
 
     background: transparent !important;
 }
-/* CARD GRAFIK */
-[data-testid="stPlotlyChart"] {
-
-    background: rgba(255,255,255,0.88) !important;
-
-    backdrop-filter: blur(12px);
-
-    border-radius: 24px;
-
-    padding: 20px;
-
-    box-shadow:
-        0 10px 25px rgba(0,0,0,0.08);
-
-    border: 1px solid rgba(255,255,255,0.5);
-}
 
 /* HERO */
 .hero {
@@ -434,32 +418,26 @@ div[data-testid="stVerticalBlock"] {
 
     background: linear-gradient(
         135deg,
-        rgba(15,23,42,0.96),
-        rgba(30,41,59,0.92)
+        #ffffff,
+        #f8fafc
     ) !important;
 
-    backdrop-filter: blur(12px);
+    padding: 15px;
 
-    border-radius: 24px;
-
-    padding: 20px;
+    border-radius: 22px;
 
     box-shadow:
-        0 10px 25px rgba(0,0,0,0.15);
-
-    border: 1px solid rgba(255,255,255,0.08);
+        0 6px 18px rgba(0,0,0,0.08);
 
     margin-top: 10px;
 }
 
-/* AREA DALAM GRAFIK */
-.js-plotly-plot,
-.plot-container,
-.svg-container {
+/* GRAFIK */
+.js-plotly-plot {
 
-    background: transparent !important;
+    border-radius: 18px;
 
-    border-radius: 20px !important;
+    overflow: hidden;
 }
 
 /* HILANGKAN BACKGROUND PUTIH */
@@ -792,8 +770,6 @@ div[data-testid="stVerticalBlock"] {
         fig.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color="white"),
-            title_font=dict(color="white"),
             height=300
         )
 
@@ -821,8 +797,6 @@ div[data-testid="stVerticalBlock"] {
         fig2.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color="white"),
-            title_font=dict(color="white"),
             height=300
         )
 
