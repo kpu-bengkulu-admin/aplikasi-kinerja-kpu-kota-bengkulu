@@ -203,15 +203,34 @@ except Exception as e:
 def safe(x): return "" if x is None else str(x)
 
 @st.cache_data(ttl=300)
-def load_data():
-    df = pd.DataFrame(sheet.get_all_records())
-    if not df.empty:
-        df["row"] = range(2, len(df)+2)
-    return df
-
-@st.cache_data(ttl=5)
 def load_users():
-    return pd.DataFrame(user_sheet.get_all_records())
+
+    data = user_sheet.get_values()
+
+    if len(data) < 2:
+        return pd.DataFrame()
+
+    return pd.DataFrame(
+        data[1:],
+        columns=data[0]
+    )
+
+@st.cache_data(ttl=300)
+def load_data():
+
+    data = sheet.get_values()
+
+    if len(data) < 2:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(
+        data[1:],
+        columns=data[0]
+    )
+
+    df["row"] = range(2, len(df)+2)
+
+    return df
 
 def parse_jam(x):
     try:
@@ -243,7 +262,11 @@ if "jabatan" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = ""
 
-users = load_users()
+try:
+    users = load_users()
+except Exception as e:
+    st.error("⚠️ Google Sheets sedang sibuk. Coba beberapa saat lagi.")
+    st.stop()
 
 if not st.session_state.login:
     st.title("🔐 Login E-Kinerja KPU KOTA BENGKULU")
