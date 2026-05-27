@@ -434,26 +434,32 @@ div[data-testid="stVerticalBlock"] {
 
     background: linear-gradient(
         135deg,
-        #ffffff,
-        #f8fafc
+        rgba(15,23,42,0.96),
+        rgba(30,41,59,0.92)
     ) !important;
 
-    padding: 15px;
+    backdrop-filter: blur(12px);
 
-    border-radius: 22px;
+    border-radius: 24px;
+
+    padding: 20px;
 
     box-shadow:
-        0 6px 18px rgba(0,0,0,0.08);
+        0 10px 25px rgba(0,0,0,0.15);
+
+    border: 1px solid rgba(255,255,255,0.08);
 
     margin-top: 10px;
 }
 
-/* GRAFIK */
-.js-plotly-plot {
+/* AREA DALAM GRAFIK */
+.js-plotly-plot,
+.plot-container,
+.svg-container {
 
-    border-radius: 18px;
+    background: transparent !important;
 
-    overflow: hidden;
+    border-radius: 20px !important;
 }
 
 /* HILANGKAN BACKGROUND PUTIH */
@@ -786,6 +792,8 @@ div[data-testid="stVerticalBlock"] {
         fig.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color="white"),
+            title_font=dict(color="white"),
             height=300
         )
 
@@ -813,6 +821,8 @@ div[data-testid="stVerticalBlock"] {
         fig2.update_layout(
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color="white"),
+            title_font=dict(color="white"),
             height=300
         )
 
