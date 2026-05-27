@@ -400,7 +400,53 @@ if menu == "Dashboard":
     overflow: hidden;
 }
 
+    /* KPI CARD DESKTOP */
+    .kpi-card {
+
+        background: linear-gradient(
+            135deg,
+            #ffffff,
+            #f8fafc
+        );
+
+        padding: 22px;
+
+        border-radius: 20px;
+
+        box-shadow:
+            0 6px 18px rgba(0,0,0,0.08);
+
+        border-left: 6px solid #ef4444;
+
+        transition: 0.3s;
+    }
+
+    .kpi-card:hover {
+
+        transform: translateY(-4px);
+
+        box-shadow:
+            0 12px 24px rgba(0,0,0,0.12);
+    }
+
+    .kpi-title {
+
+        color: #64748b;
+
+        font-size: 14px;
+    }
+
+    .kpi-value {
+
+        font-size: 35px;
+
+        font-weight: bold;
+
+        color: #0f172a;
+    }
+
 /* RESPONSIVE HP */
+
 @media (max-width: 768px) {
 
     .hero {
