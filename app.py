@@ -394,10 +394,37 @@ if menu == "Dashboard":
     margin-bottom: 10px;
 }
 
-/* Grafik */
+/* CONTAINER GRAFIK */
+[data-testid="stPlotlyChart"] {
+
+    background: linear-gradient(
+        135deg,
+        #ffffff,
+        #f8fafc
+    ) !important;
+
+    padding: 15px;
+
+    border-radius: 22px;
+
+    box-shadow:
+        0 6px 18px rgba(0,0,0,0.08);
+
+    margin-top: 10px;
+}
+
+/* GRAFIK */
 .js-plotly-plot {
-    border-radius: 14px;
+
+    border-radius: 18px;
+
     overflow: hidden;
+}
+
+/* HILANGKAN BACKGROUND PUTIH */
+.element-container {
+
+    background: transparent !important;
 }
 
     /* KPI CARD DESKTOP */
