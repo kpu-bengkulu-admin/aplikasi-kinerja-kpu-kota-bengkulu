@@ -749,8 +749,8 @@ if menu == "Dashboard":
         )
 
         fig.update_layout(
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             height=300
         )
 
@@ -776,6 +776,8 @@ if menu == "Dashboard":
         )
 
         fig2.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
             height=300
         )
 
