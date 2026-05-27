@@ -202,7 +202,7 @@ except Exception as e:
 # ================= HELPER =================
 def safe(x): return "" if x is None else str(x)
 
-@st.cache_data(ttl=5)
+@st.cache_data(ttl=300)
 def load_data():
     df = pd.DataFrame(sheet.get_all_records())
     if not df.empty:
