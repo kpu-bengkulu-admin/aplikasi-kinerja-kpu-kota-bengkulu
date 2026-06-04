@@ -868,7 +868,7 @@ elif menu == "Input":
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
 
-    if st.button("Simpan Data", type="primary"):
+if st.button("Simpan Data", type="primary"):
 
     uid = str(uuid.uuid4())
     dur = hitung_durasi(masuk, keluar)
@@ -909,7 +909,6 @@ elif menu == "Input":
         load_data.clear()
 
         st.session_state.sukses_simpan = True
-
         st.session_state.form_id += 1
         st.session_state.gps = ""
 
