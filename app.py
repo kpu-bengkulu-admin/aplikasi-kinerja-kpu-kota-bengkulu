@@ -846,43 +846,44 @@ elif menu == "Input":
 
     form_key = str(st.session_state.form_id)
 
-    # ================= FORM INPUT =================
-    tgl = st.date_input(
-        "Tanggal",
-        key="tgl_" + form_key
+# ================= FORM INPUT =================
+tgl = st.date_input(
+    "Tanggal",
+    key="tgl_" + form_key
+)
+
+if lokasi == "Rumah":
+
+    jam_absen = st.text_input(
+        "Jam Absen WFH",
+        placeholder="Contoh: 07:45",
+        key="jam_absen_" + form_key
     )
 
-    if lokasi == "Rumah":
+else:
 
-        jam_absen = st.text_input(
-            "Jam Absen WFH",
-            placeholder="Contoh: 07:45",
-            key="jam_absen_" + form_key
-        )
+    masuk = st.text_input(
+        "Jam Masuk",
+        "07:30",
+        key="masuk_" + form_key
+    )
 
-    else:
+    keluar = st.text_input(
+        "Jam Keluar",
+        "16:00",
+        key="keluar_" + form_key
+    )
 
-        masuk = st.text_input(
-            "Jam Masuk",
-            "07:30",
-            key="masuk_" + form_key
-        )
+# HARUS DI LUAR IF/ELSE
+uraian = st.text_area(
+    "Uraian Kegiatan",
+    key="uraian_" + form_key
+)
 
-        keluar = st.text_input(
-            "Jam Keluar",
-            "16:00",
-            key="keluar_" + form_key
-        )
-
-        uraian = st.text_area(
-            "Uraian Kegiatan",
-            key="uraian_" + form_key
-        )
-
-        output = st.text_area(
-            "Output/Hasil",
-            key="output_" + form_key
-        )
+output = st.text_area(
+    "Output/Hasil",
+    key="output_" + form_key
+)
 
 # 3. TOMBOL SIMPAN (Hanya Satu)
 
