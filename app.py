@@ -314,7 +314,7 @@ st.sidebar.markdown(
 if st.session_state.show_toast:
     st.toast(
         "✅ Data berhasil disimpan",
-        icon="🎉"
+        icon="👍"
     )
     st.session_state.show_toast = False
 
@@ -852,39 +852,56 @@ elif menu == "Input":
         key="tgl_" + form_key
     )
 
-    masuk = st.text_input(
-        "Jam Masuk",
-        "07:30",
-        key="masuk_" + form_key
-    )
+    if lokasi == "Rumah":
 
-    keluar = st.text_input(
-        "Jam Keluar",
-        "16:00",
-        key="keluar_" + form_key
-    )
+        jam_absen = st.text_input(
+            "Jam Absen WFH",
+            placeholder="Contoh: 07:45",
+            key="jam_absen_" + form_key
+        )
 
-    uraian = st.text_area(
-        "Uraian Kegiatan",
-        key="uraian_" + form_key
-    )
+    else:
 
-    output = st.text_area(
-        "Output/Hasil",
-        key="output_" + form_key
-    )
+        masuk = st.text_input(
+            "Jam Masuk",
+            "07:30",
+            key="masuk_" + form_key
+        )
+
+        keluar = st.text_input(
+            "Jam Keluar",
+            "16:00",
+            key="keluar_" + form_key
+        )
+
+        uraian = st.text_area(
+            "Uraian Kegiatan",
+            key="uraian_" + form_key
+        )
+
+        output = st.text_area(
+            "Output/Hasil",
+            key="output_" + form_key
+        )
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
 
     if st.button("Simpan Data", type="primary"):
 
         uid = str(uuid.uuid4())
+        if lokasi == "Rumah":
+
+            masuk = jam_absen
+            keluar = "-"
+            dur = 0
+
+    else:
+
         dur = hitung_durasi(masuk, keluar)
+            if not uraian or not output:
+                st.error("⚠️ Uraian dan Output wajib diisi!")
 
-        if not uraian or not output:
-            st.error("⚠️ Uraian dan Output wajib diisi!")
-
-        elif dur == 0:
+        elif lokasi != "Rumah" and dur == 0:
             st.error("⚠️ Jam tidak valid!")
 
         elif lokasi == "Rumah" and (foto is None or koordinat == ""):
