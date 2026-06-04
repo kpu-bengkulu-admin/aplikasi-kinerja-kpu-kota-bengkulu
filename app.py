@@ -909,10 +909,12 @@ elif menu == "Input":
 
             load_data.clear()
 
-            st.session_state.sukses_simpan = True
-            st.session_state.form_id += 1
-            st.session_state.gps = ""
+            st.success("✅ Data berhasil disimpan")
 
+            import time
+            time.sleep(2)
+
+            st.session_state.form_id += 1
             st.rerun()
 
 # ================= DATA =================
