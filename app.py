@@ -772,6 +772,10 @@ elif menu == "Input":
 
     st.subheader("📍 Input Kinerja")
 
+    if st.session_state.get("sukses_simpan", False):
+        st.success("✅ Data berhasil disimpan")
+        del st.session_state.sukses_simpan
+
     lokasi = st.selectbox(
         "Lokasi",
         ["Kantor", "Rumah", "Dinas Luar / SPT"]
