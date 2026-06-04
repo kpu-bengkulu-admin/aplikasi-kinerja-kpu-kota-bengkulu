@@ -884,60 +884,62 @@ elif menu == "Input":
             key="output_" + form_key
         )
 
-    # 3. TOMBOL SIMPAN (Hanya Satu)
+# 3. TOMBOL SIMPAN (Hanya Satu)
 
-    if st.button("Simpan Data", type="primary"):
+if st.button("Simpan Data", type="primary"):
 
-        uid = str(uuid.uuid4())
-        if lokasi == "Rumah":
+    uid = str(uuid.uuid4())
 
-            masuk = jam_absen
-            keluar = "-"
-            dur = 0
+    if lokasi == "Rumah":
+
+        masuk = jam_absen
+        keluar = "-"
+        dur = 0
 
     else:
 
         dur = hitung_durasi(masuk, keluar)
-            if not uraian or not output:
-                st.error("⚠️ Uraian dan Output wajib diisi!")
 
-        elif lokasi != "Rumah" and dur == 0:
-            st.error("⚠️ Jam tidak valid!")
+    if not uraian or not output:
+        st.error("⚠️ Uraian dan Output wajib diisi!")
 
-        elif lokasi == "Rumah" and (foto is None or koordinat == ""):
-            st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
+    elif lokasi != "Rumah" and dur == 0:
+        st.error("⚠️ Jam tidak valid!")
 
-        else:
+    elif lokasi == "Rumah" and (foto is None or koordinat == ""):
+        st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
 
-            link_foto = ""
+    else:
 
-            if lokasi == "Rumah":
-                link_foto = upload_foto(foto)
+        link_foto = ""
 
-            sheet.append_row([
-                uid,
-                safe(st.session_state.nama),
-                safe(str(st.session_state.nip)),
-                safe(st.session_state.jabatan),
-                safe(tgl.strftime("%Y-%m-%d")),
-                safe(masuk),
-                safe(keluar),
-                dur,
-                safe(uraian),
-                safe(output),
-                safe(lokasi),
-                safe(waktu_absen if lokasi == "Rumah" else "-"),
-                safe(koordinat),
-                safe(link_foto)
-            ])
+        if lokasi == "Rumah":
+            link_foto = upload_foto(foto)
 
-            load_data.clear()
+        sheet.append_row([
+            uid,
+            safe(st.session_state.nama),
+            safe(str(st.session_state.nip)),
+            safe(st.session_state.jabatan),
+            safe(tgl.strftime("%Y-%m-%d")),
+            safe(masuk),
+            safe(keluar),
+            dur,
+            safe(uraian),
+            safe(output),
+            safe(lokasi),
+            safe(waktu_absen if lokasi == "Rumah" else "-"),
+            safe(koordinat),
+            safe(link_foto)
+        ])
 
-            st.session_state.show_toast = True
-            st.session_state.form_id += 1
-            st.session_state.gps = ""
+        load_data.clear()
 
-            st.rerun()
+        st.session_state.show_toast = True
+        st.session_state.form_id += 1
+        st.session_state.gps = ""
+
+        st.rerun()
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
