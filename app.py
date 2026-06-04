@@ -251,6 +251,9 @@ def hitung_durasi(masuk, keluar):
 if "login" not in st.session_state:
     st.session_state.login = False
 
+if "sukses_simpan" not in st.session_state:
+    st.session_state.sukses_simpan = False
+
 if "nama" not in st.session_state:
     st.session_state.nama = ""
 
@@ -775,7 +778,7 @@ elif menu == "Input":
 
     if st.session_state.get("sukses_simpan", False):
         st.success("✅ Data berhasil disimpan")
-        del st.session_state.sukses_simpan
+        st.session_state.sukses_simpan = False
 
 
     lokasi = st.selectbox(
