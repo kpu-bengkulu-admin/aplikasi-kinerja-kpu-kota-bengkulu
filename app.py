@@ -82,7 +82,7 @@ def upload_foto(file):
     try:
         # 1. Buka foto dan perkecil ukurannya (agar tidak membebani Spreadsheet)
         img = Image.open(file)
-        img.thumbnail((400, 400))  # Perkecil ke 400px
+        img.thumbnail((300, 300))  
         
         # 2. Ubah foto menjadi teks (Base64)
         buffered = io.BytesIO()
@@ -91,7 +91,7 @@ def upload_foto(file):
         
         # 3. Kita tidak upload ke Drive, tapi kirim teks ini kembali
         # Kita buat link tiruan yang isinya data foto
-        return f"data:image/jpeg;base64,{img_str}"
+        return img_str
 
     except Exception as e:
         st.error(f"Gagal memproses foto: {e}")
@@ -608,7 +608,7 @@ if menu == "Dashboard":
     # ================= COL 2 =================
     with col2:
 
-        pegawai = st.multiselect(
+        Pegawai = st.multiselect(
             "👤 Pegawai",
             sorted(df["Nama"].unique())
         )
@@ -630,9 +630,9 @@ if menu == "Dashboard":
             (df["Tanggal"] <= pd.to_datetime(tgl[1]))
         ]
 
-    if pegawai:
+    if Pegawai:
         df = df[
-            df["Nama"].isin(pegawai)
+            df["Nama"].isin(Pegawai)
         ]
 
     if lokasi:
@@ -861,51 +861,49 @@ elif menu == "Input":
     )
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
-    if st.button("Simpan Data", type="primary"):
-        # Hitung durasi (Menggunakan fungsi Anda)
-        dur = hitung_durasi(masuk, keluar)
+if st.button("Simpan Data", type="primary"):
 
-        # VALIDASI
-        if not uraian or not output:
-            st.error("⚠️ Uraian dan Output wajib diisi!")
-        elif dur == 0:
-            st.error("⚠️ Jam tidak valid!")
-        elif lokasi == "Rumah" and (foto is None or koordinat == ""):
-            st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
-        else:
-            # PROSES FOTO (Jika Rumah)
-            link_foto = ""
-            if lokasi == "Rumah":
-                link_foto = upload_foto(foto) # Menggunakan fungsi Anda
+    uid = str(uuid.uuid4())
+    dur = hitung_durasi(masuk, keluar)
 
-            # PROSES SIMPAN KE GOOGLE SHEETS
-            sheet.append_row([
-                safe(st.session_state.nama),
-                safe(str(st.session_state.nip)),
-                safe(st.session_state.jabatan),
-                safe(tgl.strftime("%Y-%m-%d")),
-                safe(masuk),
-                safe(keluar),
-                dur,
-                safe(uraian),
-                safe(output),
-                safe(lokasi),
-                safe(waktu_absen if lokasi == "Rumah" else "-"),
-                safe(koordinat),
-                safe(link_foto)
-            ])
-            load_data.clear()
+    if not uraian or not output:
+        st.error("⚠️ Uraian dan Output wajib diisi!")
 
-            st.toast(
-                f"🎉 Data Kinerja ({lokasi}) Berhasil Disimpan!",
-                icon="✅"
-            )            
-            # Reset state dan Refresh
-            st.session_state.form_id += 1
-            st.session_state.gps = ""
-            import time
-            time.sleep(1)
-            st.rerun()
+    elif dur == 0:
+        st.error("⚠️ Jam tidak valid!")
+
+    elif lokasi == "Rumah" and (foto is None or koordinat == ""):
+        st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
+
+    else:
+
+        link_foto = ""
+
+        if lokasi == "Rumah":
+            link_foto = upload_foto(foto)
+
+        sheet.append_row([
+            uid,
+            safe(st.session_state.nama),
+            safe(str(st.session_state.nip)),
+            safe(st.session_state.jabatan),
+            safe(tgl.strftime("%Y-%m-%d")),
+            safe(masuk),
+            safe(keluar),
+            dur,
+            safe(uraian),
+            safe(output),
+            safe(lokasi),
+            safe(waktu_absen if lokasi == "Rumah" else "-"),
+            safe(koordinat),
+            safe(link_foto)
+        ])
+
+        load_data.clear()
+
+        st.success("✅ Data berhasil disimpan")
+        st.session_state.form_id += 1
+        st.rerun()
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
@@ -993,13 +991,13 @@ elif menu == "Data Kinerja":
     # ================= FILTER PEGAWAI =================
     if st.session_state.role in ["Admin", "Pimpinan"]:
 
-        pegawai = st.multiselect(
+        Pegawai = st.multiselect(
             "👤 Filter Pegawai",
             sorted(df["Nama"].unique())
         )
 
-        if pegawai:
-            df = df[df["Nama"].isin(pegawai)]
+        if Pegawai:
+            df = df[df["Nama"].isin(Pegawai)]
 
     # ================= FILTER LOKASI =================
     lokasi_filter = st.multiselect(
@@ -1125,13 +1123,9 @@ elif menu == "Data Kinerja":
 
             foto_data = str(row["Foto"])
 
-            if foto_data.startswith("data:image"):
+            if len(foto_data) > 100:
 
-                st.image(
-                    foto_data,
-                    width=250,
-                    caption="📸 Dokumentasi Kegiatan"
-                )
+                st.image("data:image/jpeg;base64," + foto_data)
 
             elif foto_data.startswith("http"):
 
@@ -1281,7 +1275,7 @@ elif menu == "Admin":
 
             role_baru = st.selectbox(
                 "Role",
-                ["pegawai", "pimpinan", "Admin"]
+                ["Pegawai", "Pimpinan", "Admin"]
             )
 
             simpan_user = st.form_submit_button(
