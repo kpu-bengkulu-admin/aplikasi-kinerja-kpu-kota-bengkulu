@@ -773,8 +773,8 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
+    st.success("TEST SUCCESS")
     st.subheader("📍 Input Kinerja")
-    st.write("DEBUG sukses_simpan =", st.session_state.get("sukses_simpan", "TIDAK ADA"))
 
     if st.session_state.get("sukses_simpan", False):
         st.success("✅ Data berhasil disimpan")
