@@ -902,8 +902,13 @@ if st.button("Simpan Data", type="primary"):
 
         load_data.clear()
 
-        st.success("✅ Data berhasil disimpan")
-        st.session_state.form_id += 1
+        st.success(
+            f"✅ Data Kinerja ({lokasi}) Berhasil Disimpan!"
+        )
+
+        import time
+        time.sleep(1)
+
         st.rerun()
 
 # ================= DATA =================
