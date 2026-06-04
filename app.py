@@ -266,6 +266,9 @@ if "jabatan" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = ""
 
+if "show_toast" not in st.session_state:
+    st.session_state.show_toast = False
+
 try:
     users = load_users()
 except Exception as e:
@@ -307,6 +310,13 @@ st.sidebar.markdown(
     f"</p>",
     unsafe_allow_html=True
 )
+
+if st.session_state.show_toast:
+    st.toast(
+        "✅ Data berhasil disimpan",
+        icon="🎉"
+    )
+    st.session_state.show_toast = False
 
 menu = st.sidebar.radio(
     "Menu",
@@ -773,13 +783,7 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
-    st.success("TEST SUCCESS")
     st.subheader("📍 Input Kinerja")
-
-    if st.session_state.get("sukses_simpan", False):
-        st.success("✅ Data berhasil disimpan")
-        st.session_state.sukses_simpan = False
-
 
     lokasi = st.selectbox(
         "Lokasi",
@@ -912,7 +916,7 @@ elif menu == "Input":
 
             load_data.clear()
 
-            st.session_state.sukses_simpan = True
+            st.session_state.show_toast = True
             st.session_state.form_id += 1
             st.session_state.gps = ""
 
