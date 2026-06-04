@@ -776,6 +776,7 @@ elif menu == "Input":
         st.success("✅ Data berhasil disimpan")
         del st.session_state.sukses_simpan
 
+
     lokasi = st.selectbox(
         "Lokasi",
         ["Kantor", "Rumah", "Dinas Luar / SPT"]
@@ -866,7 +867,8 @@ elif menu == "Input":
     )
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
-if st.button("Simpan Data", type="primary"):
+
+    if st.button("Simpan Data", type="primary"):
 
     uid = str(uuid.uuid4())
     dur = hitung_durasi(masuk, keluar)
@@ -906,12 +908,10 @@ if st.button("Simpan Data", type="primary"):
 
         load_data.clear()
 
-        st.success(
-            f"✅ Data Kinerja ({lokasi}) Berhasil Disimpan!"
-        )
+        st.session_state.sukses_simpan = True
 
-        import time
-        time.sleep(1)
+        st.session_state.form_id += 1
+        st.session_state.gps = ""
 
         st.rerun()
 
