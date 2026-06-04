@@ -20,7 +20,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ================= STYLE =================
+st.sidebar.empty()
+
+# ================= CSS (TETAP PUNYA KAMU) =================
 st.markdown("""
 <style>
 header {background: transparent !important;}
@@ -30,16 +32,16 @@ footer {visibility:hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# ================= DRIVE CONFIG =================
+# ================= DRIVE =================
 FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
 # ================= SESSION =================
 if "gps" not in st.session_state:
     st.session_state.gps = ""
 
-# ================= GOOGLE CONNECT =================
+# ================= CONNECT SHEETS =================
 @st.cache_resource
-def connect_sheets():
+def connect():
     info = dict(st.secrets["connections"]["gsheets"])
     info["private_key"] = info["private_key"].replace("\\n", "\n")
 
@@ -65,10 +67,10 @@ def get_drive_service():
 
     return build("drive", "v3", credentials=creds)
 
-spreadsheet = connect_sheets()
+spreadsheet = connect()
 sheet = spreadsheet.worksheet("data_kinerja")
 
-# ================= USER SHEET =================
+# ================= USERS =================
 try:
     user_sheet = spreadsheet.worksheet("users")
 except:
@@ -87,7 +89,7 @@ def hitung_durasi(masuk, keluar):
     except:
         return 0
 
-# ================= DRIVE UPLOAD =================
+# ================= DRIVE UPLOAD (FIX FINAL) =================
 def upload_to_drive(file, filename):
     if file is None:
         return ""
@@ -100,19 +102,15 @@ def upload_to_drive(file, filename):
         media = MediaIoBaseUpload(file, mimetype="image/jpeg")
 
         uploaded = service.files().create(
-            body={
-                "name": filename,
-                "parents": [FOLDER_ID]
-            },
+            body={"name": filename, "parents": [FOLDER_ID]},
             media_body=media,
             fields="id"
         ).execute()
 
-        file_id = uploaded.get("id")
-        return f"https://drive.google.com/file/d/{file_id}/view"
+        return f"https://drive.google.com/file/d/{uploaded['id']}/view"
 
     except Exception as e:
-        st.error(f"Upload Drive gagal: {e}")
+        st.error(f"Drive error: {e}")
         return ""
 
 # ================= LOAD DATA =================
@@ -146,7 +144,10 @@ if not st.session_state.login:
     pw = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        cek = users[(users["NIP"].astype(str)==nip) & (users["Password"].astype(str)==pw)]
+        cek = users[
+            (users["NIP"].astype(str) == nip) &
+            (users["Password"].astype(str) == pw)
+        ]
 
         if not cek.empty:
             u = cek.iloc[0]
@@ -158,9 +159,10 @@ if not st.session_state.login:
             st.rerun()
         else:
             st.error("Login gagal")
+
     st.stop()
 
-# ================= SIDEBAR =================
+# ================= SIDEBAR (TETAP) =================
 st.sidebar.title(st.session_state.nama)
 
 menu = st.sidebar.radio("Menu", ["Dashboard","Input","Data Kinerja","Admin"])
@@ -172,7 +174,7 @@ if st.sidebar.button("Logout"):
 # ================= INPUT =================
 if menu == "Input":
 
-    st.title("Input Kinerja")
+    st.subheader("📍 Input Kinerja")
 
     lokasi = st.selectbox("Lokasi", ["Kantor","Rumah","Dinas Luar / SPT"])
 
@@ -181,7 +183,7 @@ if menu == "Input":
     waktu_absen = "-"
 
     if lokasi == "Rumah":
-        foto = st.camera_input("Foto")
+        foto = st.camera_input("Foto WFH")
         koordinat = st.text_input("Koordinat GPS")
 
     tgl = st.date_input("Tanggal")
@@ -190,74 +192,81 @@ if menu == "Input":
     uraian = st.text_area("Uraian")
     output = st.text_area("Output")
 
-    if st.button("Simpan"):
+    if st.button("Simpan Data", type="primary"):
 
         uid = str(uuid.uuid4())
         dur = hitung_durasi(masuk, keluar)
 
-        if lokasi == "Rumah":
-            link_foto = upload_to_drive(foto, f"{st.session_state.nip}_{uid}.jpg")
+        if not uraian or not output:
+            st.error("Uraian wajib diisi")
+
+        elif dur == 0:
+            st.error("Jam tidak valid")
+
+        elif lokasi == "Rumah" and (foto is None or koordinat == ""):
+            st.error("Foto & GPS wajib")
+
         else:
+
             link_foto = ""
+            if lokasi == "Rumah":
+                link_foto = upload_to_drive(
+                    foto,
+                    f"{st.session_state.nip}_{uid}.jpg"
+                )
 
-        sheet.append_row([
-            uid,
-            st.session_state.nama,
-            st.session_state.nip,
-            st.session_state.jabatan,
-            str(tgl),
-            masuk,
-            keluar,
-            dur,
-            uraian,
-            output,
-            lokasi,
-            waktu_absen,
-            koordinat,
-            link_foto
-        ])
+            sheet.append_row([
+                uid,
+                safe(st.session_state.nama),
+                safe(st.session_state.nip),
+                safe(st.session_state.jabatan),
+                str(tgl),
+                masuk,
+                keluar,
+                dur,
+                uraian,
+                output,
+                lokasi,
+                waktu_absen,
+                koordinat,
+                link_foto
+            ])
 
-        load_data.clear()
-        st.success("Data tersimpan")
-        st.rerun()
+            load_data.clear()
+            st.success("Data berhasil disimpan")
+            st.rerun()
 
 # ================= DASHBOARD =================
 elif menu == "Dashboard":
 
-    st.title("Dashboard")
+    st.subheader("Dashboard Kinerja")
 
     df = load_data()
 
     if df.empty:
-        st.info("Tidak ada data")
+        st.info("Belum ada data")
         st.stop()
 
     st.metric("Total Data", len(df))
 
-    chart = df.groupby("Nama")["Jam Keluar"].count().reset_index()
-
-    fig = px.bar(chart, x="Nama", y="Jam Keluar")
-    st.plotly_chart(fig, use_container_width=True)
+    st.dataframe(df)
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
 
-    st.title("Data Kinerja")
+    st.subheader("Data Kinerja")
 
     df = load_data()
 
-    if df.empty:
-        st.stop()
-
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df)
 
 # ================= ADMIN =================
 elif menu == "Admin":
 
     if st.session_state.role != "Admin":
-        st.error("Tidak punya akses")
+        st.error("Tidak ada akses")
         st.stop()
 
-    st.title("Admin Panel")
+    st.subheader("Admin Panel")
 
     st.dataframe(load_users())
