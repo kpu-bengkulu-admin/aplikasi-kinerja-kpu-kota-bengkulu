@@ -868,51 +868,51 @@ elif menu == "Input":
 
     # 3. TOMBOL SIMPAN (Hanya Satu)
 
-if st.button("Simpan Data", type="primary"):
+    if st.button("Simpan Data", type="primary"):
 
-    uid = str(uuid.uuid4())
-    dur = hitung_durasi(masuk, keluar)
+        uid = str(uuid.uuid4())
+        dur = hitung_durasi(masuk, keluar)
 
-    if not uraian or not output:
-        st.error("⚠️ Uraian dan Output wajib diisi!")
+        if not uraian or not output:
+            st.error("⚠️ Uraian dan Output wajib diisi!")
 
-    elif dur == 0:
-        st.error("⚠️ Jam tidak valid!")
+        elif dur == 0:
+            st.error("⚠️ Jam tidak valid!")
 
-    elif lokasi == "Rumah" and (foto is None or koordinat == ""):
-        st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
+        elif lokasi == "Rumah" and (foto is None or koordinat == ""):
+            st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
 
-    else:
+        else:
 
-        link_foto = ""
+            link_foto = ""
 
-        if lokasi == "Rumah":
-            link_foto = upload_foto(foto)
+            if lokasi == "Rumah":
+                link_foto = upload_foto(foto)
 
-        sheet.append_row([
-            uid,
-            safe(st.session_state.nama),
-            safe(str(st.session_state.nip)),
-            safe(st.session_state.jabatan),
-            safe(tgl.strftime("%Y-%m-%d")),
-            safe(masuk),
-            safe(keluar),
-            dur,
-            safe(uraian),
-            safe(output),
-            safe(lokasi),
-            safe(waktu_absen if lokasi == "Rumah" else "-"),
-            safe(koordinat),
-            safe(link_foto)
-        ])
+            sheet.append_row([
+                uid,
+                safe(st.session_state.nama),
+                safe(str(st.session_state.nip)),
+                safe(st.session_state.jabatan),
+                safe(tgl.strftime("%Y-%m-%d")),
+                safe(masuk),
+                safe(keluar),
+                dur,
+                safe(uraian),
+                safe(output),
+                safe(lokasi),
+                safe(waktu_absen if lokasi == "Rumah" else "-"),
+                safe(koordinat),
+                safe(link_foto)
+            ])
 
-        load_data.clear()
+            load_data.clear()
 
-        st.session_state.sukses_simpan = True
-        st.session_state.form_id += 1
-        st.session_state.gps = ""
+            st.session_state.sukses_simpan = True
+            st.session_state.form_id += 1
+            st.session_state.gps = ""
 
-        st.rerun()
+            st.rerun()
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
