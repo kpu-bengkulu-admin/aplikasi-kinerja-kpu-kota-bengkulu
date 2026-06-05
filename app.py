@@ -320,47 +320,31 @@ if not st.session_state.login:
 config = load_config()
 
 maintenance = "OFF"
+message = "Aplikasi sedang dalam pemeliharaan"
 
 if not config.empty:
 
-    row = config[
-        config["Key"]
-        .astype(str)
-        .str.lower()
+    # Ambil maintenance
+    m = config[
+        config["Key"].astype(str).str.lower()
         == "maintenance"
     ]
 
-    if not row.empty:
-
+    if not m.empty:
         maintenance = str(
-            row.iloc[0]["Value"]
+            m.iloc[0]["Value"]
         ).upper()
 
-if (
-    maintenance == "ON"
-    and st.session_state.role != "Admin"
-):
+    # Ambil message
+    msg = config[
+        config["Key"].astype(str).str.lower()
+        == "message"
+    ]
 
-    st.markdown("""
-    <div style="
-        text-align:center;
-        padding-top:120px;
-    ">
-        <h1>🛠️ Maintenance</h1>
-
-        <h3>
-        Aplikasi E-Kinerja KPU Kota Bengkulu
-        Sedang Dalam Pemeliharaan
-        </h3>
-
-        <p>
-        Mohon maaf atas ketidaknyamanan ini.
-        Silakan coba kembali beberapa saat lagi.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.stop()
+    if not msg.empty:
+        message = str(
+            msg.iloc[0]["Value"]
+        )
 
 # ================= SIDEBAR =================
 st.sidebar.image("logo_kpu.png", width=100)
