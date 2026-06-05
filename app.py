@@ -283,6 +283,9 @@ if "jabatan" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = ""
 
+if "unit" not in st.session_state:
+    st.session_state.unit = ""
+
 if "show_toast" not in st.session_state:
     st.session_state.show_toast = False
 
@@ -310,6 +313,7 @@ if not st.session_state.login:
             st.session_state.nip=str(u["NIP"])
             st.session_state.jabatan=u["Jabatan"]
             st.session_state.role=u["Role"]
+            st.session_state.unit = u["Unit"]
             st.rerun()
         else:
             st.error("Login gagal")
@@ -369,9 +373,15 @@ st.sidebar.title(
 )
 
 st.sidebar.markdown(
-    f"<p style='margin-top:-10px; color:gray;'>"
-    f"{st.session_state.role}"
-    f"</p>",
+    f"""
+    <p style='margin-top:-10px; color:gray;'>
+    {st.session_state.role}
+    </p>
+
+    <p style='margin-top:-10px; color:gray;'>
+    {st.session_state.unit}
+    </p>
+    """,
     unsafe_allow_html=True
 )
 
@@ -616,24 +626,27 @@ if menu == "Dashboard":
     df = df.dropna(subset=["Tanggal"])
 
     # ================= ROLE =================
-    if st.session_state.role in ["Admin", "Pimpinan"]:
 
-        pilihan_data = st.selectbox(
-            "Pilih Data",
-            ["Semua Pegawai", "Data Pribadi"]
-        )
+    if st.session_state.role == "Admin":
 
-        if pilihan_data == "Data Pribadi":
-            df = df[
-                df["Nama"]
-                == st.session_state.nama
-            ]
+        pass
+
+    elif st.session_state.role == "Pimpinan":
+
+        pass
+
+    elif st.session_state.role == "Kasubbag":
+
+        df = df[
+            df["Unit"]
+            == st.session_state.unit
+        ]
 
     else:
 
         df = df[
-            df["Nama"]
-            == st.session_state.nama
+            df["NIP"].astype(str)
+            == st.session_state.nip
         ]
 
     # ================= FILTER =================
@@ -812,8 +825,12 @@ if menu == "Dashboard":
             use_container_width=True
         )
 
-        # ================= RANKING =================
-    if st.session_state.role in ["Admin", "Pimpinan"]:
+    # ================= RANKING =================
+    if st.session_state.role in [
+        "Admin",
+        "Pimpinan",
+        "Kasubbag"
+    ]:
 
         st.markdown("## 🏆 Ranking Pegawai")
 
@@ -985,6 +1002,7 @@ elif menu == "Input":
                 safe(st.session_state.nama),
                 safe(str(st.session_state.nip)),
                 safe(st.session_state.jabatan),
+                safe(st.session_state.unit),
                 safe(tgl.strftime("%Y-%m-%d")),
                 safe(masuk),
                 safe(keluar),
@@ -1033,6 +1051,7 @@ elif menu == "Data Kinerja":
     df = df.dropna(subset=["Tanggal"])
 
     # ================= FILTER ROLE =================
+
     if st.session_state.role in ["Admin", "Pimpinan"]:
 
         mode = st.radio(
@@ -1048,9 +1067,30 @@ elif menu == "Data Kinerja":
                 == st.session_state.nip
             ]
 
+    elif st.session_state.role == "Kasubbag":
+
+        mode = st.radio(
+            "Mode Data",
+            ["Data Unit", "Data Saya"],
+            horizontal=True
+        )
+
+        if mode == "Data Saya":
+
+            df = df[
+                df["NIP"].astype(str)
+                == st.session_state.nip
+            ]
+
+        else:
+
+            df = df[
+                df["Unit"]
+                == st.session_state.unit
+            ]
+
     else:
 
-        # Pegawai hanya melihat data sendiri
         df = df[
             df["NIP"].astype(str)
             == st.session_state.nip
@@ -1089,7 +1129,11 @@ elif menu == "Data Kinerja":
         ]
 
     # ================= FILTER PEGAWAI =================
-    if st.session_state.role in ["Admin", "Pimpinan"]:
+    if st.session_state.role in [
+        "Admin",
+        "Pimpinan",
+        "Kasubbag"
+    ]:
 
         Pegawai = st.multiselect(
             "👤 Filter Pegawai",
@@ -1097,7 +1141,10 @@ elif menu == "Data Kinerja":
         )
 
         if Pegawai:
-            df = df[df["Nama"].isin(Pegawai)]
+
+            df = df[
+                df["Nama"].isin(Pegawai)
+            ]
 
     # ================= FILTER LOKASI =================
     lokasi_filter = st.multiselect(
