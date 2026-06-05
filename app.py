@@ -247,6 +247,23 @@ def hitung_durasi(masuk, keluar):
         return round((jk-jm)/60,2)
     return 0
 
+@st.cache_data(ttl=30)
+def load_config():
+
+    try:
+
+        config_sheet = spreadsheet.worksheet(
+            "CONFIG"
+        )
+
+        data = config_sheet.get_all_records()
+
+        return pd.DataFrame(data)
+
+    except:
+
+        return pd.DataFrame()
+
 # ================= SESSION LOGIN =================
 if "login" not in st.session_state:
     st.session_state.login = False
@@ -296,6 +313,53 @@ if not st.session_state.login:
             st.rerun()
         else:
             st.error("Login gagal")
+    st.stop()
+
+# ================= MAINTENANCE =================
+
+config = load_config()
+
+maintenance = "OFF"
+
+if not config.empty:
+
+    row = config[
+        config["Key"]
+        .astype(str)
+        .str.lower()
+        == "maintenance"
+    ]
+
+    if not row.empty:
+
+        maintenance = str(
+            row.iloc[0]["Value"]
+        ).upper()
+
+if (
+    maintenance == "ON"
+    and st.session_state.role != "Admin"
+):
+
+    st.markdown("""
+    <div style="
+        text-align:center;
+        padding-top:120px;
+    ">
+        <h1>🛠️ Maintenance</h1>
+
+        <h3>
+        Aplikasi E-Kinerja KPU Kota Bengkulu
+        Sedang Dalam Pemeliharaan
+        </h3>
+
+        <p>
+        Mohon maaf atas ketidaknyamanan ini.
+        Silakan coba kembali beberapa saat lagi.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.stop()
 
 # ================= SIDEBAR =================
