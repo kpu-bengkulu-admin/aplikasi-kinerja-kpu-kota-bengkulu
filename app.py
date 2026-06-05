@@ -1415,6 +1415,17 @@ elif menu == "Admin":
 
             jabatan_baru = st.text_input("Jabatan")
 
+            unit_baru = st.selectbox(
+                "Unit",
+                [
+                    "Sekretariat",
+                    "SDM dan Parhubmas",
+                    "Hukum dan Tekhnis Penyelenggaraan",
+                    "Keuangan, Umum dan Logistik",
+                    "Perencanaan, Data dan Informasi"
+                ]
+            )
+
             password_baru = st.text_input(
                 "Password",
                 type="password"
@@ -1443,6 +1454,7 @@ elif menu == "Admin":
                         jabatan_baru,
                         password_baru,
                         role_baru
+                        unit_baru
                     ])
 
                     load_users.clear()
