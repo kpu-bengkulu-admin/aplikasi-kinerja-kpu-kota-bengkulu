@@ -1425,7 +1425,6 @@ elif menu == "Admin":
                     "Perencanaan, Data dan Informasi"
                 ]
             )
-
             password_baru = st.text_input(
                 "Password",
                 type="password"
@@ -1453,7 +1452,7 @@ elif menu == "Admin":
                         nama_baru,
                         jabatan_baru,
                         password_baru,
-                        role_baru
+                        role_baru,
                         unit_baru
                     ])
 
