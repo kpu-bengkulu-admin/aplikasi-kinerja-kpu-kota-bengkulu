@@ -617,10 +617,29 @@ if menu == "Dashboard":
         st.stop()
 
     # ================= FORMAT DATA =================
-    df["Durasi"] = pd.to_numeric(
-        df["Durasi"],
-        errors="coerce"
+    if "Durasi (Jam)" in df.columns:
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi (Jam)"],
+            errors="coerce"
         ).fillna(0)
+
+    elif "Durasi" in df.columns:
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+    else:
+
+        df["Durasi"] = df.apply(
+            lambda r: hitung_durasi(
+                r["Jam Masuk"],
+                r["Jam Keluar"]
+            ),
+            axis=1
+        )
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
@@ -1050,10 +1069,29 @@ elif menu == "Data Kinerja":
         st.stop()
 
     # ================= FORMAT DATA =================
-    df["Durasi"] = pd.to_numeric(
-        df["Durasi"],
-        errors="coerce"
-    ).fillna(0)
+    if "Durasi (Jam)" in df.columns:
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi (Jam)"],
+            errors="coerce"
+        ).fillna(0)
+
+    elif "Durasi" in df.columns:
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+    else:
+
+        df["Durasi"] = df.apply(
+            lambda r: hitung_durasi(
+                r["Jam Masuk"],
+                r["Jam Keluar"]
+            ),
+            axis=1
+        )
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
