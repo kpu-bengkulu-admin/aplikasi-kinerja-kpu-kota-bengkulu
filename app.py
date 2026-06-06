@@ -617,7 +617,7 @@ if menu == "Dashboard":
         st.stop()
 
     # ================= FORMAT DATA =================
-    if "Durasi (Jam)" in df.columns:
+    if "Durasi" in df.columns:
 
         df["Durasi"] = pd.to_numeric(
             df["Durasi"],
@@ -626,10 +626,19 @@ if menu == "Dashboard":
 
     elif "Durasi" in df.columns:
 
+        df["Durasi"] = (
+            df["Durasi"]
+            .astype(str)
+            .str.strip()
+            .str.replace(",", ".", regex=False)
+        )
+
         df["Durasi"] = pd.to_numeric(
             df["Durasi"],
             errors="coerce"
         ).fillna(0)
+
+        df["Durasi"] = df["Durasi"].astype(float)
 
     else:
 
@@ -1069,7 +1078,7 @@ elif menu == "Data Kinerja":
         st.stop()
 
     # ================= FORMAT DATA =================
-    if "Durasi (Jam)" in df.columns:
+    if "Durasi" in df.columns:
 
         df["Durasi"] = pd.to_numeric(
             df["Durasi"],
@@ -1078,10 +1087,19 @@ elif menu == "Data Kinerja":
 
     elif "Durasi" in df.columns:
 
+        df["Durasi"] = (
+            df["Durasi"]
+            .astype(str)
+            .str.strip()
+            .str.replace(",", ".", regex=False)
+        )
+
         df["Durasi"] = pd.to_numeric(
             df["Durasi"],
             errors="coerce"
         ).fillna(0)
+
+        df["Durasi"] = df["Durasi"].astype(float)
 
     else:
 
