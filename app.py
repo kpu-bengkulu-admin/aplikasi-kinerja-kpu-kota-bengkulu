@@ -978,22 +978,22 @@ elif menu == "Input":
 
         uid = str(uuid.uuid4())
 
-            if lokasi == "Rumah":
+        if lokasi == "Rumah":
 
-                masuk = jam_absen
-                keluar = "-"
+            masuk = jam_absen
+            keluar = "-"
 
-                if waktu_absen == "Pagi":
-                    dur = 2.5
+            if waktu_absen == "Pagi":
+                dur = 2.5
 
-                elif waktu_absen == "Siang":
-                    dur = 2.5
+            elif waktu_absen == "Siang":
+                dur = 2.5
 
-                elif waktu_absen == "Sore":
-                    dur = 3
+            elif waktu_absen == "Sore":
+                dur = 3
 
-                else:
-                    dur = 0
+            else:
+                dur = 0
 
         else:
 
