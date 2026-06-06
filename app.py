@@ -620,7 +620,7 @@ if menu == "Dashboard":
     if "Durasi (Jam)" in df.columns:
 
         df["Durasi"] = pd.to_numeric(
-            df["Durasi (Jam)"],
+            df["Durasi"],
             errors="coerce"
         ).fillna(0)
 
@@ -1072,7 +1072,7 @@ elif menu == "Data Kinerja":
     if "Durasi (Jam)" in df.columns:
 
         df["Durasi"] = pd.to_numeric(
-            df["Durasi (Jam)"],
+            df["Durasi"],
             errors="coerce"
         ).fillna(0)
 
