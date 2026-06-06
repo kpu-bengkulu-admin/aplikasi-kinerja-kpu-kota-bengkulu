@@ -629,13 +629,6 @@ if menu == "Dashboard":
     # ================= FORMAT DATA =================
     if "Durasi" in df.columns:
 
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-    elif "Durasi" in df.columns:
-
         df["Durasi"] = (
             df["Durasi"]
             .astype(str)
@@ -648,8 +641,6 @@ if menu == "Dashboard":
             errors="coerce"
         ).fillna(0)
 
-        df["Durasi"] = df["Durasi"].astype(float)
-
     else:
 
         df["Durasi"] = df.apply(
@@ -659,12 +650,6 @@ if menu == "Dashboard":
             ),
             axis=1
         )
-
-    st.write(
-        df[
-            ["Nama", "Durasi", "Lokasi"]
-        ].tail(10)
-    )
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
@@ -1103,13 +1088,6 @@ elif menu == "Data Kinerja":
     # ================= FORMAT DATA =================
     if "Durasi" in df.columns:
 
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-    elif "Durasi" in df.columns:
-
         df["Durasi"] = (
             df["Durasi"]
             .astype(str)
@@ -1122,8 +1100,6 @@ elif menu == "Data Kinerja":
             errors="coerce"
         ).fillna(0)
 
-        df["Durasi"] = df["Durasi"].astype(float)
-
     else:
 
         df["Durasi"] = df.apply(
@@ -1133,12 +1109,6 @@ elif menu == "Data Kinerja":
             ),
             axis=1
         )
-
-    st.write(
-        df[
-            ["Nama", "Durasi", "Lokasi"]
-        ].tail(10)
-    )
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
