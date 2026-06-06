@@ -650,6 +650,19 @@ if menu == "Dashboard":
             axis=1
         )
 
+    st.write(
+        df[
+            ["Nama", "Durasi", "Lokasi"]
+        ].tail(10)
+    )
+
+    df["Tanggal"] = pd.to_datetime(
+        df["Tanggal"],
+        errors="coerce"
+    )
+
+    df = df.dropna(subset=["Tanggal"])
+
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
         errors='coerce'
@@ -1110,6 +1123,19 @@ elif menu == "Data Kinerja":
             ),
             axis=1
         )
+
+    st.write(
+        df[
+            ["Nama", "Durasi", "Lokasi"]
+        ].tail(10)
+    )
+
+    df["Tanggal"] = pd.to_datetime(
+        df["Tanggal"],
+        errors="coerce"
+    )
+
+    df = df.dropna(subset=["Tanggal"])
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
