@@ -617,13 +617,10 @@ if menu == "Dashboard":
         st.stop()
 
     # ================= FORMAT DATA =================
-    df["Durasi"] = df.apply(
-        lambda r: hitung_durasi(
-            r["Jam Masuk"],
-            r["Jam Keluar"]
-        ),
-        axis=1
-    )
+    df["Durasi"] = pd.to_numeric(
+        df["Durasi"],
+        errors="coerce"
+        ).fillna(0)
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
@@ -1053,13 +1050,10 @@ elif menu == "Data Kinerja":
         st.stop()
 
     # ================= FORMAT DATA =================
-    df["Durasi"] = df.apply(
-        lambda r: hitung_durasi(
-            r["Jam Masuk"],
-            r["Jam Keluar"]
-        ),
-        axis=1
-    )
+    df["Durasi"] = pd.to_numeric(
+        df["Durasi"],
+        errors="coerce"
+    ).fillna(0)
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
