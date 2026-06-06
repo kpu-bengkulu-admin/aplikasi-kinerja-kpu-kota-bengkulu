@@ -216,7 +216,7 @@ def load_users():
         columns=data[0]
     )
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=0)
 def load_data():
 
     data = sheet.get_values()
@@ -611,6 +611,16 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
+    st.write("KOLOM:", df.columns.tolist())
+
+    st.write(
+        df.tail(5)
+    )
+    st.write(
+        df["Durasi"]
+        .tail(10)
+        .tolist()
+    )
 
     if df.empty:
         st.info("Belum ada data")
