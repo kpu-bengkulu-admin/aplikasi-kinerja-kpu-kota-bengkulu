@@ -611,6 +611,13 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
+    st.write(df[df["Lokasi"] == "Rumah"][["Nama","Durasi","Lokasi"]].tail(10))
+
+    st.write(
+        df[df["Lokasi"] == "Rumah"]["Durasi"]
+        .apply(lambda x: f"{x} ({type(x)})")
+        .tolist()
+    )
 
     if df.empty:
         st.info("Belum ada data")
