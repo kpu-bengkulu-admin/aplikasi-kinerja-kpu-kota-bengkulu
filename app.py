@@ -241,11 +241,18 @@ def parse_jam(x):
         return None
 
 def hitung_durasi(masuk, keluar):
+
     jm = parse_jam(masuk)
     jk = parse_jam(keluar)
-    if jm and jk and jk > jm:
-        return round((jk-jm)/60,2)
-    return 0
+
+    if jm is None or jk is None:
+        return 0
+
+    # Shift malam lintas hari
+    if jk < jm:
+        jk += 24 * 60
+
+    return round((jk - jm) / 60, 2)
 
 @st.cache_data(ttl=30)
 def load_config():
