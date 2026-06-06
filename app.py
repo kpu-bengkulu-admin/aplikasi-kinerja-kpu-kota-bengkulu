@@ -611,22 +611,6 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
-    st.write("KOLOM:", df.columns.tolist())
-
-    st.write(
-        df.tail(5)
-    )
-    st.write(
-        df["Durasi"]
-        .tail(10)
-        .tolist()
-    )
-
-    if df.empty:
-        st.info("Belum ada data")
-        st.stop()
-
-    # ================= FORMAT DATA =================
     if "Durasi" in df.columns:
 
         df["Durasi"] = (
@@ -640,6 +624,44 @@ if menu == "Dashboard":
             df["Durasi"],
             errors="coerce"
         ).fillna(0)
+
+    else:
+
+        df["Durasi"] = df.apply(
+            lambda r: hitung_durasi(
+                r["Jam Masuk"],
+                r["Jam Keluar"]
+            ),
+            axis=1
+        )
+
+    if df.empty:
+        st.info("Belum ada data")
+        st.stop()
+
+    # ================= FORMAT DATA =================
+    if "Durasi" in df.columns:
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+    elif "Durasi" in df.columns:
+
+        df["Durasi"] = (
+            df["Durasi"]
+            .astype(str)
+            .str.strip()
+            .str.replace(",", ".", regex=False)
+        )
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+        df["Durasi"] = df["Durasi"].astype(float)
 
     else:
 
@@ -1088,6 +1110,13 @@ elif menu == "Data Kinerja":
     # ================= FORMAT DATA =================
     if "Durasi" in df.columns:
 
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+    elif "Durasi" in df.columns:
+
         df["Durasi"] = (
             df["Durasi"]
             .astype(str)
@@ -1099,6 +1128,8 @@ elif menu == "Data Kinerja":
             df["Durasi"],
             errors="coerce"
         ).fillna(0)
+
+        df["Durasi"] = df["Durasi"].astype(float)
 
     else:
 
