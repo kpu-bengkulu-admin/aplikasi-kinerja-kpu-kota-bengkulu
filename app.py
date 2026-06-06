@@ -619,6 +619,9 @@ if menu == "Dashboard":
         .tolist()
     )
 
+    st.write(df.columns.tolist())
+    st.write(df.tail(3))
+
     if df.empty:
         st.info("Belum ada data")
         st.stop()
