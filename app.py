@@ -983,7 +983,7 @@ elif menu == "Input":
             )
 
         st.text_input(
-            "koordinat GPS",
+            "Koordinat GPS",
             value=koordinat,
             disabled=True
         )
@@ -1112,7 +1112,6 @@ elif menu == "Data Kinerja":
     st.subheader("📋 Data Kinerja Pegawai")
 
     df = load_data()
-    df = bersihkan_durasi(df)
 
     if df.empty:
         st.info("Belum ada data")
@@ -1378,13 +1377,13 @@ elif menu == "Data Kinerja":
 
         with info3:
 
-            if "koordinat" in row and row["koordinat"]:
+            if "Koordinat" in row and row["Koordinat"]:
                 st.warning("📍 GPS Terdeteksi")
 
         # ================= FOTO =================
-        if "Foto" in row and row["foto"]:
+        if "Foto" in row and row["Foto"]:
 
-            foto_data = str(row["oto"])
+            foto_data = str(row["Foto"])
 
             if len(foto_data) > 100:
 
@@ -1473,7 +1472,6 @@ elif menu == "Admin":
     st.title("⚙️ Admin Panel")
 
     df = load_data()
-    df = bersihkan_durasi(df)
     users_df = load_users()
 
     # ================= KPI ADMIN =================
