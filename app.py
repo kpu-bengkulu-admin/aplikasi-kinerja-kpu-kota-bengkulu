@@ -605,6 +605,23 @@ if menu == "Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
+    # ================= PETUNJUK INSTALL =================
+    with st.expander("📲 Cara Instal E-Kinerja di HP dan Laptop"):
+        st.markdown("""
+        ### 📱 Android
+        1. Buka aplikasi menggunakan **Google Chrome**
+        2. Klik menu **⋮** di kanan atas
+        3. Pilih **Install App** atau **Tambahkan ke Layar Utama**
+
+        ### 💻 Laptop/Desktop
+        1. Buka aplikasi menggunakan **Google Chrome**
+        2. Klik ikon **Install** di address bar
+        3. Klik **Install**
+
+        ### ℹ️ Catatan
+        Untuk fitur Kamera dan GPS (WFH), disarankan menggunakan Google Chrome.
+        """)
+
     # ================= LOAD DATA =================
     df = load_data()
     df["Durasi"] = (
