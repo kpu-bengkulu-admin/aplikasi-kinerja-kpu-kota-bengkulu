@@ -611,6 +611,32 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
+    st.write("KOLOM:", df.columns.tolist())
+
+    st.write(
+        "ISI DURASI MENTAH:",
+        df["Durasi"].tail(20).tolist()
+    )
+
+    st.dataframe(
+        df[["Nama", "Durasi", "Lokasi"]].tail(20)
+    )
+
+    st.write(
+        "ISI DURASI SETELAH KONVERSI:",
+        df["Durasi"].tail(20).tolist()
+    )
+
+    st.write(
+        "TIPE DATA:",
+        df["Durasi"].dtype
+    )
+
+    st.write(
+        "TOTAL DURASI:",
+        df["Durasi"].sum()
+    )
+
     if "Durasi" in df.columns:
 
         df["Durasi"] = (
