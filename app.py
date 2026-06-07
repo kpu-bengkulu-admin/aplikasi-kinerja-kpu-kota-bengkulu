@@ -611,32 +611,6 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
-    df = bersihkan_durasi(df)
-    st.write("KOLOM:", df.columns.tolist())
-
-    st.write(
-        "ISI DURASI MENTAH:",
-        df["Durasi"].tail(20).tolist()
-    )
-
-    st.dataframe(
-        df[["Nama", "Durasi", "Lokasi"]].tail(20)
-    )
-
-    st.write(
-        "ISI DURASI SETELAH KONVERSI:",
-        df["Durasi"].tail(20).tolist()
-    )
-
-    st.write(
-        "TIPE DATA:",
-        df["Durasi"].dtype
-    )
-
-    st.write(
-        "TOTAL DURASI:",
-        df["Durasi"].sum()
-    )
 
     if "Durasi" in df.columns:
 
@@ -667,9 +641,30 @@ if menu == "Dashboard":
         st.stop()
 
     # ================= FORMAT DATA =================
-    def bersihkan_durasi(df):
+    if "Durasi" in df.columns:
 
-    if "Durasi" not in df.columns:
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+    elif "Durasi" in df.columns:
+
+        df["Durasi"] = (
+            df["Durasi"]
+            .astype(str)
+            .str.strip()
+            .str.replace(",", ".", regex=False)
+        )
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+        df["Durasi"] = df["Durasi"].astype(float)
+
+    else:
 
         df["Durasi"] = df.apply(
             lambda r: hitung_durasi(
@@ -679,23 +674,19 @@ if menu == "Dashboard":
             axis=1
         )
 
-        return df
-
-    df["Durasi"] = (
-        df["Durasi"]
-        .astype(str)
-        .str.strip()
-        .str.replace(",", ".", regex=False)
+    df["Tanggal"] = pd.to_datetime(
+        df["Tanggal"],
+        errors="coerce"
     )
 
-    df["Durasi"] = pd.to_numeric(
-        df["Durasi"],
-        errors="coerce"
-    ).fillna(0)
+    df = df.dropna(subset=["Tanggal"])
 
-    df["Durasi"] = df["Durasi"].astype(float)
+    df["Tanggal"] = pd.to_datetime(
+        df["Tanggal"],
+        errors='coerce'
+    )
 
-    return df
+    df = df.dropna(subset=["Tanggal"])
 
     # ================= ROLE =================
 
