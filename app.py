@@ -636,16 +636,6 @@ if menu == "Dashboard":
 
         df["Durasi"] = df["Durasi"].astype(float)
 
-    else:
-
-        df["Durasi"] = df.apply(
-            lambda r: hitung_durasi(
-                r["Jam Masuk"],
-                r["Jam Keluar"]
-            ),
-            axis=1
-        )
-
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
         errors='coerce'
@@ -1073,46 +1063,28 @@ elif menu == "Data Kinerja":
         st.info("Belum ada data")
         st.stop()
 
-    # ================= FORMAT DATA =================
-    if "Durasi" in df.columns:
+# ================= FORMAT DATA =================
+if "Durasi" in df.columns:
 
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-    elif "Durasi" in df.columns:
-
-        df["Durasi"] = (
-            df["Durasi"]
-            .astype(str)
-            .str.strip()
-            .str.replace(",", ".", regex=False)
-        )
-
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-        df["Durasi"] = df["Durasi"].astype(float)
-
-    else:
-
-        df["Durasi"] = df.apply(
-            lambda r: hitung_durasi(
-                r["Jam Masuk"],
-                r["Jam Keluar"]
-            ),
-            axis=1
-        )
-
-    df["Tanggal"] = pd.to_datetime(
-        df["Tanggal"],
-        errors="coerce"
+    df["Durasi"] = (
+        df["Durasi"]
+        .astype(str)
+        .str.strip()
+        .str.replace(",", ".", regex=False)
     )
 
-    df = df.dropna(subset=["Tanggal"])
+    df["Durasi"] = pd.to_numeric(
+        df["Durasi"],
+        errors="coerce"
+    ).fillna(0)
+
+
+df["Tanggal"] = pd.to_datetime(
+    df["Tanggal"],
+    errors="coerce"
+)
+
+df = df.dropna(subset=["Tanggal"])
 
     # ================= FILTER ROLE =================
 
