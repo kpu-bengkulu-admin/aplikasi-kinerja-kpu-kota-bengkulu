@@ -611,11 +611,6 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
-    st.write("KOLOM:", df.columns.tolist())
-
-    st.write(
-        df.tail(5)
-    )
 
     if df.empty:
         st.info("Belum ada data")
