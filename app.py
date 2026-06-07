@@ -1063,9 +1063,7 @@ elif menu == "Data Kinerja":
         st.info("Belum ada data")
         st.stop()
 
-# ================= FORMAT DATA =================
-if "Durasi" in df.columns:
-
+    # ================= FORMAT DATA =================
     df["Durasi"] = (
         df["Durasi"]
         .astype(str)
@@ -1078,13 +1076,12 @@ if "Durasi" in df.columns:
         errors="coerce"
     ).fillna(0)
 
+    df["Tanggal"] = pd.to_datetime(
+        df["Tanggal"],
+        errors="coerce"
+    )
 
-df["Tanggal"] = pd.to_datetime(
-    df["Tanggal"],
-    errors="coerce"
-)
-
-df = df.dropna(subset=["Tanggal"])
+    df = df.dropna(subset=["Tanggal"])
 
     # ================= FILTER ROLE =================
 
