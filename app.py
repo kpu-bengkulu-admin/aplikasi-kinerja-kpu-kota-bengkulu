@@ -607,6 +607,18 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
+    df["Durasi"] = (
+        df["Durasi"]
+        .astype(str)
+        .str.strip()
+        .str.replace(",", ".", regex=False)
+    )
+
+    df["Durasi"] = pd.to_numeric(
+        df["Durasi"],
+        errors="coerce"
+    ).fillna(0)
+    st.write("Tipe Durasi Dashboard:", df["Durasi"].dtype)
 
     st.write("Jumlah Baris Awal:", len(df))
     st.write("Total Durasi Awal:", df["Durasi"].sum())
@@ -1062,6 +1074,18 @@ elif menu == "Data Kinerja":
     st.subheader("📋 Data Kinerja Pegawai")
 
     df = load_data()
+    df["Durasi"] = (
+        df["Durasi"]
+        .astype(str)
+        .str.strip()
+        .str.replace(",", ".", regex=False)
+    )
+
+    df["Durasi"] = pd.to_numeric(
+        df["Durasi"],
+        errors="coerce"
+    ).fillna(0)
+    st.write("Tipe Durasi Dashboard:", df["Durasi"].dtype)
     st.write("Jumlah Baris Awal:", len(df))
     st.write("Total Durasi Awal:", df["Durasi"].sum())
     st.write(df["Durasi"].dtype)
