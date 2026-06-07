@@ -611,30 +611,11 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
+    st.write("KOLOM:", df.columns.tolist())
 
-    if "Durasi" in df.columns:
-
-        df["Durasi"] = (
-            df["Durasi"]
-            .astype(str)
-            .str.strip()
-            .str.replace(",", ".", regex=False)
-        )
-
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-    else:
-
-        df["Durasi"] = df.apply(
-            lambda r: hitung_durasi(
-                r["Jam Masuk"],
-                r["Jam Keluar"]
-            ),
-            axis=1
-        )
+    st.write(
+        df.tail(5)
+    )
 
     if df.empty:
         st.info("Belum ada data")
@@ -673,6 +654,12 @@ if menu == "Dashboard":
             ),
             axis=1
         )
+
+    st.write(
+        df[
+            ["Nama", "Durasi", "Lokasi"]
+        ].tail(10)
+    )
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
@@ -1141,6 +1128,12 @@ elif menu == "Data Kinerja":
             ),
             axis=1
         )
+
+    st.write(
+        df[
+            ["Nama", "Durasi", "Lokasi"]
+        ].tail(10)
+    )
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
