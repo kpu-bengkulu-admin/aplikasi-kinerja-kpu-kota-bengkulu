@@ -611,6 +611,7 @@ if menu == "Dashboard":
 
     # ================= LOAD DATA =================
     df = load_data()
+    df = bersihkan_durasi(df)
     st.write("KOLOM:", df.columns.tolist())
 
     st.write(
@@ -650,6 +651,16 @@ if menu == "Dashboard":
             df["Durasi"],
             errors="coerce"
         ).fillna(0)
+    df["Durasi"] = df["Durasi"].astype(float)
+
+    st.write("HEAD DURASI")
+    st.write(df["Durasi"].head())
+
+    st.write("DTYPE")
+    st.write(df["Durasi"].dtype)
+
+    st.write("TOTAL")
+    st.write(df["Durasi"].sum())
 
     else:
 
@@ -666,30 +677,9 @@ if menu == "Dashboard":
         st.stop()
 
     # ================= FORMAT DATA =================
-    if "Durasi" in df.columns:
+    def bersihkan_durasi(df):
 
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-    elif "Durasi" in df.columns:
-
-        df["Durasi"] = (
-            df["Durasi"]
-            .astype(str)
-            .str.strip()
-            .str.replace(",", ".", regex=False)
-        )
-
-        df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
-            errors="coerce"
-        ).fillna(0)
-
-        df["Durasi"] = df["Durasi"].astype(float)
-
-    else:
+    if "Durasi" not in df.columns:
 
         df["Durasi"] = df.apply(
             lambda r: hitung_durasi(
@@ -699,19 +689,23 @@ if menu == "Dashboard":
             axis=1
         )
 
-    df["Tanggal"] = pd.to_datetime(
-        df["Tanggal"],
+        return df
+
+    df["Durasi"] = (
+        df["Durasi"]
+        .astype(str)
+        .str.strip()
+        .str.replace(",", ".", regex=False)
+    )
+
+    df["Durasi"] = pd.to_numeric(
+        df["Durasi"],
         errors="coerce"
-    )
+    ).fillna(0)
 
-    df = df.dropna(subset=["Tanggal"])
+    df["Durasi"] = df["Durasi"].astype(float)
 
-    df["Tanggal"] = pd.to_datetime(
-        df["Tanggal"],
-        errors='coerce'
-    )
-
-    df = df.dropna(subset=["Tanggal"])
+    return df
 
     # ================= ROLE =================
 
@@ -999,7 +993,7 @@ elif menu == "Input":
             )
 
         st.text_input(
-            "Koordinat GPS",
+            "koordinat GPS",
             value=koordinat,
             disabled=True
         )
@@ -1128,6 +1122,7 @@ elif menu == "Data Kinerja":
     st.subheader("📋 Data Kinerja Pegawai")
 
     df = load_data()
+    df = bersihkan_durasi(df)
 
     if df.empty:
         st.info("Belum ada data")
@@ -1393,13 +1388,13 @@ elif menu == "Data Kinerja":
 
         with info3:
 
-            if "Koordinat" in row and row["Koordinat"]:
+            if "koordinat" in row and row["koordinat"]:
                 st.warning("📍 GPS Terdeteksi")
 
         # ================= FOTO =================
-        if "Foto" in row and row["Foto"]:
+        if "Foto" in row and row["foto"]:
 
-            foto_data = str(row["Foto"])
+            foto_data = str(row["foto"])
 
             if len(foto_data) > 100:
 
@@ -1488,6 +1483,7 @@ elif menu == "Admin":
     st.title("⚙️ Admin Panel")
 
     df = load_data()
+    df = bersihkan_durasi(df)
     users_df = load_users()
 
     # ================= KPI ADMIN =================
