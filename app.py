@@ -73,10 +73,6 @@ if "gps" not in st.session_state:
 # ================= DRIVE =================
 FOLDER_ID = "1c2dL7ojqrQPqt7SjYCeI7L_NBhRApped"
 
-import base64
-from PIL import Image
-import io
-
 def upload_foto(file):
     if file is None: return ""
     
