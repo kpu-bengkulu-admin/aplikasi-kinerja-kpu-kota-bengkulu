@@ -652,7 +652,6 @@ if menu == "Dashboard":
             errors="coerce"
         ).fillna(0)
 
-
     else:
 
         df["Durasi"] = df.apply(
@@ -662,7 +661,6 @@ if menu == "Dashboard":
             ),
             axis=1
         )
-
 
     if df.empty:
         st.info("Belum ada data")
@@ -1386,7 +1384,7 @@ elif menu == "Data Kinerja":
         # ================= FOTO =================
         if "Foto" in row and row["foto"]:
 
-            foto_data = str(row["foto"])
+            foto_data = str(row["oto"])
 
             if len(foto_data) > 100:
 
