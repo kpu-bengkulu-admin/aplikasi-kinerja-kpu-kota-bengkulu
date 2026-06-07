@@ -651,16 +651,7 @@ if menu == "Dashboard":
             df["Durasi"],
             errors="coerce"
         ).fillna(0)
-    df["Durasi"] = df["Durasi"].astype(float)
 
-    st.write("HEAD DURASI")
-    st.write(df["Durasi"].head())
-
-    st.write("DTYPE")
-    st.write(df["Durasi"].dtype)
-
-    st.write("TOTAL")
-    st.write(df["Durasi"].sum())
 
     else:
 
@@ -671,6 +662,17 @@ if menu == "Dashboard":
             ),
             axis=1
         )
+
+    df["Durasi"] = df["Durasi"].astype(float)
+
+    st.write("HEAD DURASI")
+    st.write(df["Durasi"].head())
+
+    st.write("DTYPE")
+    st.write(df["Durasi"].dtype)
+
+    st.write("TOTAL")
+    st.write(df["Durasi"].sum())
 
     if df.empty:
         st.info("Belum ada data")
