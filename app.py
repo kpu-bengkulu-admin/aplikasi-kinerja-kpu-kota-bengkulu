@@ -608,6 +608,9 @@ if menu == "Dashboard":
     # ================= LOAD DATA =================
     df = load_data()
 
+    st.write("Jumlah Baris Awal:", len(df))
+    st.write("Total Durasi Awal:", df["Durasi"].sum())
+
     if df.empty:
         st.info("Belum ada data")
         st.stop()
@@ -1058,6 +1061,8 @@ elif menu == "Data Kinerja":
     st.subheader("📋 Data Kinerja Pegawai")
 
     df = load_data()
+    st.write("Jumlah Baris Awal:", len(df))
+    st.write("Total Durasi Awal:", df["Durasi"].sum())
 
     if df.empty:
         st.info("Belum ada data")
