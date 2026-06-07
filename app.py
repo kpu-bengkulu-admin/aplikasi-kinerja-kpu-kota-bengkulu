@@ -216,7 +216,7 @@ def load_users():
         columns=data[0]
     )
 
-@st.cache_data(ttl=0)
+@st.cache_data(ttl=300)
 def load_data():
 
     data = sheet.get_values()
@@ -1124,18 +1124,7 @@ elif menu == "Data Kinerja":
             axis=1
         )
 
-    st.write(
-        df[
-            ["Nama", "Durasi", "Lokasi"]
-        ].tail(10)
-    )
 
-    df["Tanggal"] = pd.to_datetime(
-        df["Tanggal"],
-        errors="coerce"
-    )
-
-    df = df.dropna(subset=["Tanggal"])
 
     df["Tanggal"] = pd.to_datetime(
         df["Tanggal"],
