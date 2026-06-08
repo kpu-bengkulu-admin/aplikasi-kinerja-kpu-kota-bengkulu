@@ -425,7 +425,7 @@ if "edit" in st.session_state:
         try:
             row_idx = int(ed['row'])
             sheet.update(
-                f"F{row_idx}:K{row_idx}",
+                f"G{row_idx}:L{row_idx}",
                 [[new_masuk, new_keluar, dur, new_uraian, new_output, ed["Lokasi"]]]
             )
             load_data.clear()
