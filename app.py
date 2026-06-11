@@ -591,11 +591,13 @@ if menu == "Dashboard":
     </style>
     """, unsafe_allow_html=True)
 
-    # ================= HERO MODERN =================
+
+if menu == "Dashboard":
 
     with open("logo_kpu.png", "rb") as f:
         logo_base64 = base64.b64encode(f.read()).decode()
 
+    # ================= HERO MODERN =================
     st.markdown(f"""
     <style>
 
@@ -744,6 +746,7 @@ if menu == "Dashboard":
 
     </div>
     """, unsafe_allow_html=True)
+
 
     # ================= PETUNJUK INSTALL =================
     with st.expander("📲 Cara Instal E-Kinerja di HP dan Laptop"):
