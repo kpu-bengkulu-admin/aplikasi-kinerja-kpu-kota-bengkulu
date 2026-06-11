@@ -591,162 +591,19 @@ if menu == "Dashboard":
     </style>
     """, unsafe_allow_html=True)
 
-
-if menu == "Dashboard":
-
-    with open("logo_kpu.png", "rb") as f:
-        logo_base64 = base64.b64encode(f.read()).decode()
-
-    # ================= HERO MODERN =================
+    # ================= HERO =================
     st.markdown(f"""
-    <style>
-
-    .hero-modern {{
-        position:relative;
-        overflow:hidden;
-
-        background:linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #fafafa 60%,
-            #f3f3f3 100%
-        );
-
-        border-radius:20px;
-        min-height:180px;
-        padding:20px 30px;
-        margin-bottom:20px;
-
-        border:1px solid #e5e7eb;
-        box-shadow:0 4px 15px rgba(0,0,0,0.08);
-    }}
-
-    .red-shape {{
-        position:absolute;
-        right:-120px;
-        top:0;
-        width:450px;
-        height:220px;
-        background:#d71920;
-        transform:skewX(-35deg);
-    }}
-
-    .orange-shape {{
-        position:absolute;
-        right:-180px;
-        top:0;
-        width:380px;
-        height:220px;
-        background:#ff6a00;
-        transform:skewX(-35deg);
-    }}
-
-    .black-shape {{
-        position:absolute;
-        right:-240px;
-        top:0;
-        width:300px;
-        height:220px;
-        background:#111111;
-        transform:skewX(-35deg);
-    }}
-
-    .hero-content {{
-        position:relative;
-        z-index:10;
-    }}
-
-    .hero-title {{
-        font-size:48px;
-        font-weight:800;
-        margin:0;
-    }}
-
-    .hero-red {{
-        color:#d71920;
-    }}
-
-    .hero-sub {{
-        font-size:28px;
-        font-weight:700;
-        color:#111;
-    }}
-
-    .hero-desc {{
-        color:#666;
-        font-size:16px;
-    }}
-
-    .hero-date {{
-        margin-top:10px;
-        color:#555;
-        font-size:14px;
-    }}
-
-    @media (max-width:768px) {{
-
-        .hero-title {{
-            font-size:28px;
-        }}
-
-        .hero-sub {{
-            font-size:18px;
-        }}
-
-        .hero-modern {{
-            min-height:140px;
-        }}
-
-    }}
-
-    </style>
-
-    <div class="hero-modern">
-
-        <div class="red-shape"></div>
-        <div class="orange-shape"></div>
-        <div class="black-shape"></div>
-
-        <div class="hero-content">
-
-            <div style="
-                display:flex;
-                align-items:center;
-                gap:20px;
-            ">
-
-                <img src="data:image/png;base64,{logo_base64}"
-                    width="90">
-
-                <div>
-
-                    <div class="hero-title">
-                        Aplikasi <span class="hero-red">E-Kinerja</span>
-                    </div>
-
-                    <div class="hero-sub">
-                        KPU KOTA BENGKULU
-                    </div>
-
-                    <div class="hero-desc">
-                        Sistem Monitoring Kinerja Pegawai Berbasis Digital
-                    </div>
-
-                    <div class="hero-date">
-                        Selamat Datang, <b>{st.session_state.nama}</b>
-                        <br>
-                        {datetime.now().strftime("%d %B %Y")}
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
+    <div class="hero">
+        <h1>📊 E-Kinerja KPU Kota Bengkulu</h1>
+        <h4>Selamat Datang, {st.session_state.nama}</h4>
+        <p style="opacity:0.8;">
+        Sistem Monitoring & Evaluasi Kinerja Pegawai
+        </p>
+        <p>
+            {datetime.now().strftime("%A, %d %B %Y")}
+        </p>
     </div>
     """, unsafe_allow_html=True)
-
 
     # ================= PETUNJUK INSTALL =================
     with st.expander("📲 Cara Instal E-Kinerja di HP dan Laptop"):
