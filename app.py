@@ -1431,35 +1431,35 @@ elif menu == "Admin":
     df = load_data()
     users_df = load_users()
 
-# Bersihkan Durasi
-        if "Durasi" in df.columns:
-            df["Durasi"] = (
-                df["Durasi"]
-                .astype(str)
-                .str.strip()
-                .str.replace(",", ".", regex=False)
-            )
-
-            df["Durasi"] = pd.to_numeric(
-                df["Durasi"],
-                errors="coerce"
-            ).fillna(0)
-
-        # Bersihkan Tanggal
-        if "Tanggal" in df.columns:
-            df["Tanggal"] = pd.to_datetime(
-                df["Tanggal"],
-                errors="coerce"
-            )
-
-        total_pegawai = (
-            users_df["Nama"]
+    # Bersihkan Durasi
+    if "Durasi" in df.columns:
+        df["Durasi"] = (
+            df["Durasi"]
             .astype(str)
             .str.strip()
-            .replace("", pd.NA)
-            .dropna()
-            .nunique()
-            )
+            .str.replace(",", ".", regex=False)
+        )
+
+        df["Durasi"] = pd.to_numeric(
+            df["Durasi"],
+            errors="coerce"
+        ).fillna(0)
+
+    # Bersihkan Tanggal
+    if "Tanggal" in df.columns:
+        df["Tanggal"] = pd.to_datetime(
+            df["Tanggal"],
+            errors="coerce"
+        )
+
+    total_pegawai = (
+        users_df["Nama"]
+        .astype(str)
+        .str.strip()
+        .replace("", pd.NA)
+        .dropna()
+        .nunique()
+    )
 
     # ================= KPI ADMIN =================
     a1, a2, a3, a4 = st.columns(4)
