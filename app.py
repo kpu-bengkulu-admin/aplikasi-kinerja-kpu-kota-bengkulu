@@ -644,7 +644,7 @@ if menu == "Dashboard":
     if "Durasi" in df.columns:
 
         df["Durasi"] = pd.to_numeric(
-            df["Durasi"],
+            df["Durasi"].astype(str).str.replace(",", "."),
             errors="coerce"
         ).fillna(0)
 
