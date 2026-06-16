@@ -1431,12 +1431,42 @@ elif menu == "Admin":
     df = load_data()
     users_df = load_users()
 
+# Bersihkan Durasi
+        if "Durasi" in df.columns:
+            df["Durasi"] = (
+                df["Durasi"]
+                .astype(str)
+                .str.strip()
+                .str.replace(",", ".", regex=False)
+            )
+
+            df["Durasi"] = pd.to_numeric(
+                df["Durasi"],
+                errors="coerce"
+            ).fillna(0)
+
+        # Bersihkan Tanggal
+        if "Tanggal" in df.columns:
+            df["Tanggal"] = pd.to_datetime(
+                df["Tanggal"],
+                errors="coerce"
+            )
+
+        total_pegawai = (
+            users_df["Nama"]
+            .astype(str)
+            .str.strip()
+            .replace("", pd.NA)
+            .dropna()
+            .nunique()
+            )
+
     # ================= KPI ADMIN =================
     a1, a2, a3, a4 = st.columns(4)
 
     a1.metric(
         "👥 Total Pegawai",
-        users_df["Nama"].nunique()
+        total_pegawai
     )
 
     a2.metric(
@@ -1446,7 +1476,7 @@ elif menu == "Admin":
 
     a3.metric(
         "⏱ Total Jam",
-        round(df["Durasi"].sum(), 2)
+        round(float(df["Durasi"].sum()), 2)
         if "Durasi" in df.columns else 0
     )
 
@@ -1491,8 +1521,8 @@ elif menu == "Admin":
                 "Unit",
                 [
                     "Sekretariat",
-                    "SDM dan Parhubmas",
-                    "Hukum dan Tekhnis Penyelenggaraan",
+                    "Parhubmas dan SDM",
+                    "Teknis PP dan Hukum",
                     "Keuangan, Umum dan Logistik",
                     "Perencanaan, Data dan Informasi"
                 ]
