@@ -1430,6 +1430,14 @@ elif menu == "Admin":
 
     df = load_data()
     users_df = load_users()
+    st.write("Jumlah baris users:", len(users_df))
+
+    st.write(
+             users_df["Nama"]
+             .astype(str)
+             .str.strip()
+             .value_counts(dropna=False)
+        )
 
     # Bersihkan Durasi
     if "Durasi" in df.columns:
