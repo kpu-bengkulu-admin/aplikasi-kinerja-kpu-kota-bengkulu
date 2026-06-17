@@ -903,7 +903,7 @@ if menu == "Dashboard":
     st.markdown("""
     <hr>
     <center>
-    © 2025 KPU Kota Bengkulu | Sistem E-Kinerja Digital
+    ©by.es 2025 KPU Kota Bengkulu | Sistem E-Kinerja Digital
     </center>
     """, unsafe_allow_html=True)
 
