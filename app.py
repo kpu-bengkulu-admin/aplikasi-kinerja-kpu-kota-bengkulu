@@ -726,13 +726,13 @@ if menu == "Dashboard":
 
     df = df.dropna(subset=["Tanggal"])
 
-         start_periode, end_periode = get_periode_kinerja()
+    start_periode, end_periode = get_periode_kinerja()
 
-         df = df[
-             (df["Tanggal"].dt.date >= start_periode)
-             &
-             (df["Tanggal"].dt.date <= end_periode)
-         ]
+    df = df[
+        (df["Tanggal"].dt.date >= start_periode)
+        &
+        (df["Tanggal"].dt.date <= end_periode)
+    ]
 
     # ================= ROLE =================
 
