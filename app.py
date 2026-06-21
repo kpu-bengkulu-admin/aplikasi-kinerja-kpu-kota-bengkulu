@@ -79,7 +79,7 @@ def upload_foto(file):
     try:
         # 1. Buka foto dan perkecil ukurannya (agar tidak membebani Spreadsheet)
         img = Image.open(file)
-        img.thumbnail((300, 300))  
+        img.thumbnail((200, 200))  
         
         # 2. Ubah foto menjadi teks (Base64)
         buffered = io.BytesIO()
@@ -249,6 +249,61 @@ def hitung_durasi(masuk, keluar):
         jk += 24 * 60
 
     return round((jk - jm) / 60, 2)
+
+# ================= PERIODE KINERJA =================
+def get_periode_kinerja():
+
+    today = date.today()
+
+    if today.day >= 21:
+
+        start_date = date(
+            today.year,
+            today.month,
+            21
+        )
+
+        if today.month == 12:
+
+            end_date = date(
+                today.year + 1,
+                1,
+                20
+            )
+
+        else:
+
+            end_date = date(
+                today.year,
+                today.month + 1,
+                20
+            )
+
+    else:
+
+        if today.month == 1:
+
+            start_date = date(
+                today.year - 1,
+                12,
+                21
+            )
+
+        else:
+
+            start_date = date(
+                today.year,
+                today.month - 1,
+                21
+            )
+
+        end_date = date(
+            today.year,
+            today.month,
+            20
+        )
+
+    return start_date, end_date
 
 @st.cache_data(ttl=30)
 def load_config():
@@ -670,6 +725,14 @@ if menu == "Dashboard":
     )
 
     df = df.dropna(subset=["Tanggal"])
+
+         start_periode, end_periode = get_periode_kinerja()
+
+         df = df[
+             (df["Tanggal"].dt.date >= start_periode)
+             &
+             (df["Tanggal"].dt.date <= end_periode)
+         ]
 
     # ================= ROLE =================
 
