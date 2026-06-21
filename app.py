@@ -728,43 +728,43 @@ if menu == "Dashboard":
     )
 
 # ================= COL 1 =================
-with col1:
+   with col1:
 
-    today = date.today()
+        today = date.today()
 
-    if df.empty:
-        start_default = today
-        end_default = today
-
-    else:
-
-        if "Tanggal" not in df.columns:
+        if df.empty:
             start_default = today
             end_default = today
 
         else:
 
-            df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
-
-            start_periode, end_periode = get_periode_kinerja()
-
-            start_default = start_periode
-            end_default = end_periode
-
-            if pd.isna(start_default):
+            if "Tanggal" not in df.columns:
                 start_default = today
-            else:
-                start_default = pd.to_datetime(start_default).date()
-
-            if pd.isna(end_default):
                 end_default = today
-            else:
-                end_default = end_default.date()
 
-    tgl = st.date_input(
-        "📅 Range Tanggal",
-        value=(start_default, end_default)
-    )
+            else:
+
+                df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
+
+                start_periode, end_periode = get_periode_kinerja()
+
+                start_default = start_periode
+                end_default = end_periode
+
+                if pd.isna(start_default):
+                    start_default = today
+                else:
+                    start_default = pd.to_datetime(start_default).date()
+
+                if pd.isna(end_default):
+                    end_default = today
+                else:
+                    end_default = end_default.date()
+
+        tgl = st.date_input(
+            "📅 Range Tanggal",
+            value=(start_default, end_default)
+        )
 
     # ================= COL 2 =================
     with col2:
