@@ -1194,8 +1194,10 @@ elif menu == "Data Kinerja":
         ]
 
     # ================= RANGE TANGGAL =================
-    start_default = df["Tanggal"].min()
-    end_default = df["Tanggal"].max()
+    start_periode, end_periode = get_periode_kinerja()
+
+    start_default = start_periode
+    end_default = end_periode
 
     today = date.today()
 
