@@ -79,7 +79,7 @@ def upload_foto(file):
     try:
         # 1. Buka foto dan perkecil ukurannya (agar tidak membebani Spreadsheet)
         img = Image.open(file)
-        img.thumbnail((200, 200))  
+        img.thumbnail((300, 300))  
         
         # 2. Ubah foto menjadi teks (Base64)
         buffered = io.BytesIO()
@@ -725,14 +725,6 @@ if menu == "Dashboard":
     )
 
     df = df.dropna(subset=["Tanggal"])
-
-    start_periode, end_periode = get_periode_kinerja()
-
-    df = df[
-        (df["Tanggal"].dt.date >= start_periode)
-        &
-        (df["Tanggal"].dt.date <= end_periode)
-    ]
 
     # ================= ROLE =================
 
