@@ -257,51 +257,21 @@ def get_periode_kinerja():
 
     if today.day >= 21:
 
-        start_date = date(
-            today.year,
-            today.month,
-            21
-        )
+        start_date = date(today.year, today.month, 21)
 
         if today.month == 12:
-
-            end_date = date(
-                today.year + 1,
-                1,
-                20
-            )
-
+            end_date = date(today.year + 1, 1, 20)
         else:
-
-            end_date = date(
-                today.year,
-                today.month + 1,
-                20
-            )
+            end_date = date(today.year, today.month + 1, 20)
 
     else:
 
         if today.month == 1:
-
-            start_date = date(
-                today.year - 1,
-                12,
-                21
-            )
-
+            start_date = date(today.year - 1, 12, 21)
         else:
+            start_date = date(today.year, today.month - 1, 21)
 
-            start_date = date(
-                today.year,
-                today.month - 1,
-                21
-            )
-
-        end_date = date(
-            today.year,
-            today.month,
-            20
-        )
+        end_date = date(today.year, today.month, 20)
 
     return start_date, end_date
 
