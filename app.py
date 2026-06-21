@@ -727,8 +727,8 @@ if menu == "Dashboard":
         gap="medium"
     )
 
-# ================= COL 1 =================
-   with col1:
+    # ================= COL 1 =================
+    with col1:
 
         today = date.today()
 
@@ -743,7 +743,6 @@ if menu == "Dashboard":
                 end_default = today
 
             else:
-
                 df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
 
                 start_periode, end_periode = get_periode_kinerja()
