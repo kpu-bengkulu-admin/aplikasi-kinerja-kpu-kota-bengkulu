@@ -758,7 +758,8 @@ if menu == "Dashboard":
                 if pd.isna(end_default):
                     end_default = today
                 else:
-                    end_default = end_default.date()
+                   if isinstance(end_default, datetime):
+                            end_default = end_default.date()
 
         tgl = st.date_input(
             "📅 Range Tanggal",
