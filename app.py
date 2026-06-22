@@ -1428,12 +1428,12 @@ elif menu == "Data Kinerja":
 
     with pd.ExcelWriter(excel, engine="openpyxl") as writer:
 
-    df.to_excel(
-        writer,
-        index=False,
-        sheet_name="Data",
-        startrow=4
-    )
+        df.to_excel(
+            writer,
+            index=False,
+            sheet_name="Data",
+            startrow=4
+        )
 
         worksheet = writer.sheets["Data"]
         from openpyxl.styles import Font, Alignment
@@ -1441,16 +1441,28 @@ elif menu == "Data Kinerja":
         worksheet.merge_cells("A1:J1")
         worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
 
-        worksheet["A1"].font = Font(bold=True, size=16)
-        worksheet["A1"].alignment = Alignment(horizontal="center")
+        worksheet["A1"].font = Font(
+            bold=True,
+            size=16
+        )
+
+        worksheet["A1"].alignment = Alignment(
+            horizontal="center"
+        )
 
         worksheet.merge_cells("A2:J2")
         worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
-        worksheet["A2"].alignment = Alignment(horizontal="center")
+
+        worksheet["A2"].alignment = Alignment(
+            horizontal="center"
+        )
 
         worksheet.merge_cells("A3:J3")
         worksheet["A3"] = periode_text
-        worksheet["A3"].alignment = Alignment(horizontal="center")
+
+        worksheet["A3"].alignment = Alignment(
+            horizontal="center"
+        )
 
         for row_excel in worksheet.iter_rows():
             for cell in row_excel:
