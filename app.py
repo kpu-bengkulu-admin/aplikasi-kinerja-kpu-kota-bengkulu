@@ -616,6 +616,16 @@ if menu == "Dashboard":
     </style>
     """, unsafe_allow_html=True)
 
+    # ================= PERIODE =================
+    start_periode, end_periode = get_periode_kinerja()
+
+    periode_text = (
+        f"Periode "
+        f"{start_periode.strftime('%d %B %Y')} "
+        f"s/d "
+        f"{end_periode.strftime('%d %B %Y')}"
+    )
+
     # ================= HERO =================
     st.markdown(f"""
     <div class="hero">
