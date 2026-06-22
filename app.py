@@ -1463,10 +1463,8 @@ with pd.ExcelWriter(excel, engine="openpyxl") as writer:
 
     df_export = df.copy()
 
-    # Tambahkan nomor urut seperti di gambar
     df_export.insert(0, "No", range(1, len(df_export) + 1))
 
-    # Pastikan urutan kolom sesuai layout Excel kamu
     df_export = df_export[[
         "No",
         "Nama",
@@ -1480,7 +1478,6 @@ with pd.ExcelWriter(excel, engine="openpyxl") as writer:
         "Lokasi"
     ]]
 
-    # SIMPAN KE EXCEL (INI YANG SEHARUSNYA PAKAI df_export, BUKAN df)
     df_export.to_excel(
         writer,
         index=False,
@@ -1512,7 +1509,7 @@ with pd.ExcelWriter(excel, engine="openpyxl") as writer:
                 vertical="top"
             )
 
-excel.seek(0)
+    excel.seek(0)
 
 st.download_button(
     label="📥 Download Excel",
@@ -1520,6 +1517,7 @@ st.download_button(
     file_name="data_kinerja.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
 # ================= ADMIN =================
 elif menu == "Admin":
 
