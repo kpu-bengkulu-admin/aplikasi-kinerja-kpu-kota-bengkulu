@@ -1422,10 +1422,31 @@ elif menu == "Data Kinerja":
         df.to_excel(
             writer,
             index=False,
-            sheet_name="Data"
+            sheet_name="Data",
+            startrow=4
         )
 
         worksheet = writer.sheets["Data"]
+        from openpyxl.styles import Font, Alignment
+        
+        worksheet.merge_cells("A1:J1")
+        worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
+
+        worksheet["A1"].font = Font(
+            bold=True,
+            size=16
+        )
+
+        worksheet["A1"].alignment = Alignment(
+            horizontal="center"
+        )
+
+   worksheet.merge_cells("A2:J2")
+   worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
+
+   worksheet["A2"].alignment = Alignment(
+            horizontal="center"
+         )
 
         for row_excel in worksheet.iter_rows():
 
