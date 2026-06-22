@@ -1419,6 +1419,17 @@ elif menu == "Data Kinerja":
 
         st.divider()
 
+    # ================= PERIODE LAPORAN =================
+    if len(tgl) == 2:
+        periode_text = (
+            f"Periode "
+            f"{tgl[0].strftime('%d %B %Y')} "
+            f"s/d "
+            f"{tgl[1].strftime('%d %B %Y')}"
+        )
+    else:
+        periode_text = "Periode Tidak Dipilih"
+
     # ================= DOWNLOAD EXCEL =================
     st.subheader("📥 Download Data")
 
@@ -1432,7 +1443,7 @@ elif menu == "Data Kinerja":
             writer,
             index=False,
             sheet_name="Data",
-            startrow=4
+            startrow=5
         )
 
         worksheet = writer.sheets["Data"]
