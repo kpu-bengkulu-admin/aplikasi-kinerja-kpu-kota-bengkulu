@@ -1440,14 +1440,14 @@ elif menu == "Data Kinerja":
     else:
         periode_text = "Periode Tidak Dipilih"
 
-    # ================= DOWNLOAD EXCEL =================
-    st.subheader("📥 Download Data")
+# ================= DOWNLOAD EXCEL =================
+st.subheader("📥 Download Data")
 
-    df["NIP"] = df["NIP"].astype(str)
+df["NIP"] = df["NIP"].astype(str)
 
-    excel = io.BytesIO()
+excel = io.BytesIO()
 
-    with pd.ExcelWriter(excel, engine="openpyxl") as writer:
+with pd.ExcelWriter(excel, engine="openpyxl") as writer:
 
     kolom_excel = [
         "Nama",
@@ -1479,58 +1479,47 @@ elif menu == "Data Kinerja":
         "Output",
         "Lokasi"
     ]]
-        df.to_excel(
-            writer,
-            index=False,
-            sheet_name="Data",
-            startrow=5
-        )
 
-        worksheet = writer.sheets["Data"]
-        from openpyxl.styles import Font, Alignment
-
-        worksheet.merge_cells("A1:J1")
-        worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
-
-        worksheet["A1"].font = Font(
-            bold=True,
-            size=16
-        )
-
-        worksheet["A1"].alignment = Alignment(
-            horizontal="center"
-        )
-
-        worksheet.merge_cells("A2:J2")
-        worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
-
-        worksheet["A2"].alignment = Alignment(
-            horizontal="center"
-        )
-
-        worksheet.merge_cells("A3:J3")
-        worksheet["A3"] = periode_text
-
-        worksheet["A3"].alignment = Alignment(
-            horizontal="center"
-        )
-
-        for row_excel in worksheet.iter_rows():
-            for cell in row_excel:
-                cell.alignment = Alignment(
-                    wrap_text=True,
-                    vertical="top"
-                )
-
-    excel.seek(0)
-
-    st.download_button(
-        label="📥 Download Excel",
-        data=excel,
-        file_name="data_kinerja.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    # SIMPAN KE EXCEL (INI YANG SEHARUSNYA PAKAI df_export, BUKAN df)
+    df_export.to_excel(
+        writer,
+        index=False,
+        sheet_name="Data",
+        startrow=5
     )
 
+    worksheet = writer.sheets["Data"]
+
+    from openpyxl.styles import Font, Alignment
+
+    worksheet.merge_cells("A1:J1")
+    worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
+    worksheet["A1"].font = Font(bold=True, size=16)
+    worksheet["A1"].alignment = Alignment(horizontal="center")
+
+    worksheet.merge_cells("A2:J2")
+    worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
+    worksheet["A2"].alignment = Alignment(horizontal="center")
+
+    worksheet.merge_cells("A3:J3")
+    worksheet["A3"] = periode_text
+    worksheet["A3"].alignment = Alignment(horizontal="center")
+
+    for row_excel in worksheet.iter_rows():
+        for cell in row_excel:
+            cell.alignment = Alignment(
+                wrap_text=True,
+                vertical="top"
+            )
+
+excel.seek(0)
+
+st.download_button(
+    label="📥 Download Excel",
+    data=excel,
+    file_name="data_kinerja.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 # ================= ADMIN =================
 elif menu == "Admin":
 
