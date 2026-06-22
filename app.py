@@ -665,6 +665,16 @@ if menu == "Dashboard":
         st.info("Belum ada data")
         st.stop()
 
+# ================= PERIODE TEXT =================
+    start_periode, end_periode = get_periode_kinerja()
+
+    periode_text = (
+               f"Periode "
+               f"{start_periode.strftime('%d %B %Y')} "
+               f"s/d "
+               f"{end_periode.strftime('%d %B %Y')}"
+             )
+
     # ================= FORMAT DATA =================
     if "Durasi" in df.columns:
 
@@ -997,7 +1007,6 @@ elif menu == "Input":
 
     form_key = str(st.session_state.form_id)
 
-# ================= FORM INPUT =================
     # ================= FORM INPUT =================
     tgl = st.date_input(
         "Tanggal",
@@ -1429,24 +1438,24 @@ elif menu == "Data Kinerja":
         worksheet = writer.sheets["Data"]
         from openpyxl.styles import Font, Alignment
         
-        worksheet.merge_cells("A1:J1")
-        worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
+                      worksheet.merge_cells("A1:J1")
+                      worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
 
-        worksheet["A1"].font = Font(
-            bold=True,
-            size=16
-        )
+                      worksheet["A1"].font = Font(
+                      bold=True,
+                      size=16
+                       )
 
-        worksheet["A1"].alignment = Alignment(
-            horizontal="center"
-        )
+                      worksheet["A1"].alignment = Alignment(
+                      horizontal="center"
+                       )
 
-   worksheet.merge_cells("A2:J2")
-   worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
+        worksheet.merge_cells("A2:J2")
+        worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
 
-   worksheet["A2"].alignment = Alignment(
-            horizontal="center"
-         )
+        worksheet["A2"].alignment = Alignment(
+                      horizontal="center"
+                       )
 
         for row_excel in worksheet.iter_rows():
 
