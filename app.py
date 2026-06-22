@@ -627,6 +627,9 @@ if menu == "Dashboard":
         <p>
             {datetime.now().strftime("%A, %d %B %Y")}
         </p>
+        <p style="font-weight:bold;">
+            {periode_text}
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1437,6 +1440,8 @@ elif menu == "Data Kinerja":
 
         worksheet.merge_cells("A1:J1")
         worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
+   worksheet["A2"] = periode_text
+
 
         worksheet["A1"].font = Font(bold=True, size=16)
         worksheet["A1"].alignment = Alignment(horizontal="center")
