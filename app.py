@@ -1449,6 +1449,36 @@ elif menu == "Data Kinerja":
 
     with pd.ExcelWriter(excel, engine="openpyxl") as writer:
 
+    kolom_excel = [
+        "Nama",
+        "NIP",
+        "Jabatan",
+        "Tanggal",
+        "Jam Masuk",
+        "Jam Keluar",
+        "Uraian",
+        "Output",
+        "Lokasi"
+    ]
+
+    df_export = df.copy()
+
+    # Tambahkan nomor urut seperti di gambar
+    df_export.insert(0, "No", range(1, len(df_export) + 1))
+
+    # Pastikan urutan kolom sesuai layout Excel kamu
+    df_export = df_export[[
+        "No",
+        "Nama",
+        "NIP",
+        "Jabatan",
+        "Tanggal",
+        "Jam Masuk",
+        "Jam Keluar",
+        "Uraian",
+        "Output",
+        "Lokasi"
+    ]]
         df.to_excel(
             writer,
             index=False,
