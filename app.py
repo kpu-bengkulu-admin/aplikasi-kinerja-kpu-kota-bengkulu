@@ -1440,7 +1440,7 @@ elif menu == "Data Kinerja":
     else:
         periode_text = "Periode Tidak Dipilih"
 
-# ================= DOWNLOAD EXCEL (FIX DI SINI) =================
+    # ================= DOWNLOAD EXCEL (FIX DI SINI) =================
     st.subheader("📥 Download Data")
 
     df["NIP"] = df["NIP"].astype(str)
@@ -1466,22 +1466,20 @@ elif menu == "Data Kinerja":
             "Lokasi"
         ]]
 
-    start_row = 5
-    df_export.to_excel(
-        writer,
-        index=False,
-        sheet_name="Data",
-        startrow=start_row
-    )
+        start_row = 5
 
-    worksheet = writer.sheets["Data"]
-
-    last_row = start_row + len(df_export) + 2
+        df_export.to_excel(
+            writer,
+            index=False,
+            sheet_name="Data",
+            startrow=start_row
+        )
 
         worksheet = writer.sheets["Data"]
 
         from openpyxl.styles import Font, Alignment
 
+        # ================= HEADER =================
         worksheet.merge_cells("A1:J1")
         worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
         worksheet["A1"].font = Font(bold=True, size=16)
@@ -1495,85 +1493,87 @@ elif menu == "Data Kinerja":
         worksheet["A3"] = periode_text
         worksheet["A3"].alignment = Alignment(horizontal="center")
 
+        # ================= FORMAT CELL =================
         for row_excel in worksheet.iter_rows():
             for cell in row_excel:
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
 
-    # ================= TANGGAL TTD =================
-    tanggal_ttd = tgl[1].strftime("%d %B %Y") if len(tgl) == 2 else date.today().strftime("%d %B %Y")
+        # ================= TTD LOGIC =================
+        tanggal_ttd = (
+            tgl[1].strftime("%d %B %Y")
+            if len(tgl) == 2
+            else date.today().strftime("%d %B %Y")
+        )
 
-    role_user = st.session_state.role
+        role_user = st.session_state.role
 
-    # ================= LOGIKA ROLE =================
-    if role_user == "Pegawai":
+        if role_user == "Pegawai":
 
-        jabatan_atasan = st.session_state.get("kasubbag", "Kasub Bag. Perencanaan Data dan Informasi")
-        nama_atasan = st.session_state.get("nama_kasubbag", "Kasubbag")
+            jabatan_atasan = st.session_state.get(
+                "kasubbag",
+                "Kasub Bag. Perencanaan Data dan Informasi"
+            )
+            nama_atasan = st.session_state.get(
+                "nama_kasubbag",
+                "Kasubbag"
+            )
 
-        jabatan_bawah = st.session_state.jabatan
-        nama_bawah = st.session_state.nama
+            jabatan_bawah = st.session_state.jabatan
+            nama_bawah = st.session_state.nama
 
+        elif role_user == "Kasubbag":
 
-    elif role_user == "Kasubbag":
+            jabatan_atasan = "Pimpinan"
+            nama_atasan = st.session_state.get("nama_pimpinan", "Pimpinan")
 
-        jabatan_atasan = "Pimpinan"
-        nama_atasan = st.session_state.get("nama_pimpinan", "Pimpinan")
+            jabatan_bawah = st.session_state.jabatan
+            nama_bawah = st.session_state.nama
 
-        jabatan_bawah = st.session_state.jabatan
-        nama_bawah = st.session_state.nama
+        else:
 
+            jabatan_atasan = "Pimpinan"
+            nama_atasan = st.session_state.get("nama_pimpinan", "Pimpinan")
 
-    else:
+            jabatan_bawah = st.session_state.jabatan
+            nama_bawah = st.session_state.nama
 
-        jabatan_atasan = "Pimpinan"
-        nama_atasan = st.session_state.get("nama_pimpinan", "Pimpinan")
+        # ================= HITUNG POSISI TTD =================
+        last_row = start_row + len(df_export) + 2
 
-        jabatan_bawah = st.session_state.jabatan
-        nama_bawah = st.session_state.nama
+        # ================= HEADER TTD =================
+        worksheet.merge_cells(f"A{last_row}:E{last_row}")
+        worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
 
+        worksheet.merge_cells(f"F{last_row}:J{last_row}")
+        worksheet[f"F{last_row}"] = f"Bengkulu, {tanggal_ttd}"
 
-    # ================= HITUNG BARIS TTD =================
-    start_row = 5
-    last_row = start_row + len(df_export) + 2
+        # ================= JABATAN =================
+        worksheet.merge_cells(f"A{last_row+1}:E{last_row+1}")
+        worksheet[f"A{last_row+1}"] = jabatan_atasan
 
-    # ================= HEADER TTD =================
-    worksheet.merge_cells(f"A{last_row}:E{last_row}")
-    worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
+        worksheet.merge_cells(f"F{last_row+1}:J{last_row+1}")
+        worksheet[f"F{last_row+1}"] = jabatan_bawah
 
-    worksheet.merge_cells(f"F{last_row}:J{last_row}")
-    worksheet[f"F{last_row}"] = f"Bengkulu, {tanggal_ttd}"
+        # ================= ALIGNMENT =================
+        for r in range(last_row, last_row + 4):
+            for c in range(1, 11):
+                worksheet.cell(row=r, column=c).alignment = Alignment(
+                    horizontal="center",
+                    vertical="center"
+                )
 
+        # ================= NAMA =================
+        worksheet.merge_cells(f"A{last_row+3}:E{last_row+3}")
+        worksheet[f"A{last_row+3}"] = nama_atasan
 
-    # ================= JABATAN =================
-    worksheet.merge_cells(f"A{last_row+1}:E{last_row+1}")
-    worksheet[f"A{last_row+1}"] = jabatan_atasan
+        worksheet.merge_cells(f"F{last_row+3}:J{last_row+3}")
+        worksheet[f"F{last_row+3}"] = nama_bawah
 
-    worksheet.merge_cells(f"F{last_row+1}:J{last_row+1}")
-    worksheet[f"F{last_row+1}"] = jabatan_bawah
-
-
-    # ================= ALIGNMENT AREA =================
-    for r in range(last_row, last_row + 4):
         for c in range(1, 11):
-            worksheet.cell(row=r, column=c).alignment = Alignment(
+            worksheet.cell(row=last_row+3, column=c).alignment = Alignment(
                 horizontal="center",
                 vertical="center"
             )
-
-
-    # ================= NAMA =================
-    worksheet.merge_cells(f"A{last_row+3}:E{last_row+3}")
-    worksheet[f"A{last_row+3}"] = nama_atasan
-
-    worksheet.merge_cells(f"F{last_row+3}:J{last_row+3}")
-    worksheet[f"F{last_row+3}"] = nama_bawah
-
-
-    for c in range(1, 11):
-        worksheet.cell(row=last_row+3, column=c).alignment = Alignment(
-            horizontal="center",
-            vertical="center"
-        )
 
     excel.seek(0)
 
