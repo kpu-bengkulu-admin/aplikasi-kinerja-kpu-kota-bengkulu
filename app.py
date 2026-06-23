@@ -1509,7 +1509,7 @@ with pd.ExcelWriter(excel, engine="openpyxl") as writer:
                 vertical="top"
             )
 
-    excel.seek(0)
+excel.seek(0)
 
 st.download_button(
     label="📥 Download Excel",
@@ -1564,15 +1564,9 @@ elif menu == "Admin":
     # ================= KPI ADMIN =================
     a1, a2, a3, a4 = st.columns(4)
 
-    a1.metric(
-        "👥 Total Pegawai",
-        total_pegawai
-    )
+    a1.metric("👥 Total Pegawai", total_pegawai)
 
-    a2.metric(
-        "📄 Total Kinerja",
-        len(df)
-    )
+    a2.metric("📄 Total Kinerja", len(df))
 
     a3.metric(
         "⏱ Total Jam",
@@ -1591,16 +1585,9 @@ elif menu == "Admin":
     # ================= DATA USER =================
     st.subheader("👤 Data User")
 
-    # Hilangkan kolom password
-    users_tampil = users_df.drop(
-        columns=["Password"],
-        errors="ignore"
-    )
+    users_tampil = users_df.drop(columns=["Password"], errors="ignore")
 
-    st.dataframe(
-        users_tampil,
-        use_container_width=True
-    )
+    st.dataframe(users_tampil, use_container_width=True)
 
     st.divider()
 
@@ -1612,9 +1599,7 @@ elif menu == "Admin":
         with st.form("form_user"):
 
             nip_baru = st.text_input("NIP")
-
             nama_baru = st.text_input("Nama")
-
             jabatan_baru = st.text_input("Jabatan")
 
             unit_baru = st.selectbox(
@@ -1627,28 +1612,22 @@ elif menu == "Admin":
                     "Perencanaan, Data dan Informasi"
                 ]
             )
-            password_baru = st.text_input(
-                "Password",
-                type="password"
-            )
+
+            password_baru = st.text_input("Password", type="password")
 
             role_baru = st.selectbox(
                 "Role",
                 ["Pegawai", "Pimpinan", "Admin"]
             )
 
-            simpan_user = st.form_submit_button(
-                "Simpan User"
-            )
+            simpan_user = st.form_submit_button("Simpan User")
 
             if simpan_user:
 
                 if not nip_baru or not nama_baru:
-
                     st.error("⚠️ Lengkapi data user")
 
                 else:
-
                     user_sheet.append_row([
                         nip_baru,
                         nama_baru,
