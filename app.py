@@ -1494,8 +1494,6 @@ elif menu == "Data Kinerja":
             for cell in row_excel:
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
 
-    excel.seek(0)
-
     # ================= TANDA TANGAN =================
 
     last_row = worksheet.max_row + 3  # jarak dari data
@@ -1532,6 +1530,9 @@ elif menu == "Data Kinerja":
             horizontal="center",
             vertical="center"
         )
+
+    excel.seek(0)
+
     st.download_button(
         label="📥 Download Excel",
         data=excel,
