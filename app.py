@@ -1466,12 +1466,17 @@ elif menu == "Data Kinerja":
             "Lokasi"
         ]]
 
-        df_export.to_excel(
-            writer,
-            index=False,
-            sheet_name="Data",
-            startrow=5
-        )
+    start_row = 5
+    df_export.to_excel(
+        writer,
+        index=False,
+        sheet_name="Data",
+        startrow=start_row
+    )
+
+    worksheet = writer.sheets["Data"]
+
+    last_row = start_row + len(df_export) + 2
 
         worksheet = writer.sheets["Data"]
 
@@ -1528,7 +1533,8 @@ elif menu == "Data Kinerja":
 
 
     # ================= HITUNG BARIS TTD =================
-    last_row = len(df_export) + 8
+    start_row = 5
+    last_row = start_row + len(df_export) + 2
 
     # ================= HEADER TTD =================
     worksheet.merge_cells(f"A{last_row}:E{last_row}")
