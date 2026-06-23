@@ -12,6 +12,35 @@ from PIL import Image
 
 from openpyxl.styles import Alignment
 
+import streamlit as st
+import pandas as pd
+import io
+from datetime import date, datetime
+
+# ================= MAPPING KASUBBAG =================
+kasubbag_mapping = {
+    "Parhubmas dan SDM": {
+        "jabatan": "Kasubbag Parhubmas dan SDM",
+        "nama": "NAMA KASUBBAG PARHUBMAS",
+        "nip": "0000000000000001"
+    },
+    "Teknis PP dan Hukum": {
+        "jabatan": "Kasubbag Teknis PP dan Hukum",
+        "nama": "NAMA KASUBBAG TEKNIS",
+        "nip": "0000000000000002"
+    },
+    "Keuangan, Umum dan Logistik": {
+        "jabatan": "Kasubbag Keuangan, Umum dan Logistik",
+        "nama": "NAMA KASUBBAG KEU",
+        "nip": "0000000000000003"
+    },
+    "Perencanaan, Data dan Informasi": {
+        "jabatan": "Kasubbag Perencanaan, Data dan Informasi",
+        "nama": "NAMA KASUBBAG PERENCANAAN",
+        "nip": "0000000000000004"
+    }
+}
+
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU KOTA BENGKULU",
@@ -1477,6 +1506,21 @@ elif menu == "Data Kinerja":
 
         worksheet = writer.sheets["Data"]
 
+        unit_user = st.session_state.get("unit", "")
+
+        kasubbag = kasubbag_mapping.get(
+            unit_user,
+            {
+                "jabatan": "Kasubbag",
+                "nama": "Kasubbag",
+                "nip": "-"
+            }
+        )
+
+        jabatan_atasan = kasubbag["jabatan"]
+        nama_atasan = kasubbag["nama"]
+        nip_atasan = kasubbag["nip"]
+
         from openpyxl.styles import Font, Alignment
 
         # ================= HEADER =================
@@ -1505,7 +1549,7 @@ elif menu == "Data Kinerja":
             else date.today().strftime("%d %B %Y")
         )
 
-        role_user = st.session_state.role
+        role_user = str(st.session_state.role).strip().lower()
 
         if role_user == "Pegawai":
 
@@ -1618,7 +1662,7 @@ elif menu == "Admin":
             errors="coerce"
         )
 
-    total_pegawai = (
+    total_Pegawai = (
         users_df["Nama"]
         .astype(str)
         .str.strip()
@@ -1630,7 +1674,7 @@ elif menu == "Admin":
     # ================= KPI ADMIN =================
     a1, a2, a3, a4 = st.columns(4)
 
-    a1.metric("👥 Total Pegawai", total_pegawai)
+    a1.metric("👥 Total Pegawai", total_Pegawai)
 
     a2.metric("📄 Total Kinerja", len(df))
 
