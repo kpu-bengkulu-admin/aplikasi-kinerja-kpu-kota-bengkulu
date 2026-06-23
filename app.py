@@ -1506,6 +1506,31 @@ elif menu == "Data Kinerja":
 
         worksheet = writer.sheets["Data"]
 
+        # ================= LOKASI CHECKBOX (AUTO 1 TERPILIH) =================
+
+        lokasi = df_export["Lokasi"].iloc[0] if not df_export.empty else ""
+
+        lokasi_kantor = "☐ Kantor"
+        lokasi_rumah = "☐ Rumah"
+        lokasi_dinas = "☐ Dinas Luar / SPT"
+
+        if lokasi == "Kantor":
+            lokasi_kantor = "☑ Kantor"
+
+        elif lokasi == "Rumah":
+            lokasi_rumah = "☑ Rumah"
+
+        elif lokasi == "Dinas Luar / SPT":
+            lokasi_dinas = "☑ Dinas Luar / SPT"
+
+        worksheet.merge_cells("A1:J1")
+        worksheet["A1"] = "LOKASI BEKERJA"
+        worksheet["A1"].alignment = Alignment(horizontal="center")
+
+        worksheet.merge_cells("A2:J2")
+        worksheet["A2"] = f"{lokasi_kantor}    {lokasi_rumah}    {lokasi_dinas}"
+        worksheet["A2"].alignment = Alignment(horizontal="center")
+
         unit_user = st.session_state.get("unit", "")
 
         kasubbag = kasubbag_mapping.get(
