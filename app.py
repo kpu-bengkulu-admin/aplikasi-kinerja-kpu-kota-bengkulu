@@ -1496,6 +1496,42 @@ elif menu == "Data Kinerja":
 
     excel.seek(0)
 
+    # ================= TANDA TANGAN =================
+
+    last_row = worksheet.max_row + 3  # jarak dari data
+
+    worksheet.merge_cells(f"A{last_row}:E{last_row}")
+    worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
+
+    worksheet.merge_cells(f"F{last_row}:J{last_row}")
+    worksheet[f"F{last_row}"] = "Bengkulu, 23 Februari 2026"
+
+    worksheet.merge_cells(f"A{last_row+1}:E{last_row+1}")
+    worksheet[f"A{last_row+1}"] = "Kasub Bag. Perencanaan Data dan Informasi"
+
+    worksheet.merge_cells(f"F{last_row+1}:J{last_row+1}")
+    worksheet[f"F{last_row+1}"] = "Operator Layanan Operasional"
+
+    # ================= ALIGNMENT =================
+    for r in range(last_row, last_row + 6):
+        for c in range(1, 11):
+            worksheet.cell(row=r, column=c).alignment = Alignment(
+                horizontal="center",
+                vertical="center"
+            )
+
+    # ================= NAMA TTD =================
+    worksheet.merge_cells(f"A{last_row+4}:E{last_row+4}")
+    worksheet[f"A{last_row+4}"] = "Erlina, SE, ME."
+
+    worksheet.merge_cells(f"F{last_row+4}:J{last_row+4}")
+    worksheet[f"F{last_row+4}"] = "Evan Suryadi"
+
+    for c in range(1, 11):
+        worksheet.cell(row=last_row+4, column=c).alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
     st.download_button(
         label="📥 Download Excel",
         data=excel,
