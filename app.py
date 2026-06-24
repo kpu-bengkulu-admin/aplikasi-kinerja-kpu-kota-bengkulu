@@ -1645,15 +1645,16 @@ elif menu == "Data Kinerja":
         else:
             jabatan_bawah = "-"
 
+        if "NIP" in df_export.columns and not df_export.empty and df_export["NIP"].notna().any():
+            nip_bawah = df_export["NIP"].iloc[-1]
+        else:
+            nip_bawah = "-"
+
         if "Nama" in df_export.columns and not df_export.empty and df_export["Nama"].notna().any():
             nama_bawah = df_export["Nama"].iloc[-1]
         else:
             nama_bawah = "-"
 
-        if "NIP" in df_export.columns and not df_export.empty and df_export["NIP"].notna().any():
-            nip_bawah = df_export["NIP"].iloc[-1]
-        else:
-            nip_bawah = "-"
 
         # ================= HEADER TTD =================
         worksheet.merge_cells(f"A{last_row}:E{last_row}")
@@ -1669,6 +1670,12 @@ elif menu == "Data Kinerja":
         worksheet.merge_cells(f"F{last_row+1}:J{last_row+1}")
         worksheet[f"F{last_row+1}"] = jabatan_bawah
 
+        # ================= NIP =================
+        worksheet.merge_cells(f"A{last_row+2}:E{last_row+2}")
+        worksheet[f"A{last_row+2}"] = nip_atasan
+
+        worksheet.merge_cells(f"F{last_row+2}:J{last_row+2}")
+        worksheet[f"F{last_row+2}"] = nip_bawah
 
         # ================= ALIGNMENT =================
         for r in range(last_row, last_row + 4):
@@ -1690,14 +1697,6 @@ elif menu == "Data Kinerja":
                 horizontal="center",
                 vertical="center"
             )
-
-        # ================= NIP =================
-        worksheet.merge_cells(f"A{last_row+2}:E{last_row+2}")
-        worksheet[f"A{last_row+2}"] = nip_atasan
-
-        worksheet.merge_cells(f"F{last_row+2}:J{last_row+2}")
-        worksheet[f"F{last_row+2}"] = nip_bawah
-
 
     excel.seek(0)
 
