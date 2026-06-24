@@ -1574,42 +1574,77 @@ elif menu == "Data Kinerja":
             else date.today().strftime("%d %B %Y")
         )
 
-        role_user = str(st.session_state.role).strip().lower()
+        role_user = str(
+            st.session_state.role
+        ).strip().lower()
+        unit_user = st.session_state.unit
 
-        if role_user == "Pegawai":
+        kasub_df = users_df[
+            (users_df["Role"].astype(str).str.strip() == "Kasubbag") &
+            (users_df["Unit"].astype(str).str.strip() == unit_user)
+        ]
 
-            jabatan_atasan = st.session_state.get(
-                "kasubbag",
-                "Kasub Bag. Perencanaan Data dan Informasi"
-            )
-            nama_atasan = st.session_state.get(
-                "nama_kasubbag",
-                "Kasubbag"
-            )
+        pimpinan_df = users_df[
+            users_df["Role"].astype(str).str.strip() == "Pimpinan"
+        ]
 
-            jabatan_bawah = st.session_state.jabatan
-            nama_bawah = st.session_state.nama
+        if role_user in ["pegawai", "admin"]:
 
-        elif role_user == "Kasubbag":
+            if not kasub_df.empty:
 
-            jabatan_atasan = "Pimpinan"
-            nama_atasan = st.session_state.get("nama_Pimpinan", "Pimpinan")
+                nama_atasan = kasub_df.iloc[0]["Nama"]
 
-            jabatan_bawah = st.session_state.jabatan
-            nama_bawah = st.session_state.nama
+                nip_atasan = str(
+                    kasub_df.iloc[0]["NIP"]
+                )
+
+                jabatan_atasan = str(
+                    kasub_df.iloc[0]["Jabatan"]
+                )
+
+            else:
+
+                nama_atasan = "Kasubbag"
+                nip_atasan = "-"
+                jabatan_atasan = "Kasubbag"
+
+        elif role_user == "kasubbag":
+
+            if not pimpinan_df.empty:
+
+                nama_atasan = pimpinan_df.iloc[0]["Nama"]
+
+                nip_atasan = str(
+                    pimpinan_df.iloc[0]["NIP"]
+                )
+
+                jabatan_atasan = str(
+                    pimpinan_df.iloc[0]["Jabatan"]
+                )
+
+            else:
+
+                nama_atasan = "Pimpinan"
+                nip_atasan = "-"
+                jabatan_atasan = "Pimpinan"
 
         else:
 
-            jabatan_atasan = "Pimpinan"
-            nama_atasan = st.session_state.get("nama_Pimpinan", "Pimpinan")
+            nama_atasan = "-"
+            nip_atasan = "-"
+            jabatan_atasan = "-"
 
             jabatan_bawah = st.session_state.jabatan
-            nama_bawah = st.session_state.nama
+            nama_bawah = st.session_state.nama            nama_bawah = st.session_state.nama
 
         # ================= HITUNG POSISI TTD =================
         last_row = start_row + len(df_export) + 2
 
         # ================= HEADER TTD =================
+        st.write("ROLE :", role_user)
+        st.write("UNIT :", unit_user)
+        st.write("ATASAN :", nama_atasan)
+       st.write("NIP :", nip_atasan)
         worksheet.merge_cells(f"A{last_row}:E{last_row}")
         worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
 
