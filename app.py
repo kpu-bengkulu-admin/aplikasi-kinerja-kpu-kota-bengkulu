@@ -1670,6 +1670,19 @@ elif menu == "Data Kinerja":
         worksheet.merge_cells(f"F{last_row+1}:J{last_row+1}")
         worksheet[f"F{last_row+1}"] = jabatan_bawah
 
+        # ================= NAMA =================
+        worksheet.merge_cells(f"A{last_row+3}:E{last_row+3}")
+        worksheet[f"A{last_row+3}"] = nama_atasan
+
+        worksheet.merge_cells(f"F{last_row+3}:J{last_row+3}")
+        worksheet[f"F{last_row+3}"] = nama_bawah
+
+        for c in range(1, 11):
+            worksheet.cell(row=last_row+3, column=c).alignment = Alignment(
+                horizontal="center",
+                vertical="center"
+            )
+
         # ================= NIP =================
         worksheet.merge_cells(f"A{last_row+2}:E{last_row+2}")
         worksheet[f"A{last_row+2}"] = nip_atasan
@@ -1684,19 +1697,6 @@ elif menu == "Data Kinerja":
                     horizontal="center",
                     vertical="center"
                 )
-
-        # ================= NAMA =================
-        worksheet.merge_cells(f"A{last_row+3}:E{last_row+3}")
-        worksheet[f"A{last_row+3}"] = nama_atasan
-
-        worksheet.merge_cells(f"F{last_row+3}:J{last_row+3}")
-        worksheet[f"F{last_row+3}"] = nama_bawah
-
-        for c in range(1, 11):
-            worksheet.cell(row=last_row+3, column=c).alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
 
     excel.seek(0)
 
