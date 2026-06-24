@@ -1650,6 +1650,11 @@ elif menu == "Data Kinerja":
         else:
             nama_bawah = "-"
 
+        if "NIP" in df_export.columns and not df_export.empty and df_export["NIP"].notna().any():
+            nip_bawah = df_export["NIP"].iloc[-1]
+        else:
+            nip_bawah = "-"
+
         # ================= HEADER TTD =================
         worksheet.merge_cells(f"A{last_row}:E{last_row}")
         worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
