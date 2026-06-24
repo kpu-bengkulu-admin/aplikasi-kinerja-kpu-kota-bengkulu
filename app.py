@@ -1690,13 +1690,17 @@ elif menu == "Data Kinerja":
         worksheet.merge_cells(f"F{last_row+2}:J{last_row+2}")
         worksheet[f"F{last_row+2}"] = nip_bawah
 
-        # ================= ALIGNMENT =================
-        for r in range(last_row, last_row + 4):
-            for c in range(1, 11):
-                worksheet.cell(row=r, column=c).alignment = Alignment(
-                    horizontal="center",
-                    vertical="center"
-                )
+        worksheet[f"A{last_row}"].alignment = Alignment(horizontal="center")
+        worksheet[f"F{last_row}"].alignment = Alignment(horizontal="center")
+
+        worksheet[f"A{last_row+1}"].alignment = Alignment(horizontal="center")
+        worksheet[f"F{last_row+1}"].alignment = Alignment(horizontal="center")
+
+        worksheet[f"A{last_row+2}"].alignment = Alignment(horizontal="center")
+        worksheet[f"F{last_row+2}"].alignment = Alignment(horizontal="center")
+
+        worksheet[f"A{last_row+3}"].alignment = Alignment(horizontal="center")
+        worksheet[f"F{last_row+3}"].alignment = Alignment(horizontal="center")
 
     excel.seek(0)
 
