@@ -1574,6 +1574,7 @@ elif menu == "Data Kinerja":
             else date.today().strftime("%d %B %Y")
         )
 
+        users_df = load_users()
         role_user = str(
             st.session_state.role
         ).strip().lower()
