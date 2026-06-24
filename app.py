@@ -409,12 +409,9 @@ if (
     ">
         <h1>🛠️ Maintenance</h1>
 
-        <h3>
         Aplikasi E-Kinerja KPU Kota Bengkulu
         Sedang Dalam Pemeliharaan
-        </h3>
-
-        <p>
+        
         Mohon maaf atas ketidaknyamanan ini.
         Silakan coba kembali beberapa saat lagi.
         </p>
@@ -1593,7 +1590,7 @@ elif menu == "Data Kinerja":
         elif role_user == "Kasubbag":
 
             jabatan_atasan = "Pimpinan"
-            nama_atasan = st.session_state.get("nama_pimpinan", "Pimpinan")
+            nama_atasan = st.session_state.get("nama_Pimpinan", "Pimpinan")
 
             jabatan_bawah = st.session_state.jabatan
             nama_bawah = st.session_state.nama
@@ -1601,7 +1598,7 @@ elif menu == "Data Kinerja":
         else:
 
             jabatan_atasan = "Pimpinan"
-            nama_atasan = st.session_state.get("nama_pimpinan", "Pimpinan")
+            nama_atasan = st.session_state.get("nama_Pimpinan", "Pimpinan")
 
             jabatan_bawah = st.session_state.jabatan
             nama_bawah = st.session_state.nama
