@@ -1641,10 +1641,6 @@ elif menu == "Data Kinerja":
         last_row = start_row + len(df_export) + 2
 
         # ================= HEADER TTD =================
-        st.write("ROLE :", role_user)
-        st.write("UNIT :", unit_user)
-        st.write("ATASAN :", nama_atasan)
-       st.write("NIP :", nip_atasan)
         worksheet.merge_cells(f"A{last_row}:E{last_row}")
         worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
 
