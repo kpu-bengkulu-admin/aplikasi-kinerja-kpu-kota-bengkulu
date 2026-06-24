@@ -1635,7 +1635,7 @@ elif menu == "Data Kinerja":
             jabatan_atasan = "-"
 
             jabatan_bawah = st.session_state.jabatan
-            nama_bawah = st.session_state.nama            nama_bawah = st.session_state.nama
+            nama_bawah = st.session_state.nama
 
         # ================= HITUNG POSISI TTD =================
         last_row = start_row + len(df_export) + 2
