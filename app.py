@@ -1599,8 +1599,10 @@ elif menu == "Data Kinerja":
                     kasub_df.iloc[0]["NIP"]
                 )
 
-                jabatan_atasan = str(
-                    kasub_df.iloc[0]["Jabatan"]
+                jabatan_atasan = (
+                    f"{kasub_df.iloc[0]['Jabatan']} {kasub_df.iloc[0]['Unit']}"
+                    if not kasub_df.empty
+                    else "Kasubbag"
                 )
 
             else:
@@ -1661,6 +1663,13 @@ elif menu == "Data Kinerja":
 
         worksheet.merge_cells(f"F{last_row+1}:J{last_row+1}")
         worksheet[f"F{last_row+1}"] = jabatan_bawah
+
+        # ================= NIP =================
+        worksheet.merge_cells(f"A{last_row+2}:E{last_row+2}")
+        worksheet[f"A{last_row+2}"] = nip_atasan
+
+        worksheet.merge_cells(f"F{last_row+2}:J{last_row+2}")
+        worksheet[f"F{last_row+2}"] = nip_bawah
 
         # ================= ALIGNMENT =================
         for r in range(last_row, last_row + 4):
