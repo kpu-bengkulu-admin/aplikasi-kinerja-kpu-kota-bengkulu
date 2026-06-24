@@ -1641,6 +1641,11 @@ elif menu == "Data Kinerja":
         # ================= HITUNG POSISI TTD =================
         last_row = start_row + len(df_export) + 2
 
+   if "Jabatan" in df_export.columns and not df_export.empty and df_export["Jabatan"].notna().any():
+            jabatan_bawah = df_export["Jabatan"].iloc[-1]
+   else:
+            jabatan_bawah = "-"
+
         # ================= HEADER TTD =================
         worksheet.merge_cells(f"A{last_row}:E{last_row}")
         worksheet[f"A{last_row}"] = "Menyetujui Atasan Langsung"
