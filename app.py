@@ -409,9 +409,12 @@ if (
     ">
         <h1>🛠️ Maintenance</h1>
 
+        <h3>
         Aplikasi E-Kinerja KPU Kota Bengkulu
         Sedang Dalam Pemeliharaan
-        
+        </h3>
+
+        <p>
         Mohon maaf atas ketidaknyamanan ini.
         Silakan coba kembali beberapa saat lagi.
         </p>
