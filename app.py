@@ -1524,7 +1524,7 @@ elif menu == "Data Kinerja":
 
         header_row = start_row + 1
 
-        for cell in worksheet[header_row]:
+        for cell in worksheet[header_row:header_row]:
             cell.alignment = Alignment(
                 horizontal="center",
                 vertical="center",
