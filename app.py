@@ -1818,19 +1818,39 @@ elif menu == "Data Kinerja":
 
         from openpyxl.utils import get_column_letter
 
-        # ================= AUTO WIDTH KOLOM (MAX 40 KARAKTER) =================
-        for col in worksheet.columns:
-            max_length = 0
-            column_index = col[0].column  # ambil nomor kolom
+        for col_idx in range(1, worksheet.max_column + 1):
 
-            for cell in col:
+            max_length = 0
+
+            for row_idx in range(1, worksheet.max_row + 1):
+                cell = worksheet.cell(row=row_idx, column=col_idx)
+
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))
 
-            # batas maksimal lebar kolom (biar tidak terlalu lebar)
-            adjusted_width = min(max_length + 2, 40)
+            # ================= RULE KHUSUS KOLOM =================
+            if col_idx == 1:  # NO
+                adjusted_width = 5
 
-            worksheet.column_dimensions[get_column_letter(column_index)].width = adjusted_width
+            elif col_idx == 3:  # NIP
+                adjusted_width = 18
+
+            elif col_idx == 6:  # Jam Masuk
+                adjusted_width = 12
+
+            elif col_idx == 7:  # Jam Keluar
+                adjusted_width = 12
+
+            elif col_idx == 8:  # Uraian
+                adjusted_width = 40
+
+            elif col_idx == 9:  # Output
+                adjusted_width = 25
+
+            else:
+                adjusted_width = min(max_length + 2, 30)
+
+            worksheet.column_dimensions[get_column_letter(col_idx)].width = adjusted_width
 
     excel.seek(0)
 
