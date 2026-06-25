@@ -1585,7 +1585,6 @@ elif menu == "Data Kinerja":
             )
 
         worksheet = writer.sheets["Data"]
-       worksheet.print_title_rows = "6:6"
 
         # ================= SETTING KERTAS A4 =================
         from openpyxl.worksheet.page import PageMargins
