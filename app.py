@@ -1482,7 +1482,7 @@ elif menu == "Data Kinerja":
 
         # ================= AMBIL HANYA ABSENSI TERAKHIR PER HARI =================
         df_export["Tanggal"] = pd.to_datetime(df_export["Tanggal"], errors="coerce")
-        df_export["Jam Masuk"] = pd.to_datetime(df_export["Jam Masuk"], errors="coerce")
+        df_export["Jam Masuk"] = pd.to_datetime(df_export["Jam Masuk"], errors="coerce").dt.strftime("%H:%M")
 
         # urutkan dari kecil ke besar (biar terakhir = sore)
         df_export = df_export.sort_values(["Nama", "Tanggal", "Jam Masuk"])
