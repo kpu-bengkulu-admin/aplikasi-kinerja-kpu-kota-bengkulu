@@ -1520,71 +1520,11 @@ elif menu == "Data Kinerja":
             startrow=start_row
         )
 
+        worksheet = writer.sheets["Data"]
+
         from openpyxl.styles import Alignment, Font
 
         header_row = start_row + 1
-
-        for cell in worksheet[header_row:header_row]:
-            cell.alignment = Alignment(
-                horizontal="center",
-                vertical="center",
-                wrap_text=True
-            )
-            cell.font = Font(
-                bold=True
-            )
-
-        for row in worksheet.iter_rows(
-            min_row=header_row + 1,
-            max_row=worksheet.max_row
-        ):
-            # No
-            row[0].alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-            # Nama
-            row[1].alignment = Alignment(
-                vertical="top"
-            )
-
-            # NIP
-            row[2].alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-            # Jabatan
-            row[3].alignment = Alignment(
-                vertical="top"
-            )
-
-            # Tanggal
-            row[4].alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-            # Jam Masuk
-            row[5].alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-            # Jam Keluar
-            row[6].alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-            # Lokasi
-            row[9].alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-        worksheet = writer.sheets["Data"]
 
         # ================= SETTING KERTAS A4 =================
         from openpyxl.worksheet.page import PageMargins
