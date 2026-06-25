@@ -1522,6 +1522,27 @@ elif menu == "Data Kinerja":
 
         worksheet = writer.sheets["Data"]
 
+        # ================= SETTING KERTAS A4 =================
+        from openpyxl.worksheet.page import PageMargins
+
+        worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
+        worksheet.page_setup.orientation = "landscape"
+       worksheet.sheet_view.zoomScale = 85
+
+        worksheet.page_margins = PageMargins(
+            left=0.3,
+            right=0.3,
+            top=0.5,
+            bottom=0.5,
+            header=0.2,
+            footer=0.2
+        )
+
+        worksheet.page_setup.fitToWidth = 1
+        worksheet.page_setup.fitToHeight = 0
+
+        worksheet.print_options.horizontalCentered = True
+
         # ================= LEBAR KOLOM =================
         worksheet.column_dimensions["A"].width = 8
         worksheet.column_dimensions["B"].width = 18
@@ -1767,6 +1788,10 @@ elif menu == "Data Kinerja":
 
         worksheet[f"A{last_row+6}"].alignment = Alignment(horizontal="center")
         worksheet[f"F{last_row+6}"].alignment = Alignment(horizontal="center")
+
+        # ================= AREA CETAK =================
+        last_print_row = last_row + 6
+        worksheet.print_area = f"A1:J{last_print_row}"
 
     excel.seek(0)
 
