@@ -1609,7 +1609,12 @@ elif menu == "Data Kinerja":
             header=0.1,
             footer=0.1
         )
+
+        # ================= JUDUL HANYA DI HALAMAN 1 =================
         worksheet.print_title_rows = "6:6"
+
+        # ================= ZOOM =================
+        worksheet.sheet_view.zoomScale = 80
 
         # ================= LEBAR KOLOM =================
         worksheet.column_dimensions["A"].width = 8
@@ -1622,7 +1627,6 @@ elif menu == "Data Kinerja":
         worksheet.column_dimensions["H"].width = 50
         worksheet.column_dimensions["I"].width = 30
         worksheet.column_dimensions["J"].width = 15
-        worksheet.sheet_view.zoomScale = 80
 
         # ================= LOKASI CHECKBOX (AUTO 1 TERPILIH) =================
 
