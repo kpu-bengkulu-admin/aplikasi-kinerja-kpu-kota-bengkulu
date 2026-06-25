@@ -650,9 +650,9 @@ if menu == "Dashboard":
 
     periode_text = (
         f"Periode "
-        f"{start_periode.strftime('%d %B %Y')} "
+        f"{indo_date(start_periode)} "
         f"s/d "
-        f"{end_periode.strftime('%d %B %Y')}"
+        f"{indo_date(end_periode)}"
     )
 
     # ================= HERO =================
@@ -712,9 +712,9 @@ if menu == "Dashboard":
 
     periode_text = (
                f"Periode "
-               f"{start_periode.strftime('%d %B %Y')} "
+               f"{indo_date(start_periode)} "
                f"s/d "
-               f"{end_periode.strftime('%d %B %Y')}"
+               f"{indo_date(end_periode)}"
              )
 
     # ================= FORMAT DATA =================
@@ -1676,18 +1676,39 @@ elif menu == "Data Kinerja":
             for cell in row:
                 cell.border = thin_border
 
+
+        BULAN_ID = {
+            "January": "Januari",
+            "February": "Februari",
+            "March": "Maret",
+            "April": "April",
+            "May": "Mei",
+            "June": "Juni",
+            "July": "Juli",
+            "August": "Agustus",
+            "September": "September",
+            "October": "Oktober",
+            "November": "November",
+            "December": "Desember"
+        }
+
+        def indo_date(dt):
+            text = dt.strftime("%d %B %Y")
+            for eng, indo in BULAN_ID.items():
+                text = text.replace(eng, indo)
+            return text
+
         # ================= TTD LOGIC =================
         tanggal_ttd = (
-            tgl[1].strftime("%d %B %Y")
+            indo_date(tgl[1])
             if len(tgl) == 2
-            else date.today().strftime("%d %B %Y")
+            else indo_date(date.today())
         )
 
         users_df = load_users()
         role_user = str(
             st.session_state.role
         ).strip().lower()
-        unit_user = st.session_state.unit
 
         kasub_df = users_df[
             (users_df["Role"].astype(str).str.strip() == "Kasubbag") &
