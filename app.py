@@ -1528,19 +1528,23 @@ elif menu == "Data Kinerja":
         worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
         worksheet.page_setup.orientation = "landscape"
 
+        # Paksa masuk 1 halaman
+        worksheet.page_setup.fitToPage = True
+        worksheet.page_setup.fitToWidth = 1
+        worksheet.page_setup.fitToHeight = 1
+
+        # Center horizontal dan vertical
+        worksheet.print_options.horizontalCentered = True
+        worksheet.print_options.verticalCentered = True
+
         worksheet.page_margins = PageMargins(
-            left=0.3,
-            right=0.3,
+            left=0.25,
+            right=0.25,
             top=0.5,
             bottom=0.5,
             header=0.2,
             footer=0.2
         )
-
-        worksheet.page_setup.fitToWidth = 1
-        worksheet.page_setup.fitToHeight = 0
-
-        worksheet.print_options.horizontalCentered = True
 
         # ================= LEBAR KOLOM =================
         worksheet.column_dimensions["A"].width = 8
@@ -1553,6 +1557,7 @@ elif menu == "Data Kinerja":
         worksheet.column_dimensions["H"].width = 50
         worksheet.column_dimensions["I"].width = 30
         worksheet.column_dimensions["J"].width = 15
+        worksheet.sheet_view.zoomScale = 80
 
         # ================= LOKASI CHECKBOX (AUTO 1 TERPILIH) =================
 
@@ -1791,6 +1796,9 @@ elif menu == "Data Kinerja":
         # ================= AREA CETAK =================
         last_print_row = last_row + 6
         worksheet.print_area = f"A1:J{last_print_row}"
+
+        # Scaling
+        worksheet.sheet_properties.pageSetUpPr.fitToPage = True
 
     excel.seek(0)
 
