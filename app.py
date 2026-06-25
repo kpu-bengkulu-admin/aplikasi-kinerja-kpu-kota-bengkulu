@@ -1832,8 +1832,11 @@ elif menu == "Data Kinerja":
             if col_idx == 1:  # NO
                 adjusted_width = 5
 
+            if col_idx == 2:  # Nama
+                adjusted_width = 30
+
             elif col_idx == 3:  # NIP
-                adjusted_width = 18
+                adjusted_width = 20
 
             elif col_idx == 6:  # Jam Masuk
                 adjusted_width = 12
@@ -1845,7 +1848,10 @@ elif menu == "Data Kinerja":
                 adjusted_width = 40
 
             elif col_idx == 9:  # Output
-                adjusted_width = 25
+                adjusted_width = 40
+
+            elif col_idx == 10:  # Lokasi
+                adjusted_width = 14
 
             else:
                 adjusted_width = min(max_length + 2, 30)
