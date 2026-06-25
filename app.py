@@ -1480,21 +1480,15 @@ elif menu == "Data Kinerja":
 
         df_export = df.copy()
 
-        # ================= FILTER WFH (AMBIL HANYA ABSENSI TERAKHIR/SORE) ==============
-        if "Jenis" in df_export.columns:
+        # ================= AMBIL HANYA ABSENSI TERAKHIR PER HARI =================
+        df_export["Tanggal"] = pd.to_datetime(df_export["Tanggal"], errors="coerce")
+        df_export["Jam Masuk"] = pd.to_datetime(df_export["Jam Masuk"], errors="coerce")
 
-            df_export["Tanggal"] = pd.to_datetime(df_export["Tanggal"], errors="coerce")
+        # urutkan dari kecil ke besar (biar terakhir = sore)
+        df_export = df_export.sort_values(["Nama", "Tanggal", "Jam Masuk"])
 
-            df_export["Jam Masuk"] = pd.to_datetime(df_export["Jam Masuk"], errors="coerce")
-
-            df_wfh = df_export[df_export["Jenis"] == "WFH"].copy()
-            df_non_wfh = df_export[df_export["Jenis"] != "WFH"].copy()
-
-            df_wfh = df_wfh.sort_values("Jam Masuk").groupby(
-                ["Nama", "Tanggal"], as_index=False
-            ).tail(1)
-
-            df_export = pd.concat([df_non_wfh, df_wfh])
+        # ambil hanya data terakhir per Nama + Tanggal
+        df_export = df_export.groupby(["Nama", "Tanggal"], as_index=False).tail(1)
 
         df_export.insert(0, "No", range(1, len(df_export) + 1))
 
