@@ -1527,13 +1527,14 @@ elif menu == "Data Kinerja":
         header_row = start_row + 1
 
         # ================= HEADER TABEL (NO - LOKASI) =================
-        for cell in worksheet[header_row]:
+        for col in range(1, worksheet.max_column + 1):
+            cell = worksheet.cell(row=header_row, column=col)
+
             cell.font = Font(bold=True)
             cell.alignment = Alignment(
                 horizontal="center",
                 vertical="center",
-                wrap_text=True,
-                shrink_to_fit=True
+                wrap_text=True
             )
 
         # ================= SETTING KERTAS A4 =================
