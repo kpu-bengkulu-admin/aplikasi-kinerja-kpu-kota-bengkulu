@@ -1671,24 +1671,24 @@ elif menu == "Data Kinerja":
         worksheet[f"F{last_row+1}"] = jabatan_bawah
 
         # ================= NAMA =================
-        worksheet.merge_cells(f"A{last_row+3}:E{last_row+3}")
-        worksheet[f"A{last_row+3}"] = nama_atasan
+        worksheet.merge_cells(f"A{last_row+5}:E{last_row+5}")
+        worksheet[f"A{last_row+5}"] = nama_atasan
 
-        worksheet.merge_cells(f"F{last_row+3}:J{last_row+3}")
-        worksheet[f"F{last_row+3}"] = nama_bawah
+        worksheet.merge_cells(f"F{last_row+5}:J{last_row+5}")
+        worksheet[f"F{last_row+5}"] = nama_bawah
 
         for c in range(1, 11):
-            worksheet.cell(row=last_row+3, column=c).alignment = Alignment(
+            worksheet.cell(row=last_row+5, column=c).alignment = Alignment(
                 horizontal="center",
                 vertical="center"
             )
 
         # ================= NIP =================
-        worksheet.merge_cells(f"A{last_row+2}:E{last_row+2}")
-        worksheet[f"A{last_row+2}"] = nip_atasan
+        worksheet.merge_cells(f"A{last_row+6}:E{last_row+6}")
+        worksheet[f"A{last_row+6}"] = nip_atasan
 
-        worksheet.merge_cells(f"F{last_row+2}:J{last_row+2}")
-        worksheet[f"F{last_row+2}"] = nip_bawah
+        worksheet.merge_cells(f"F{last_row+6}:J{last_row+6}")
+        worksheet[f"F{last_row+6}"] = nip_bawah
 
         worksheet[f"A{last_row}"].alignment = Alignment(horizontal="center")
         worksheet[f"F{last_row}"].alignment = Alignment(horizontal="center")
@@ -1696,11 +1696,11 @@ elif menu == "Data Kinerja":
         worksheet[f"A{last_row+1}"].alignment = Alignment(horizontal="center")
         worksheet[f"F{last_row+1}"].alignment = Alignment(horizontal="center")
 
-        worksheet[f"A{last_row+2}"].alignment = Alignment(horizontal="center")
-        worksheet[f"F{last_row+2}"].alignment = Alignment(horizontal="center")
+        worksheet[f"A{last_row+5}"].alignment = Alignment(horizontal="center")
+        worksheet[f"F{last_row+5}"].alignment = Alignment(horizontal="center")
 
-        worksheet[f"A{last_row+3}"].alignment = Alignment(horizontal="center")
-        worksheet[f"F{last_row+3}"].alignment = Alignment(horizontal="center")
+        worksheet[f"A{last_row+6}"].alignment = Alignment(horizontal="center")
+        worksheet[f"F{last_row+6}"].alignment = Alignment(horizontal="center")
 
     excel.seek(0)
 
