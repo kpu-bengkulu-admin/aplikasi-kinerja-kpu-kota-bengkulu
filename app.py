@@ -1551,21 +1551,40 @@ elif menu == "Data Kinerja":
         # ================= HEADER =================
         worksheet.merge_cells("A1:J1")
         worksheet["A1"] = "LAPORAN KINERJA HARIAN PEGAWAI"
-        worksheet["A1"].font = Font(bold=True, size=16)
-        worksheet["A1"].alignment = Alignment(horizontal="center")
+        worksheet["A1"].font = Font(
+            bold=True,
+            size=16
+        )
+        worksheet["A1"].alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
 
         worksheet.merge_cells("A2:J2")
         worksheet["A2"] = "KOMISI PEMILIHAN UMUM KOTA BENGKULU"
-        worksheet["A2"].alignment = Alignment(horizontal="center")
+        worksheet["A2"].alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
 
         worksheet.merge_cells("A3:J3")
         worksheet["A3"] = periode_text
-        worksheet["A3"].alignment = Alignment(horizontal="center")
+        worksheet["A3"].alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
+
+        worksheet.row_dimensions[1].height = 25
+        worksheet.row_dimensions[2].height = 20
+        worksheet.row_dimensions[3].height = 20
 
         # ================= FORMAT CELL =================
-        for row_excel in worksheet.iter_rows():
+        for row_excel in worksheet.iter_rows(min_row=4):
             for cell in row_excel:
-                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                cell.alignment = Alignment(
+                    wrap_text=True,
+                    vertical="top"
+                )
 
         # ================= TTD LOGIC =================
         tanggal_ttd = (
