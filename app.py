@@ -1816,6 +1816,8 @@ elif menu == "Data Kinerja":
         last_print_row = last_row + 6
         worksheet.print_area = f"A1:J{last_print_row}"
 
+        from openpyxl.utils import get_column_letter
+
         # ================= AUTO WIDTH KOLOM (MAX 40 KARAKTER) =================
         for col in worksheet.columns:
             max_length = 0
