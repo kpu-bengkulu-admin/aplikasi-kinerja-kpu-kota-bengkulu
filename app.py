@@ -1526,6 +1526,19 @@ elif menu == "Data Kinerja":
 
         header_row = start_row + 1
 
+        # ================= HEADER TABEL (NO - LOKASI) =================
+        for row in worksheet.iter_rows(
+            min_row=header_row,
+            max_row=header_row
+        ):
+            for cell in row:
+                cell.alignment = Alignment(
+                    horizontal="center",
+                    vertical="center",
+                    wrap_text=True
+                )
+                cell.font = Font(bold=True)
+
         # ================= SETTING KERTAS A4 =================
         from openpyxl.worksheet.page import PageMargins
 
