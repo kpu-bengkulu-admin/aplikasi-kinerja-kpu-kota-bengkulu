@@ -1693,7 +1693,8 @@ elif menu == "Data Kinerja":
             jabatan_atasan = "-"
 
         # ================= HITUNG POSISI TTD =================
-        last_row = start_row + len(df_export) + 2
+        last_row = start_row + len(df_export) + 4
+
         # ================= DATA BAWAH (PEGAWAI) =================
         if "Jabatan" in df_export.columns and not df_export.empty and df_export["Jabatan"].notna().any():
             jabatan_bawah = df_export["Jabatan"].iloc[-1]
