@@ -1832,7 +1832,7 @@ elif menu == "Data Kinerja":
             if col_idx == 1:  # No
                 adjusted_width = 5
 
-            if col_idx == 2:  # Nama
+            elif col_idx == 2:  # Nama
                 adjusted_width = 30
 
             elif col_idx == 3:  # NIP
