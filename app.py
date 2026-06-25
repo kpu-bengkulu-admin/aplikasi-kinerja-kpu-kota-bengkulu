@@ -707,7 +707,8 @@ if menu == "Dashboard":
         st.info("Belum ada data")
         st.stop()
 
-        BULAN_ID = {
+    def indo_date(dt):
+        bulan = {
             "January": "Januari",
             "February": "Februari",
             "March": "Maret",
@@ -722,12 +723,12 @@ if menu == "Dashboard":
             "December": "Desember"
         }
 
-        def indo_date(dt):
-            text = dt.strftime("%d %B %Y")
-            for eng, indo in BULAN_ID.items():
-                text = text.replace(eng, indo)
-            return text
+        text = dt.strftime("%d %B %Y")
 
+        for eng, indo in bulan.items():
+            text = text.replace(eng, indo)
+
+        return text
 # ================= PERIODE TEXT =================
     start_periode, end_periode = get_periode_kinerja()
 
