@@ -1527,7 +1527,6 @@ elif menu == "Data Kinerja":
 
         worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
         worksheet.page_setup.orientation = "landscape"
-       worksheet.sheet_view.zoomScale = 85
 
         worksheet.page_margins = PageMargins(
             left=0.3,
