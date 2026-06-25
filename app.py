@@ -1829,7 +1829,7 @@ elif menu == "Data Kinerja":
                     max_length = max(max_length, len(str(cell.value)))
 
             # ================= RULE KHUSUS KOLOM =================
-            if col_idx == 1:  # NO
+            if col_idx == 1:  # No
                 adjusted_width = 5
 
             if col_idx == 2:  # Nama
