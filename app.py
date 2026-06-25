@@ -1506,6 +1506,18 @@ elif menu == "Data Kinerja":
 
         worksheet = writer.sheets["Data"]
 
+        # ================= LEBAR KOLOM =================
+        worksheet.column_dimensions["A"].width = 8
+        worksheet.column_dimensions["B"].width = 18
+        worksheet.column_dimensions["C"].width = 20
+        worksheet.column_dimensions["D"].width = 25
+        worksheet.column_dimensions["E"].width = 15
+        worksheet.column_dimensions["F"].width = 12
+        worksheet.column_dimensions["G"].width = 12
+        worksheet.column_dimensions["H"].width = 50
+        worksheet.column_dimensions["I"].width = 30
+        worksheet.column_dimensions["J"].width = 15
+
         # ================= LOKASI CHECKBOX (AUTO 1 TERPILIH) =================
 
         lokasi = df_export["Lokasi"].iloc[0] if not df_export.empty else ""
