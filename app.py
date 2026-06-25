@@ -1495,6 +1495,12 @@ elif menu == "Data Kinerja":
             "Lokasi"
         ]]
 
+        # ================= FORMAT TANGGAL =================
+        df_export["Tanggal"] = pd.to_datetime(
+            df_export["Tanggal"],
+            errors="coerce"
+        ).dt.strftime("%d/%m/%Y")
+
         start_row = 5
 
         df_export.to_excel(
