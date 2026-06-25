@@ -1558,7 +1558,7 @@ elif menu == "Data Kinerja":
         nama_atasan = kasubbag["nama"]
         nip_atasan = kasubbag["nip"]
 
-        from openpyxl.styles import Font, Alignment
+        from openpyxl.styles import Font, Alignment, Border, Side
 
         # ================= HEADER =================
         worksheet.merge_cells("A1:J1")
@@ -1590,6 +1590,14 @@ elif menu == "Data Kinerja":
         worksheet.row_dimensions[2].height = 20
         worksheet.row_dimensions[3].height = 20
 
+        # ================= BORDER TABEL =================
+        thin_border = Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin")
+        )
+
         # ================= FORMAT CELL =================
         for row_excel in worksheet.iter_rows(min_row=4):
             for cell in row_excel:
@@ -1597,6 +1605,16 @@ elif menu == "Data Kinerja":
                     wrap_text=True,
                     vertical="top"
                 )
+
+        # ================= BORDER DATA =================
+        for row in worksheet.iter_rows(
+            min_row=start_row + 1,
+            max_row=start_row + len(df_export) + 1,
+            min_col=1,
+            max_col=10
+        ):
+            for cell in row:
+                cell.border = thin_border
 
         # ================= TTD LOGIC =================
         tanggal_ttd = (
