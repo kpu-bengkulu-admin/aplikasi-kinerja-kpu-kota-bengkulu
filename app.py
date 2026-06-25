@@ -707,37 +707,38 @@ if menu == "Dashboard":
         st.info("Belum ada data")
         st.stop()
 
-    def indo_date(dt):
-        bulan = {
-            "January": "Januari",
-            "February": "Februari",
-            "March": "Maret",
-            "April": "April",
-            "May": "Mei",
-            "June": "Juni",
-            "July": "Juli",
-            "August": "Agustus",
-            "September": "September",
-            "October": "Oktober",
-            "November": "November",
-            "December": "Desember"
-        }
+            def indo_date(dt):
+                bulan = {
+                    "January": "Januari",
+                    "February": "Februari",
+                    "March": "Maret",
+                    "April": "April",
+                    "May": "Mei",
+                    "June": "Juni",
+                    "July": "Juli",
+                    "August": "Agustus",
+                    "September": "September",
+                    "October": "Oktober",
+                    "November": "November",
+                    "December": "Desember"
+                }
 
-        text = dt.strftime("%d %B %Y")
+                text = dt.strftime("%d %B %Y")
 
-        for eng, indo in bulan.items():
-            text = text.replace(eng, indo)
+                for eng, indo in bulan.items():
+                    text = text.replace(eng, indo)
 
-        return text
-# ================= PERIODE TEXT =================
-    start_periode, end_periode = get_periode_kinerja()
+                return text
 
-    periode_text = (
-               f"Periode "
-               f"{indo_date(start_periode)} "
-               f"s/d "
-               f"{indo_date(end_periode)}"
-             )
+            # ================= PERIODE TEXT =================
+            start_periode, end_periode = get_periode_kinerja()
+
+            periode_text = (
+                f"Periode "
+                f"{indo_date(start_periode)} "
+                f"s/d "
+                f"{indo_date(end_periode)}"
+            )
 
     # ================= FORMAT DATA =================
     if "Durasi" in df.columns:
