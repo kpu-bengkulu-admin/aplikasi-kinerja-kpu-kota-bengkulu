@@ -738,9 +738,9 @@ if menu == "Dashboard":
 
     periode_text = (
                f"Periode "
-               f"{start_periode.strftime('%d %B %Y')} "
+               f"{indo_date(start_periode)} "
                f"s/d "
-               f"{end_periode.strftime('%d %B %Y')}"
+               f"{indo_date(end_periode)}"
              )
 
     # ================= FORMAT DATA =================
