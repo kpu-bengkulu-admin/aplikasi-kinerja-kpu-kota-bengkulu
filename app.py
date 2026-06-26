@@ -1665,6 +1665,8 @@ elif menu == "Data Kinerja":
             vertical="center"
         )
 
+       st.write("PERIODE EXCEL :", periode_text)
+
         worksheet.merge_cells("A3:J3")
         worksheet["A3"] = periode_text
         worksheet["A3"].alignment = Alignment(
