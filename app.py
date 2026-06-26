@@ -304,6 +304,31 @@ def get_periode_kinerja():
 
     return start_date, end_date
 
+# ================= FORMAT TANGGAL INDONESIA =================
+def indo_date(dt):
+
+    bulan = {
+        "January": "Januari",
+        "February": "Februari",
+        "March": "Maret",
+        "April": "April",
+        "May": "Mei",
+        "June": "Juni",
+        "July": "Juli",
+        "August": "Agustus",
+        "September": "September",
+        "October": "Oktober",
+        "November": "November",
+        "December": "Desember"
+    }
+
+    text = dt.strftime("%d %B %Y")
+
+    for eng, indo in bulan.items():
+        text = text.replace(eng, indo)
+
+    return text
+
 @st.cache_data(ttl=30)
 def load_config():
 
@@ -320,6 +345,7 @@ def load_config():
     except:
 
         return pd.DataFrame()
+
 
 # ================= SESSION LOGIN =================
 if "login" not in st.session_state:
@@ -650,9 +676,9 @@ if menu == "Dashboard":
 
     periode_text = (
         f"Periode "
-        f"{start_periode.strftime('%d %B %Y')} "
+        f"{indo_date(start_periode)} "
         f"s/d "
-        f"{end_periode.strftime('%d %B %Y')}"
+        f"{indo_date(end_periode)}"
     )
 
     # ================= HERO =================
@@ -1680,9 +1706,9 @@ elif menu == "Data Kinerja":
 
         # ================= TTD LOGIC =================
         tanggal_ttd = (
-            tgl[1].strftime("%d %B %Y")
+            indo_date(tgl[1])
             if len(tgl) == 2
-            else date.today().strftime("%d %B %Y")
+            else indo_date(date.today())
         )
 
         users_df = load_users()
