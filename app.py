@@ -17,6 +17,40 @@ import pandas as pd
 import io
 from datetime import date, datetime
 
+# ==========================================================
+# HAK AKSES
+# ==========================================================
+
+def boleh_input():
+    role = st.session_state.role
+    jabatan = str(st.session_state.jabatan).strip().upper()
+
+    # Admin
+    if role == "Admin":
+        return True
+
+    # Kasubbag
+    if role == "Kasubbag":
+        return True
+
+    # Pegawai
+    if role == "Pegawai":
+        return True
+
+    # Pimpinan
+    if role == "Pimpinan":
+
+        # Ketua & Anggota hanya melihat
+        if jabatan in ["KETUA", "ANGGOTA"]:
+            return False
+
+        # Sekretaris tetap bisa input
+        if jabatan == "SEKRETARIS":
+            return True
+
+    return False
+
+
 # ================= MAPPING KASUBBAG =================
 kasubbag_mapping = {
     "Parhubmas dan SDM": {
@@ -475,10 +509,46 @@ if st.session_state.show_toast:
     )
     st.session_state.show_toast = False
 
-menu = st.sidebar.radio(
-    "Menu",
-    ["Dashboard", "Input", "Data Kinerja", "Admin"]
-)
+role = st.session_state.role
+
+jabatan = str(st.session_state.jabatan).strip().upper()
+
+if role == "Admin":
+
+    menu = st.sidebar.radio(
+        "Menu",
+        ["Dashboard", "Input", "Data Kinerja", "Admin"]
+    )
+
+elif role == "Pimpinan":
+
+    if jabatan == "SEKRETARIS":
+
+        menu = st.sidebar.radio(
+            "Menu",
+            ["Dashboard", "Input", "Data Kinerja", "Admin"]
+        )
+
+    else:
+
+        menu = st.sidebar.radio(
+            "Menu",
+            ["Dashboard", "Data Kinerja", "Admin"]
+        )
+
+elif role == "Kasubbag":
+
+    menu = st.sidebar.radio(
+        "Menu",
+        ["Dashboard", "Input", "Data Kinerja", "Admin"]
+    )
+
+else:
+
+    menu = st.sidebar.radio(
+        "Menu",
+        ["Dashboard", "Input", "Data Kinerja"]
+    )
 
 if st.sidebar.button("Logout"):
     st.session_state.clear()
@@ -1012,6 +1082,10 @@ if menu == "Dashboard":
 # ================= INPUT =================
 elif menu == "Input":
 
+    if not boleh_input():
+        st.error("Anda tidak memiliki hak akses untuk menginput kinerja.")
+        st.stop()
+
     st.subheader("📍 Input Kinerja")
 
     lokasi = st.selectbox(
@@ -1455,32 +1529,49 @@ elif menu == "Data Kinerja":
                     f"[📸 Lihat Foto]({foto_data})"
                 )
 
+        # ================= HAK AKSES =================
+        read_only_pimpinan = (
+            st.session_state.role == "Pimpinan"
+            and str(st.session_state.jabatan).strip().upper()
+            in ["KETUA", "ANGGOTA"]
+        )
+
         # ================= TOMBOL =================
-        btn1, btn2, btn3 = st.columns([8,1,1])
 
-        if btn2.button(
-            "✏️",
-            key=f"edit{i}"
+        if not (
+            st.session_state.role == "Pimpinan"
+            and str(st.session_state.jabatan).strip().upper()
+            in ["KETUA", "ANGGOTA"]
         ):
 
-            st.session_state.edit = row
+            btn1, btn2, btn3 = st.columns([8,1,1])
 
-            st.rerun()
+            if btn2.button(
+                "✏️",
+                key=f"edit{i}"
+            ):
 
-        if btn3.button(
-            "🗑",
-            key=f"del{i}"
-        ):
+                st.session_state.edit = row
 
-            sheet.delete_rows(
-                int(row["row"])
-            )
+                st.rerun()
 
-            load_data.clear()
+            if btn3.button(
+                "🗑",
+                key=f"del{i}"
+            ):
 
-            st.rerun()
+                sheet.delete_rows(
+                    int(row["row"])
+                )
 
-        st.markdown("</div>", unsafe_allow_html=True)
+                load_data.clear()
+
+                st.rerun()
+
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
 
         st.divider()
 
@@ -1712,21 +1803,35 @@ elif menu == "Data Kinerja":
         )
 
         users_df = load_users()
+
         role_user = str(
             st.session_state.role
-        ).strip().lower()
-        unit_user = st.session_state.unit
+        ).strip().upper()
 
+        jabatan_user = str(
+            st.session_state.jabatan
+        ).strip().upper()
+
+        unit_user = str(
+            st.session_state.unit
+        ).strip().upper()
+
+        # ================= CARI KASUBBAG =================
         kasub_df = users_df[
-            (users_df["Role"].astype(str).str.strip() == "Kasubbag") &
-            (users_df["Unit"].astype(str).str.strip() == unit_user)
+            (users_df["Role"].astype(str).str.strip().str.upper() == "KASUBBAG") &
+            (users_df["Unit"].astype(str).str.strip().str.upper() == unit_user)
         ]
 
-        pimpinan_df = users_df[
-            users_df["Role"].astype(str).str.strip() == "Pimpinan"
+        # ================= CARI SEKRETARIS =================
+        sekretaris_df = users_df[
+            (users_df["Role"].astype(str).str.strip().str.upper() == "PIMPINAN") &
+            (users_df["Jabatan"].astype(str).str.strip().str.upper() == "SEKRETARIS")
         ]
 
-        if role_user in ["pegawai", "admin"]:
+        # ================= PENENTUAN ATASAN =================
+
+        # ---------- Pegawai & Admin ----------
+        if role_user in ["PEGAWAI", "ADMIN"]:
 
             if not kasub_df.empty:
 
@@ -1736,61 +1841,123 @@ elif menu == "Data Kinerja":
                     kasub_df.iloc[0]["NIP"]
                 )
 
-                jabatan_atasan = (
-                    f"{kasub_df.iloc[0]['Jabatan']} {kasub_df.iloc[0]['Unit']}"
-                    if not kasub_df.empty
-                    else "Kasubbag"
+                jabatan_atasan = str(
+                    f"{kasub_df.iloc[0]['Jabatan']} "
+                    f"{kasub_df.iloc[0]['Unit']}"
                 )
 
             else:
 
-                nama_atasan = "Kasubbag"
+                nama_atasan = "-"
+
                 nip_atasan = "-"
-                jabatan_atasan = "Kasubbag"
 
-        elif role_user == "kasubbag":
+                jabatan_atasan = "-"
 
-            if not pimpinan_df.empty:
+        # ---------- Kasubbag ----------
+        elif role_user == "KASUBBAG":
 
-                nama_atasan = pimpinan_df.iloc[0]["Nama"]
+            if not sekretaris_df.empty:
+
+                nama_atasan = sekretaris_df.iloc[0]["Nama"]
 
                 nip_atasan = str(
-                    pimpinan_df.iloc[0]["NIP"]
+                    sekretaris_df.iloc[0]["NIP"]
                 )
 
-                jabatan_atasan = str(
-                    pimpinan_df.iloc[0]["Jabatan"]
-                )
+                jabatan_atasan = "Sekretaris KPU Kota Bengkulu"
 
             else:
 
-                nama_atasan = "Pimpinan"
-                nip_atasan = "-"
-                jabatan_atasan = "Pimpinan"
+                nama_atasan = "-"
 
+                nip_atasan = "-"
+
+                jabatan_atasan = "-"
+
+        # ---------- Pimpinan ----------
+        elif role_user == "PIMPINAN":
+
+            # Sekretaris
+            if jabatan_user == "SEKRETARIS":
+
+                nama_atasan = "NAMA SEKRETARIS KPU PROVINSI BENGKULU"
+
+                nip_atasan = "ISI NIP SEKRETARIS PROVINSI"
+
+                jabatan_atasan = (
+                    "Sekretaris KPU Provinsi Bengkulu"
+                )
+
+            # Ketua & Anggota
+            else:
+
+                nama_atasan = "-"
+
+                nip_atasan = "-"
+
+                jabatan_atasan = "-"
+
+        # ---------- Selain itu ----------
         else:
 
             nama_atasan = "-"
+
             nip_atasan = "-"
+
             jabatan_atasan = "-"
 
         # ================= HITUNG POSISI TTD =================
         last_row = start_row + len(df_export) + 4
 
         # ================= DATA BAWAH (PEGAWAI) =================
-        if "Jabatan" in df_export.columns and not df_export.empty and df_export["Jabatan"].notna().any():
-            jabatan_bawah = df_export["Jabatan"].iloc[-1]
-        else:
-            jabatan_bawah = "-"
+        role_login = str(
+            st.session_state.role
+        ).strip()
 
-        if "NIP" in df_export.columns and not df_export.empty and df_export["NIP"].notna().any():
-            nip_bawah = df_export["NIP"].iloc[-1]
+        jabatan_login = str(
+            st.session_state.jabatan
+        ).strip()
+
+        unit_login = str(
+            st.session_state.unit
+        ).strip()
+
+        # ================= JABATAN PENANDATANGAN =================
+        if role_login == "Kasubbag":
+
+            jabatan_bawah = (
+                f"{jabatan_login} {unit_login}"
+            )
+
         else:
+
+            jabatan_bawah = jabatan_login
+
+        # ================= NIP =================
+        if (
+            "NIP" in df_export.columns
+            and not df_export.empty
+            and df_export["NIP"].notna().any()
+        ):
+
+            nip_bawah = df_export["NIP"].iloc[-1]
+
+        else:
+
             nip_bawah = "-"
 
-        if "Nama" in df_export.columns and not df_export.empty and df_export["Nama"].notna().any():
+        # ================= NAMA =================
+        if (
+            "Nama" in df_export.columns
+            and not df_export.empty
+            and df_export["Nama"].notna().any()
+        ):
+
             nama_bawah = df_export["Nama"].iloc[-1]
+
         else:
+
             nama_bawah = "-"
 
 
@@ -1897,6 +2064,12 @@ elif menu == "Data Kinerja":
 
 # ================= ADMIN =================
 elif menu == "Admin":
+    role = st.session_state.role
+    jabatan = str(st.session_state.jabatan).strip().upper()
+    read_only_pimpinan = (
+    role == "Pimpinan"
+        and jabatan in ["KETUA", "ANGGOTA"]
+    )
 
     # Hanya admin yang boleh akses
     if st.session_state.role not in ["Admin", "Pimpinan"]:
