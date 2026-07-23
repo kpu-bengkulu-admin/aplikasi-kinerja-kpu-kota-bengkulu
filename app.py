@@ -127,25 +127,12 @@ footer {
 
 st.markdown("""
 <style>
-/* Hilangkan toolbar Streamlit */
-[data-testid="stToolbar"] {
-    display: none;
-}
 
 /* Hilangkan menu pojok kanan */
 #MainMenu {
     visibility: hidden;
 }
 
-/* Hilangkan footer */
-footer {
-    visibility: hidden;
-}
-
-/* Hilangkan header */
-header {
-    visibility: hidden;
-}
 </style>
 """, unsafe_allow_html=True)
 
