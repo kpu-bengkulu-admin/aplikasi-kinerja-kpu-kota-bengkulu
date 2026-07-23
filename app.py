@@ -125,26 +125,6 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-
-/* Hilangkan menu pojok kanan */
-#MainMenu {
-    visibility: hidden;
-}
-
-/* Hilangkan footer */
-footer {
-    visibility: hidden;
-}
-
-/* header {
-    visibility: hidden;
-} */
-
-</style>
-""", unsafe_allow_html=True)
-
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
