@@ -125,41 +125,6 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-
-/* Hilangkan Main Menu */
-#MainMenu {
-    visibility: hidden;
-}
-
-/* Hilangkan footer */
-footer {
-    visibility: hidden;
-}
-
-/* ============================
-   Sembunyikan hanya tombol toolbar
-   ============================ */
-
-/* Fork */
-div[data-testid="stToolbarActionButton"] {
-    display: none !important;
-}
-
-/* GitHub */
-a[data-testid="stGithubLink"] {
-    display: none !important;
-}
-
-/* Menu titik tiga */
-button[data-testid="stBaseButton-headerNoPadding"] {
-    display: none !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
