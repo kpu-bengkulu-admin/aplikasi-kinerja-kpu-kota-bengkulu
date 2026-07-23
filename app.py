@@ -133,6 +133,11 @@ st.markdown("""
     visibility: hidden;
 }
 
+/* Hilangkan footer */
+footer {
+    visibility: hidden;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
