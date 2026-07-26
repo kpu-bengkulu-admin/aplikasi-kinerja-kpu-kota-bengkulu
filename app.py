@@ -147,6 +147,35 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+
+/* Area kanan atas Streamlit */
+.stAppDeployButton {
+    display:none !important;
+}
+
+
+/* Matikan semua link di header kanan */
+header a {
+    pointer-events:none !important;
+    cursor:default !important;
+}
+
+
+/* Tetap aktifkan tombol sidebar */
+header button {
+    pointer-events:auto !important;
+}
+
+
+footer {
+    display:none !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU KOTA BENGKULU",
