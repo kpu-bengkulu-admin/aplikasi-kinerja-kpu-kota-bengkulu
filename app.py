@@ -106,54 +106,42 @@ kasubbag_mapping = {
 st.markdown("""
 <style>
 
-/* ==================================
-   HILANGKAN FORK DAN GITHUB STREAMLIT
-   ================================== */
+/* ===============================
+   HILANGKAN GITHUB / FORK / MENU
+   =============================== */
 
-/* tombol Fork */
-[data-testid="stAppViewBlockContainer"] ~ div a {
+/* Sembunyikan link Github */
+a[href*="github"] {
+    display: none !important;
+}
+
+/* Sembunyikan tombol fork */
+a[href*="fork"] {
+    display: none !important;
+}
+
+/* Sembunyikan menu titik tiga */
+[data-testid="stMainMenu"] {
     display: none !important;
 }
 
 
-/* alternatif selector Streamlit terbaru */
-header a {
-    display: none !important;
-}
+/* ===============================
+   PERTAHANKAN SIDEBAR TOGGLE
+   =============================== */
 
-
-/* ==================================
-   PERTAHANKAN HEADER & SIDEBAR
-   ================================== */
-
+/* Jangan sembunyikan header Streamlit */
 [data-testid="stHeader"] {
     display: block !important;
 }
 
 
-/* ==================================
-   HILANGKAN FOOTER STREAMLIT
-   ================================== */
+/* ===============================
+   HILANGKAN FOOTER
+   =============================== */
 
 footer {
     display: none !important;
-}
-
-
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-
-/* sembunyikan area kanan atas */
-[data-testid="stToolbar"] {
-    visibility: hidden;
-}
-
-/* hidupkan kembali tombol sidebar */
-button[kind="header"] {
-    visibility: visible !important;
 }
 
 </style>
