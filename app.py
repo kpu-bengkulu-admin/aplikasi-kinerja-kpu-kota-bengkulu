@@ -235,7 +235,7 @@ st.markdown(
         position: fixed;
         top: 0;
         right: 0;
-        width: 180px;
+        width: 100px;
         height: 55px;
         z-index: 999999;
         background: transparent;
