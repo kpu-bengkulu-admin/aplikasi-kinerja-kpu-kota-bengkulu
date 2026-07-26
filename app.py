@@ -245,7 +245,7 @@ st.markdown(
 
     /* Naikkan isi aplikasi */
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.1rem !important;
     }
 
 
