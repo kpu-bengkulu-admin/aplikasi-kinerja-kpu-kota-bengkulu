@@ -7,7 +7,9 @@ from google.oauth2.service_account import Credentials
 import io
 import base64
 import uuid
-
+import mimetypes
+import numpy as np
+from reportlab.lib.pagesizes import A4
 from PIL import Image
 
 from openpyxl.styles import Alignment
@@ -16,6 +18,32 @@ import streamlit as st
 import pandas as pd
 import io
 from datetime import date, datetime
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+from streamlit_drawable_canvas import st_canvas
+
+from io import BytesIO
+import tempfile
+import base64
+
+from PIL import Image
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image as RLImage
+)
+
+import tempfile
+import os
+import time
 
 # ==========================================================
 # HAK AKSES
@@ -155,6 +183,729 @@ def upload_foto(file):
     except Exception as e:
         st.error(f"Gagal memproses foto: {e}")
         return ""
+
+from auth.credentials import get_google_credentials
+
+def upload_drive_oauth(file, nama_file=None):
+
+    if file is None:
+        return ""
+
+    try:
+
+        creds = get_google_credentials()
+
+        drive_service = build(
+            "drive",
+            "v3",
+            credentials=creds
+        )
+
+        file_bytes = io.BytesIO(
+            file.getvalue()
+        )
+
+        media = MediaIoBaseUpload(
+            file_bytes,
+            mimetype=file.type,
+            resumable=True
+        )
+
+        metadata = {
+            "name": nama_file or file.name,
+            "parents": [FOLDER_ID]
+        }
+
+        hasil = drive_service.files().create(
+            body=metadata,
+            media_body=media,
+            fields="id"
+        ).execute()
+
+        file_id = hasil["id"]
+
+        drive_service.permissions().create(
+            fileId=file_id,
+            body={
+                "type": "anyone",
+                "role": "reader"
+            }
+        ).execute()
+
+        return (
+            f"https://drive.google.com/file/d/"
+            f"{file_id}/view"
+        )
+
+    except Exception as e:
+
+        st.exception(e)
+
+        st.stop()
+
+# ==========================================================
+# SURAT IZIN DIGITAL
+# ==========================================================
+
+import base64
+import io
+import uuid
+import tempfile
+
+from io import BytesIO
+
+from PIL import Image
+
+from reportlab.lib.units import cm
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image as RLImage
+)
+from reportlab.lib import colors
+
+
+# ==========================================================
+# SESSION STATE
+# ==========================================================
+
+if "step_izin" not in st.session_state:
+
+    st.session_state.step_izin = 1
+
+
+# ==========================================================
+# WIZARD IZIN
+# ==========================================================
+
+def wizard_izin(step):
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        if step == 1:
+            st.success("① Data Izin")
+        else:
+            st.success("✓ Data Izin")
+
+    with col2:
+
+        if step == 2:
+            st.success("② Tanda Tangan")
+        elif step > 2:
+            st.success("✓ Tanda Tangan")
+        else:
+            st.info("② Tanda Tangan")
+
+    with col3:
+
+        if step == 3:
+            st.success("③ Preview Surat")
+        else:
+            st.info("③ Preview Surat")
+
+    st.divider()
+
+
+# ==========================================================
+# IMAGE TO BASE64
+# ==========================================================
+
+def image_to_base64(img):
+
+    if img is None:
+        return ""
+
+    image = Image.fromarray(img.astype("uint8"))
+
+    buffer = BytesIO()
+
+    image.save(
+        buffer,
+        format="PNG"
+    )
+
+    return base64.b64encode(
+        buffer.getvalue()
+    ).decode()
+
+
+# ==========================================================
+# NUMPY -> PNG
+# ==========================================================
+
+def save_signature(image_data):
+
+    image = Image.fromarray(
+        image_data.astype("uint8")
+    )
+
+    temp = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".png"
+    )
+
+    image.save(
+        temp.name
+    )
+
+    return temp.name
+
+
+from PIL import Image
+import numpy as np
+
+
+def crop_signature(image_data):
+
+    """
+    Menghilangkan area putih di sekitar tanda tangan.
+    """
+
+    if image_data is None:
+        return None
+
+    # numpy -> PIL
+    img = Image.fromarray(
+        image_data.astype("uint8")
+    )
+
+    img = img.convert("RGBA")
+
+    data = np.array(img)
+
+    # Cari pixel yang bukan putih
+    mask = (
+        (data[:, :, 0] < 250) |
+        (data[:, :, 1] < 250) |
+        (data[:, :, 2] < 250)
+    )
+
+    coords = np.argwhere(mask)
+
+    if len(coords) == 0:
+        return img
+
+    y0, x0 = coords.min(axis=0)
+    y1, x1 = coords.max(axis=0)
+
+    # Margin 20 pixel
+    margin = 20
+
+    x0 = max(x0 - margin, 0)
+    y0 = max(y0 - margin, 0)
+
+    x1 = min(x1 + margin, img.width)
+    y1 = min(y1 + margin, img.height)
+
+    img = img.crop(
+        (
+            x0,
+            y0,
+            x1,
+            y1
+        )
+    )
+
+    return img
+
+def tanggal_indonesia(tanggal):
+
+    bulan = {
+
+        1: "Januari",
+        2: "Februari",
+        3: "Maret",
+        4: "April",
+        5: "Mei",
+        6: "Juni",
+        7: "Juli",
+        8: "Agustus",
+        9: "September",
+        10: "Oktober",
+        11: "November",
+        12: "Desember"
+
+    }
+
+    return f"{tanggal.day} {bulan[tanggal.month]} {tanggal.year}"
+
+
+# ==========================================================
+# GENERATE PDF IZIN
+# ==========================================================
+
+def generate_pdf_izin(data, ttd=None):
+
+    pdf_file = tempfile.NamedTemporaryFile(
+
+        delete=False,
+
+        suffix=".pdf"
+
+    ).name
+
+    doc = SimpleDocTemplate(
+
+        pdf_file,
+
+        pagesize=A4,
+
+        rightMargin=2.5 * cm,
+
+        leftMargin=3 * cm,
+
+        topMargin=2.5 * cm,
+
+        bottomMargin=2.5 * cm
+
+    )
+
+    styles = getSampleStyleSheet()
+
+    style = styles["Normal"]
+
+    style.leading = 20
+
+    story = []
+
+    # ======================================================
+    # TANGGAL POJOK KANAN
+    # ======================================================
+
+    story.append(
+
+        Paragraph(
+
+            f"""
+            <para alignment="right">
+            Bengkulu, {data["tanggal"]}
+            </para>
+            """,
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            0.8 * cm
+        )
+    )
+
+    # ======================================================
+    # TUJUAN SURAT
+    # ======================================================
+
+    story.append(
+
+        Paragraph(
+
+            """
+            Yth.<br/>
+            Sekretaris<br/>
+            Komisi Pemilihan Umum Kota Bengkulu<br/>
+            di Tempat
+            """,
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            0.5 * cm
+        )
+    )
+
+    story.append(
+
+        Paragraph(
+
+            "Dengan hormat,",
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            0.4 * cm
+        )
+    )
+
+    story.append(
+
+        Paragraph(
+
+            "Saya yang bertanda tangan di bawah ini :",
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            0.3 * cm
+        )
+    )
+
+    data_tabel = [
+
+        ["Nama", data["nama"]],
+
+        ["NIP", data["nip"]],
+
+        ["Jabatan", data["jabatan"]],
+
+        ["Unit Kerja", data["unit"]]
+
+    ]
+
+    tabel = Table(
+
+        data_tabel,
+
+        colWidths=[4 * cm, 11 * cm]
+
+    )
+
+    tabel.setStyle(
+
+        TableStyle([
+
+            ("GRID", (0, 0), (-1, -1), 0, colors.white),
+
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+
+            ("FONTNAME", (0, 0), (-1, -1), "Times-Roman")
+
+        ])
+
+    )
+
+    story.append(tabel)
+
+    story.append(
+        Spacer(
+            1,
+            0.4 * cm
+        )
+    )
+
+    story.append(
+
+        Paragraph(
+
+            "Dengan ini mengajukan permohonan izin tidak masuk kerja dengan rincian sebagai berikut :",
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            0.3 * cm
+        )
+    )
+
+    data_tabel2 = [
+
+        ["Tanggal", data["tanggal"]],
+
+        ["Jenis Izin", data["jenis"]]
+
+    ]
+
+    tabel2 = Table(
+
+        data_tabel2,
+
+        colWidths=[4 * cm, 11 * cm]
+
+    )
+
+    tabel2.setStyle(
+
+        TableStyle([
+
+            ("GRID", (0, 0), (-1, -1), 0, colors.white),
+
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+
+            ("FONTNAME", (0, 0), (-1, -1), "Times-Roman")
+
+        ])
+
+    )
+
+    story.append(tabel2)
+
+    story.append(
+        Spacer(
+            1,
+            0.4 * cm
+        )
+    )
+
+    story.append(
+
+        Paragraph(
+
+            "<b>Alasan :</b>",
+
+            style
+
+        )
+
+    )
+
+    story.append(
+
+        Paragraph(
+
+            data["alasan"],
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            0.8 * cm
+        )
+    )
+
+    story.append(
+
+        Paragraph(
+
+            """
+            Demikian surat permohonan izin ini saya sampaikan.
+            Atas perhatian dan perkenan Bapak, saya ucapkan terima kasih.
+            """,
+
+            style
+
+        )
+
+    )
+
+    story.append(
+        Spacer(
+            1,
+            1.2 * cm
+        )
+    )
+
+    # ======================================================
+    # BLOK TANDA TANGAN
+    # ======================================================
+
+    if ttd is not None:
+
+        img = crop_signature(
+            ttd
+        )
+
+        img_file = tempfile.NamedTemporaryFile(
+
+            delete=False,
+
+            suffix=".png"
+
+        ).name
+
+        img.save(
+            img_file
+        )
+
+        img_ttd = RLImage(
+
+            img_file,
+
+            width=4 * cm,
+
+            height=2 * cm
+
+        )
+
+    else:
+
+        img_ttd = Spacer(
+
+            1,
+
+            2 * cm
+
+        )
+
+    ttd_table = Table(
+
+        [
+
+            [
+
+                Paragraph(
+
+                    "<para alignment='center'>Hormat saya,</para>",
+
+                    style
+
+                )
+
+            ],
+
+            [
+
+                img_ttd
+
+            ],
+
+            [
+
+                Paragraph(
+
+                    f"<para alignment='center'><b>{data['nama']}</b></para>",
+
+                    style
+
+                )
+
+            ]
+
+        ],
+
+        colWidths=[6 * cm]
+
+    )
+
+    ttd_table.setStyle(
+
+        TableStyle(
+
+            [
+
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+
+            ]
+
+        )
+
+    )
+
+    wrapper = Table(
+
+        [
+
+            [
+
+                "",
+
+                ttd_table
+
+            ]
+
+        ],
+
+        colWidths=[6 * cm, 6 * cm]
+
+    )
+
+    wrapper.setStyle(
+
+        TableStyle(
+
+            [
+
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+
+                ("ALIGN", (1, 0), (1, 0), "CENTER"),
+
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+
+                ("GRID", (0, 0), (-1, -1), 0, colors.white),
+
+            ]
+
+        )
+
+    )
+
+    story.append(
+
+        wrapper
+
+    )
+
+    doc.build(story)
+
+    return pdf_file
+
+def cek_bentrok_cuti(
+    sheet,
+    nama,
+    tgl_mulai,
+    tgl_selesai
+):
+
+    data = sheet.get_all_records()
+
+    for row in data:
+
+        if str(row.get("Nama", "")).strip() != nama:
+
+            continue
+
+        try:
+
+            tgl = pd.to_datetime(
+                row["Tanggal"]
+            ).date()
+
+        except:
+
+            continue
+
+        if tgl_mulai <= tgl <= tgl_selesai:
+
+            return tgl
+
+    return None
 
 # ================= UI CUSTOM (SIDEBAR FIX) =================
 st.markdown("""
@@ -404,6 +1155,10 @@ if "unit" not in st.session_state:
 
 if "show_toast" not in st.session_state:
     st.session_state.show_toast = False
+
+if "cuti_form_key" not in st.session_state:
+
+    st.session_state.cuti_form_key = 0
 
 try:
     users = load_users()
@@ -987,6 +1742,7 @@ if menu == "Dashboard":
         </div>
         """, unsafe_allow_html=True)
 
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
     # ================= GRAFIK =================
     g1, g2 = st.columns(2)
 
@@ -1007,8 +1763,8 @@ if menu == "Dashboard":
         )
 
         fig.update_layout(
-            plot_bgcolor='white',
-            paper_bgcolor='white',
+            plot_bgcolor="white",
+            paper_bgcolor="white",
             height=300
         )
 
@@ -1019,26 +1775,73 @@ if menu == "Dashboard":
 
     with g2:
 
-        chart2 = (
-            df.groupby("Lokasi")
-            .size()
-            .reset_index(name="Total")
+        # ================= PIE STATUS KEHADIRAN =================
+        chart3 = (
+            df["Status Kehadiran"]
+            .fillna("Hadir")
+            .replace("", "Hadir")
+            .value_counts()
+            .reset_index()
         )
 
-        fig2 = px.pie(
-            chart2,
-            names="Lokasi",
+        chart3.columns = [
+            "Status Kehadiran",
+            "Total"
+        ]
+
+        fig3 = px.pie(
+            chart3,
+            names="Status Kehadiran",
             values="Total",
-            hole=0.5,
-            title="📍 Distribusi Lokasi Kerja"
+            hole=0.50,
+            title="🩺 Distribusi Status Kehadiran",
+            color="Status Kehadiran",
+            color_discrete_map={
+                "Hadir": "#2563eb",
+                "Sakit": "#ef4444",
+                "Izin": "#f59e0b",
+                "Cuti": "#22c55e"
+            }
         )
 
-        fig2.update_layout(
-            height=300
+        fig3.update_traces(
+            textinfo="percent",
+            textposition="inside",
+            textfont_size=12
+        )
+
+        fig3.update_layout(
+
+            height=300,
+
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+
+            margin=dict(
+                l=10,
+                r=90,
+                t=45,
+                b=10
+            ),
+
+            legend=dict(
+
+                orientation="v",
+
+                y=0.5,
+                yanchor="middle",
+
+                x=0.82,
+                xanchor="left",
+
+                font=dict(size=12)
+
+            )
+
         )
 
         st.plotly_chart(
-            fig2,
+            fig3,
             use_container_width=True
         )
 
@@ -1087,146 +1890,228 @@ elif menu == "Input":
 
     st.subheader("📍 Input Kinerja")
 
-    lokasi = st.selectbox(
-        "Lokasi",
-        ["Kantor", "Rumah", "Dinas Luar / SPT"]
+    status_kehadiran = st.selectbox(
+        "Status Kehadiran",
+        [
+            "Hadir",
+            "Sakit",
+            "Izin",
+            "Cuti"
+        ]
     )
 
-    foto = None
-    koordinat = ""
-    waktu_absen = "-"
+    if status_kehadiran == "Hadir":
 
-    # ================= KHUSUS WFH =================
-    if lokasi == "Rumah":
-
-        waktu_absen = st.selectbox(
-            "Waktu Absen",
-            ["Pagi", "Siang", "Sore"]
+        lokasi = st.selectbox(
+            "Lokasi",
+            [
+                "Kantor",
+                "Rumah",
+                "Dinas Luar / SPT"
+            ]
         )
 
-        st.markdown("### 📸 Verifikasi WFH")
+        foto = None
+        koordinat = ""
+        waktu_absen = "-"
 
-        foto = st.camera_input(
-            "Ambil Foto Langsung"
-        )
+        # ================= KHUSUS WFH =================
+        if lokasi == "Rumah":
 
-        from streamlit_js_eval import get_geolocation
-
-        loc = get_geolocation()
-
-        if loc:
-
-            koordinat = (
-                f"{loc['coords']['latitude']}, "
-                f"{loc['coords']['longitude']}"
+            waktu_absen = st.selectbox(
+                "Waktu Absen",
+                [
+                    "Pagi",
+                    "Siang",
+                    "Sore"
+                ]
             )
 
-            st.success(
-                f"✅ GPS Terdeteksi: {koordinat}"
+            st.markdown("### 📸 Verifikasi WFH")
+
+            foto = st.camera_input(
+                "Ambil Foto Langsung"
             )
 
-        else:
+            from streamlit_js_eval import get_geolocation
 
-            st.warning(
-                "📡 Menunggu GPS..."
+            loc = get_geolocation()
+
+            if loc:
+
+                koordinat = (
+                    f"{loc['coords']['latitude']}, "
+                    f"{loc['coords']['longitude']}"
+                )
+
+                st.success(
+                    f"✅ GPS Terdeteksi: {koordinat}"
+                )
+
+            else:
+
+                st.warning(
+                    "📡 Menunggu GPS..."
+                )
+
+            st.text_input(
+                "Koordinat GPS",
+                value=koordinat,
+                disabled=True
             )
 
-        st.text_input(
-            "Koordinat GPS",
-            value=koordinat,
-            disabled=True
+            st.divider()
+
+        # ================= FORM UTAMA =================
+        # INI HARUS DI LUAR IF RUMAH
+
+        # ================= RESET FORM =================
+        if "form_id" not in st.session_state:
+            st.session_state.form_id = 0
+
+        form_key = str(st.session_state.form_id)
+
+        # ================= FORM INPUT =================
+        tgl = st.date_input(
+            "Tanggal",
+            key="tgl_" + form_key
         )
-
-        st.divider()
-
-    # ================= FORM UTAMA =================
-    # INI HARUS DI LUAR IF RUMAH
-
-    # ================= RESET FORM =================
-    if "form_id" not in st.session_state:
-        st.session_state.form_id = 0
-
-    form_key = str(st.session_state.form_id)
-
-    # ================= FORM INPUT =================
-    tgl = st.date_input(
-        "Tanggal",
-        key="tgl_" + form_key
-    )
-
-    if lokasi == "Rumah":
-
-        jam_absen = st.text_input(
-            "Jam Absen WFH",
-            placeholder="Contoh: 07:45",
-            key="jam_absen_" + form_key
-        )
-
-    else:
-
-        masuk = st.text_input(
-            "Jam Masuk",
-            "07:30",
-            key="masuk_" + form_key
-        )
-
-        keluar = st.text_input(
-            "Jam Keluar",
-            "16:00",
-            key="keluar_" + form_key
-        )
-
-    uraian = st.text_area(
-        "Uraian Kegiatan",
-        key="uraian_" + form_key
-    )
-
-    output = st.text_area(
-        "Output/Hasil",
-        key="output_" + form_key
-    )
-
-    # ================= TOMBOL SIMPAN =================
-    if st.button("Simpan Data", type="primary"):
-
-        uid = str(uuid.uuid4())
 
         if lokasi == "Rumah":
 
-            masuk = jam_absen
-            keluar = "-"
-
-            if waktu_absen == "Pagi":
-                dur = 2.5
-
-            elif waktu_absen == "Siang":
-                dur = 2.5
-
-            elif waktu_absen == "Sore":
-                dur = 3
-
-            else:
-                dur = 0
+            jam_absen = st.text_input(
+                "Jam Absen WFH",
+                placeholder="Contoh: 07:45",
+                key="jam_absen_" + form_key
+            )
 
         else:
 
-            dur = hitung_durasi(masuk, keluar)
+            masuk = st.text_input(
+                "Jam Masuk",
+                "07:30",
+                key="masuk_" + form_key
+            )
 
-        if not uraian or not output:
-            st.error("⚠️ Uraian dan Output wajib diisi!")
+            keluar = st.text_input(
+                "Jam Keluar",
+                "16:00",
+                key="keluar_" + form_key
+            )
 
-        elif lokasi != "Rumah" and dur == 0:
-            st.error("⚠️ Jam tidak valid!")
+        uraian = st.text_area(
+            "Uraian Kegiatan",
+            key="uraian_" + form_key
+        )
 
-        elif lokasi == "Rumah" and (foto is None or koordinat == ""):
-            st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
+        output = st.text_area(
+            "Output/Hasil",
+            key="output_" + form_key
+        )
 
-        else:
+        # ================= TOMBOL SIMPAN =================
+        if st.button("Simpan Data", type="primary"):
 
-            link_foto = ""
+            uid = str(uuid.uuid4())
 
             if lokasi == "Rumah":
-                link_foto = upload_foto(foto)
+
+                masuk = jam_absen
+                keluar = "-"
+
+                if waktu_absen == "Pagi":
+                    dur = 2.5
+
+                elif waktu_absen == "Siang":
+                    dur = 2.5
+
+                elif waktu_absen == "Sore":
+                    dur = 3
+
+                else:
+                    dur = 0
+
+            else:
+
+                dur = hitung_durasi(masuk, keluar)
+
+            if not uraian or not output:
+                st.error("⚠️ Uraian dan Output wajib diisi!")
+
+            elif lokasi != "Rumah" and dur == 0:
+                st.error("⚠️ Jam tidak valid!")
+
+            elif lokasi == "Rumah" and (foto is None or koordinat == ""):
+                st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
+
+            else:
+
+                link_foto = ""
+
+                if lokasi == "Rumah":
+                    link_foto = upload_foto(foto)
+
+                sheet.append_row([
+                    uid,
+                    safe(st.session_state.nama),
+                    safe(str(st.session_state.nip)),
+                    safe(st.session_state.jabatan),
+                    safe(st.session_state.unit),
+                    safe(tgl.strftime("%Y-%m-%d")),
+                    safe(masuk),
+                    safe(keluar),
+                    dur,
+                    safe(uraian),
+                    safe(output),
+                    safe(lokasi),
+                    safe(waktu_absen if lokasi == "Rumah" else "-"),
+                    safe(koordinat),
+                    safe(link_foto)
+                ])
+
+                load_data.clear()
+
+                st.session_state.show_toast = True
+                st.session_state.form_id += 1
+                st.session_state.gps = ""
+
+                st.rerun()
+
+    elif status_kehadiran == "Sakit":
+
+        st.subheader("🩺 Form Sakit")
+
+        tgl = st.date_input(
+            "Tanggal Sakit",
+            key="tgl_sakit"
+        )
+
+        keterangan = st.text_area(
+            "Keterangan Sakit",
+            key="ket_sakit"
+        )
+
+        surat_sakit = st.file_uploader(
+            "Upload Surat Dokter (Opsional)",
+            type=["pdf", "jpg", "jpeg", "png"],
+            key="surat_sakit"
+        )
+
+        if st.button(
+            "Simpan Data Sakit",
+            type="primary"
+        ):
+
+            uid = str(uuid.uuid4())
+
+            link_bukti = ""
+
+            if surat_sakit is not None:
+
+                link_bukti = upload_drive_oauth(
+                    surat_sakit,
+                    f"SAKIT_{st.session_state.nip}_{tgl}.pdf"
+                )
 
             sheet.append_row([
                 uid,
@@ -1235,24 +2120,917 @@ elif menu == "Input":
                 safe(st.session_state.jabatan),
                 safe(st.session_state.unit),
                 safe(tgl.strftime("%Y-%m-%d")),
-                safe(masuk),
-                safe(keluar),
-                dur,
-                safe(uraian),
-                safe(output),
-                safe(lokasi),
-                safe(waktu_absen if lokasi == "Rumah" else "-"),
-                safe(koordinat),
-                safe(link_foto)
+                "-",
+                "-",
+                0,
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "Sakit",
+                safe(keterangan),
+                safe(link_bukti)
             ])
 
             load_data.clear()
 
             st.session_state.show_toast = True
-            st.session_state.form_id += 1
-            st.session_state.gps = ""
+
+            st.success("✅ Data sakit berhasil disimpan.")
 
             st.rerun()
+
+    if "step_izin" not in st.session_state:
+
+        st.session_state.step_izin = 1
+
+    if status_kehadiran == "Izin":
+
+        st.subheader("📝 Form Izin Tidak Masuk Kerja")
+
+        # ==========================================
+        # STEP 1 - DATA IZIN
+        # ==========================================
+
+        if st.session_state.step_izin == 1:
+
+            wizard_izin(1)
+
+            tgl = st.date_input(
+
+                "Tanggal Izin",
+
+                key="tgl_izin"
+
+            )
+
+            jenis_izin = st.selectbox(
+
+                "Jenis Izin",
+
+                [
+
+                    "Keluarga Meninggal",
+
+                    "Keluarga Sakit",
+
+                    "Keperluan Mendesak",
+
+                    "Lainnya"
+
+                ],
+
+                key="jenis_izin"
+
+            )
+
+            uraian = st.text_area(
+
+                "Alasan Izin",
+
+                height=150,
+
+                key="uraian_izin"
+
+            )
+
+            st.markdown("")
+
+            col1, col2 = st.columns([1, 1])
+
+            with col1:
+
+                if st.button(
+
+                    "📝 Lanjut ke Tanda Tangan",
+
+                    type="primary",
+
+                    use_container_width=True
+
+                ):
+
+                    if uraian.strip() == "":
+
+                        st.error(
+
+                            "Alasan izin wajib diisi."
+
+                        )
+
+                    else:
+
+                        st.session_state.izin_tgl = tgl
+
+                        st.session_state.izin_jenis = jenis_izin
+
+                        st.session_state.izin_alasan = uraian
+
+                        st.session_state.step_izin = 2
+
+                        st.rerun()
+
+            with col2:
+
+                if st.button(
+
+                    "↺ Reset Form",
+
+                    use_container_width=True
+
+                ):
+
+                    for key in [
+
+                        "izin_tgl",
+
+                        "jenis_izin",
+
+                        "uraian_izin",
+
+                        "ttd_izin"
+
+                        "tgl_izin"
+
+                    ]:
+
+                        st.session_state.pop(
+
+                            key,
+
+                            None
+
+                        )
+
+                    st.session_state.step_izin = 1
+
+                    st.rerun()
+
+        # ==========================================
+        # STEP 2 - TANDA TANGAN DIGITAL
+        # ==========================================
+
+        elif st.session_state.step_izin == 2:
+
+            wizard_izin(2)
+
+            st.subheader("✍️ Tanda Tangan Digital")
+
+            st.info(
+                "Silakan tanda tangani menggunakan mouse atau layar sentuh."
+            )
+
+            st.markdown(
+                """
+                <div style="
+                    border-left:5px solid #16a34a;
+                    padding:15px;
+                    background:#f8fafc;
+                    margin-bottom:15px;
+                    border-radius:6px;
+                ">
+                <b>Petunjuk:</b><br>
+                Buat tanda tangan pada area di bawah ini.
+                Pastikan tanda tangan terlihat jelas karena akan
+                dimasukkan ke dalam surat izin.
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            canvas_result = st_canvas(
+
+                fill_color="rgba(255,255,255,0)",
+
+                stroke_width=2,
+
+                stroke_color="#000000",
+
+                background_color="#FFFFFF",
+
+                width=700,
+
+                height=220,
+
+                drawing_mode="freedraw",
+
+                key="ttd_canvas"
+
+            )
+
+            st.markdown(
+                """
+                <div style="
+                    width:700px;
+                    margin:auto;
+                    text-align:center;
+                ">
+                    <hr>
+                    <b>Tanda Tangan Pegawai</b>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+
+                if st.button(
+                    "⬅️ Kembali",
+                    use_container_width=True
+                ):
+
+                    st.session_state.step_izin = 1
+
+                    st.rerun()
+
+            with col2:
+
+                if st.button(
+                    "🗑 Bersihkan",
+                    use_container_width=True
+                ):
+
+                    if "ttd_izin" in st.session_state:
+
+                        del st.session_state["ttd_izin"]
+
+                    st.rerun()
+
+            with col3:
+
+                if st.button(
+                    "➡️ Lanjut Preview",
+                    type="primary",
+                    use_container_width=True
+                ):
+
+                    if canvas_result.image_data is None:
+
+                        st.error(
+                            "Silakan tanda tangani terlebih dahulu."
+                        )
+
+                    else:
+
+                        st.session_state.ttd_izin = (
+                            canvas_result.image_data
+                        )
+
+                        st.session_state.step_izin = 3
+
+                        st.rerun()
+
+        # ==========================================
+        # STEP 3 - PREVIEW SURAT
+        # ==========================================
+
+        elif st.session_state.step_izin == 3:
+
+            wizard_izin(3)
+
+            st.subheader("📄 Preview Surat")
+
+            img64 = ""
+
+            if "ttd_izin" in st.session_state:
+
+                img64 = image_to_base64(
+                    st.session_state.ttd_izin
+                )
+
+            st.markdown(
+
+                f"""
+
+<div style="
+    max-width:850px;
+    margin:auto;
+    background:white;
+    color:black;
+    padding:60px;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    font-family:'Times New Roman',serif;
+    font-size:18px;
+    line-height:1.7;
+">
+
+<div style="text-align:right;">
+
+Bengkulu,
+{tanggal_indonesia(st.session_state.izin_tgl)}
+
+</div>
+
+<br><br>
+
+Yth.<br>
+Sekretaris<br>
+Komisi Pemilihan Umum Kota Bengkulu<br>
+di Tempat
+
+<br><br>
+
+Dengan hormat,
+
+<br><br>
+
+Saya yang bertanda tangan di bawah ini :
+
+<table style="margin-top:10px;">
+
+<tr>
+<td width="150">Nama</td>
+<td width="15">:</td>
+<td>{st.session_state.nama}</td>
+</tr>
+
+<tr>
+<td>NIP</td>
+<td>:</td>
+<td>{st.session_state.nip}</td>
+</tr>
+
+<tr>
+<td>Jabatan</td>
+<td>:</td>
+<td>{st.session_state.jabatan}</td>
+</tr>
+
+<tr>
+<td>Unit Kerja</td>
+<td>:</td>
+<td>{st.session_state.unit}</td>
+</tr>
+
+</table>
+
+<br>
+
+Dengan ini mengajukan permohonan izin tidak masuk kerja dengan rincian sebagai berikut :
+
+<table style="margin-top:10px;">
+
+<tr>
+<td width="150">Tanggal</td>
+<td width="15">:</td>
+<td>{tanggal_indonesia(st.session_state.izin_tgl)}</td>
+</tr>
+
+<tr>
+<td>Jenis Izin</td>
+<td>:</td>
+<td>{st.session_state.izin_jenis}</td>
+</tr>
+
+</table>
+
+<br>
+
+<b>Alasan :</b>
+
+<br><br>
+
+<div style="text-align:justify;">
+
+{st.session_state.izin_alasan}
+
+</div>
+
+<br><br>
+
+Demikian surat permohonan izin ini saya sampaikan.
+Atas perhatian dan perkenan Bapak, saya ucapkan terima kasih.
+
+<br><br>
+
+<div style="text-align:right;">
+
+Hormat saya,
+
+<br><br>
+
+<img src="data:image/png;base64,{img64}" width="170">
+
+<br><br>
+
+<b>
+{st.session_state.nama}
+</b>
+
+</div>
+
+</div>
+
+                """,
+
+                unsafe_allow_html=True
+
+            )
+
+            data_pdf = {
+
+                "nama": st.session_state.nama,
+
+                "nip": st.session_state.nip,
+
+                "jabatan": st.session_state.jabatan,
+
+                "unit": st.session_state.unit,
+
+                "tanggal": tanggal_indonesia(st.session_state.izin_tgl),
+
+                "jenis": st.session_state.izin_jenis,
+
+                "alasan": st.session_state.izin_alasan
+
+            }
+
+            pdf_file = generate_pdf_izin(
+
+                data_pdf,
+
+                st.session_state.ttd_izin
+
+            )
+
+            with open(
+
+                pdf_file,
+
+                "rb"
+
+            ) as f:
+
+                pdf_bytes = f.read()
+
+            st.download_button(
+
+                "📥 Lihat / Download Surat",
+
+                pdf_bytes,
+
+                file_name="Surat_Izin.pdf",
+
+                mime="application/pdf",
+
+                use_container_width=True
+
+            )
+
+            pesan = st.empty()
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                if st.button(
+
+                    "⬅️ Kembali",
+
+                    use_container_width=True
+
+                ):
+
+                    st.session_state.step_izin = 2
+
+                    st.rerun()
+
+            with col2:
+
+                if st.button(
+
+                    "📤 Kirim Surat",
+
+                    type="primary",
+
+                    use_container_width=True
+
+                ):
+
+                    with st.spinner(
+
+                        "Sedang mengirim surat izin, mohon tunggu..."
+
+                    ):
+
+                        # Proses Generate PDF
+
+                        data_pdf = {
+
+                            "nama": st.session_state.nama,
+
+                            "nip": st.session_state.nip,
+
+                            "jabatan": st.session_state.jabatan,
+
+                            "unit": st.session_state.unit,
+
+                            "tanggal": tanggal_indonesia(st.session_state.izin_tgl),
+
+                            "jenis": st.session_state.izin_jenis,
+
+                            "alasan": st.session_state.izin_alasan
+
+                        }
+
+                        pdf_file = generate_pdf_izin(
+
+                            data_pdf,
+
+                            st.session_state.ttd_izin
+
+                        )
+
+                        class UploadPDF:
+
+                            def __init__(self, path):
+
+                                self.name = os.path.basename(path)
+
+                                self.type = "application/pdf"
+
+                                self._path = path
+
+                            def getvalue(self):
+
+                                with open(
+
+                                    self._path,
+
+                                    "rb"
+
+                                ) as f:
+
+                                    return f.read()
+
+                        upload_pdf = UploadPDF(
+
+                            pdf_file
+
+                        )
+
+                        link_pdf = upload_drive_oauth(
+
+                            upload_pdf,
+
+                            nama_file=(
+
+                                f"Surat_Izin_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{st.session_state.nama}.pdf"
+
+                            )
+
+                        )
+
+                        uid = str(
+
+                            uuid.uuid4()
+
+                        )
+
+                        sheet.append_row(
+
+                            [
+
+                                uid,
+
+                                safe(st.session_state.nama),
+
+                                safe(str(st.session_state.nip)),
+
+                                safe(st.session_state.jabatan),
+
+                                safe(st.session_state.unit),
+
+                                safe(st.session_state.izin_tgl.strftime("%Y-%m-%d")),
+
+                                "",
+
+                                "",
+
+                                0,
+
+                                safe(st.session_state.izin_alasan),
+
+                                "",
+
+                                "",
+
+                                safe(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+
+                                "",
+
+                                "",
+
+                                "Izin",
+
+                                safe(st.session_state.izin_jenis),
+
+                                safe(link_pdf)
+
+                            ]
+
+                        )
+
+                    load_data.clear()
+
+                    pesan.success(
+
+                        "✅ Surat izin berhasil dikirim."
+
+                    )
+
+                    st.balloons()
+
+                    time.sleep(2)
+
+                    for key in [
+
+                        "step_izin",
+
+                        "izin_tgl",
+
+                        "izin_jenis",
+
+                        "izin_alasan",
+
+                        "ttd_izin"
+
+                    ]:
+
+                        st.session_state.pop(
+
+                            key,
+
+                            None
+
+                        )
+
+                    st.session_state.step_izin = 1
+
+                    st.rerun()
+
+
+    elif status_kehadiran == "Cuti":
+
+        st.subheader("🏖️ Form Cuti")
+
+        if "error_cuti" in st.session_state:
+
+            st.error(
+
+                st.session_state.error_cuti
+
+            )
+
+            del st.session_state.error_cuti
+
+        tgl_mulai = st.date_input(
+            "Tanggal Mulai Cuti",
+            key=f"mulai_cuti_{st.session_state.cuti_form_key}"
+        )
+
+        tgl_selesai = st.date_input(
+            "Tanggal Selesai Cuti",
+            key=f"selesai_cuti_{st.session_state.cuti_form_key}"
+        )
+
+        if tgl_selesai < tgl_mulai:
+
+            st.error(
+                "Tanggal selesai tidak boleh lebih kecil dari tanggal mulai."
+            )
+
+            st.stop()
+
+        jumlah_hari = (
+            tgl_selesai - tgl_mulai
+        ).days + 1
+
+        st.info(
+            f"📅 Lama cuti : {jumlah_hari} hari"
+        )
+
+        jenis_cuti = st.selectbox(
+            "Jenis Cuti",
+            [
+                "Cuti Tahunan",
+                "Cuti Besar",
+                "Cuti Sakit",
+                "Cuti Melahirkan",
+                "Cuti Alasan Penting",
+                "Cuti di Luar Tanggungan Negara"
+            ],
+            key=f"ket_cuti_{st.session_state.cuti_form_key}"
+        )
+
+        keterangan = st.text_area(
+            "Keterangan",
+            height=120,
+            key=f"ket_cuti_{st.session_state.cuti_form_key}"
+        )
+
+        surat_cuti = st.file_uploader(
+            "Upload Surat Cuti (Wajib)",
+            type=[
+                "pdf",
+                "jpg",
+                "jpeg",
+                "png"
+            ],
+            key=f"surat_cuti_{st.session_state.cuti_form_key}"
+        )
+
+        st.markdown("")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if st.button(
+                "💾 Simpan Data Cuti",
+                type="primary",
+                use_container_width=True
+            ):
+
+                if surat_cuti is None:
+
+                    st.error(
+                        "Silakan upload Surat Cuti terlebih dahulu."
+                    )
+
+                elif keterangan.strip() == "":
+
+                    st.error(
+                        "Keterangan cuti wajib diisi."
+                    )
+
+                else:
+
+                    bentrok = cek_bentrok_cuti(
+
+                        sheet,
+
+                        st.session_state.nama,
+
+                        tgl_mulai,
+
+                        tgl_selesai
+
+                    )
+
+                    if bentrok:
+
+                        st.session_state.error_cuti = (
+
+                            f"""
+                            Tidak dapat mengajukan cuti.
+
+                            Sudah terdapat data kinerja pada tanggal
+                            {bentrok.strftime('%d/%m/%Y')}.
+                            """
+
+                        )
+
+                        st.rerun()
+
+                    else:
+
+                        with st.spinner(
+
+                            "Mengupload surat cuti..."
+
+                        ):
+
+                            link_surat = upload_drive_oauth(
+
+                                surat_cuti,
+
+                                nama_file=(
+
+                                    f"CUTI_"
+
+                                    f"{safe(st.session_state.nama)}_"
+
+                                    f"{safe(tanggal_indonesia(tgl_mulai))}_"
+
+                                    f"s.d._"
+
+                                    f"{safe(tanggal_indonesia(tgl_selesai))}"
+
+                                )
+
+                            )
+
+                        if link_surat == "":
+
+                            st.error(
+
+                                "Upload surat cuti gagal."
+
+                            )
+
+                        else:
+
+                            from datetime import timedelta
+
+                            tanggal = tgl_mulai
+
+                            while tanggal <= tgl_selesai:
+
+                                uid = str(uuid.uuid4())
+
+                                sheet.append_row([
+
+                                    uid,
+
+                                    safe(st.session_state.nama),
+
+                                    safe(str(st.session_state.nip)),
+
+                                    safe(st.session_state.jabatan),
+
+                                    safe(st.session_state.unit),
+
+                                    safe(
+                                        tanggal.strftime("%Y-%m-%d")
+                                    ),
+
+                                    "-",
+
+                                    "-",
+
+                                    0,
+
+                                    safe(
+                                        f"{jenis_cuti} ({jumlah_hari} hari)"
+                                    ),
+
+                                    "-",
+
+                                    "-",
+
+                                    "-",
+
+                                    "-",
+
+                                    "-",
+
+                                    "Cuti",
+
+                                    safe(keterangan),
+
+                                    safe(link_surat)
+
+                                ])
+
+                                tanggal += timedelta(
+                                    days=1
+                                )
+
+                            # ================= RESET FORM CUTI =================
+
+                            for key in [
+
+                                "mulai_cuti",
+
+                                "selesai_cuti",
+
+                                "jenis_cuti",
+
+                                "ket_cuti",
+
+                                "surat_cuti"
+
+                            ]:
+
+                                st.session_state.pop(
+
+                                    key,
+
+                                    None
+
+                                )
+
+                            load_data.clear()
+
+                            st.session_state.show_toast = True
+
+                            st.session_state.cuti_form_key += 1
+
+                            st.success(
+
+                                "✅ Data cuti berhasil disimpan."
+
+                            )
+
+                            st.balloons()
+
+                            st.rerun()
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
@@ -1605,6 +3383,129 @@ elif menu == "Data Kinerja":
 
         # ambil hanya data terakhir per Nama + Tanggal
         df_export = df_export.groupby(["Nama", "Tanggal"], as_index=False).tail(1)
+
+        # ================= STATUS SAKIT =================
+
+        mask_sakit = (
+            df_export["Status Kehadiran"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == "SAKIT"
+        )
+
+        df_export.loc[
+            mask_sakit,
+            "Uraian"
+        ] = (
+            "SAKIT - "
+            + df_export.loc[
+                mask_sakit,
+                "Keterangan"
+            ].fillna("").astype(str)
+        )
+
+        df_export.loc[
+            mask_sakit,
+            "Jam Masuk"
+        ] = "-"
+
+        df_export.loc[
+            mask_sakit,
+            "Jam Keluar"
+        ] = "-"
+
+        df_export.loc[
+            mask_sakit,
+            "Output"
+        ] = "-"
+
+        df_export.loc[
+            mask_sakit,
+            "Lokasi"
+        ] = "-"
+
+        # ================= STATUS IZIN =================
+
+        mask_izin = (
+            df_export["Status Kehadiran"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == "IZIN"
+        )
+
+        df_export.loc[
+            mask_izin,
+            "Uraian"
+        ] = (
+            "IZIN - "
+            + df_export.loc[
+                mask_izin,
+                "Keterangan"
+            ].fillna("").astype(str)
+        )
+
+        df_export.loc[
+            mask_izin,
+            "Jam Masuk"
+        ] = "-"
+
+        df_export.loc[
+            mask_izin,
+            "Jam Keluar"
+        ] = "-"
+
+        df_export.loc[
+            mask_izin,
+            "Output"
+        ] = "-"
+
+        df_export.loc[
+            mask_izin,
+            "Lokasi"
+        ] = "-"
+
+        # ================= STATUS CUTI =================
+
+        mask_cuti = (
+            df_export["Status Kehadiran"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == "CUTI"
+        )
+
+        df_export.loc[
+            mask_cuti,
+            "Uraian"
+        ] = (
+            "CUTI - "
+            + df_export.loc[
+                mask_cuti,
+                "Keterangan"
+            ].fillna("").astype(str)
+        )
+
+        df_export.loc[
+            mask_cuti,
+            "Jam Masuk"
+        ] = "-"
+
+        df_export.loc[
+            mask_cuti,
+            "Jam Keluar"
+        ] = "-"
+
+        df_export.loc[
+            mask_cuti,
+            "Output"
+        ] = "-"
+
+        df_export.loc[
+            mask_cuti,
+            "Lokasi"
+        ] = "-"
 
         df_export.insert(0, "No", range(1, len(df_export) + 1))
 
