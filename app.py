@@ -230,7 +230,7 @@ st.markdown(
     """
     <style>
 
-    /* Overlay transparan hanya pojok kanan atas */
+    /* Nonaktifkan klik toolbar kanan atas */
     .block-toolbar-click {
         position: fixed;
         top: 0;
@@ -239,7 +239,15 @@ st.markdown(
         height: 55px;
         z-index: 999999;
         background: transparent;
+        pointer-events: auto;
     }
+
+
+    /* Naikkan isi aplikasi */
+    .block-container {
+        padding-top: 0.5rem !important;
+    }
+
 
     </style>
 
