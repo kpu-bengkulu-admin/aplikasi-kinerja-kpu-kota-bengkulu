@@ -236,7 +236,7 @@ st.markdown(
         top: 0;
         right: 0;
         width: 100px;
-        height: 20px;
+        height: 55px;
         z-index: 999999;
         background: transparent;
         pointer-events: auto;
@@ -245,7 +245,7 @@ st.markdown(
 
     /* Naikkan isi aplikasi */
     .block-container {
-        padding-top: 0.1rem !important;
+        padding-top: 0rem !important;
     }
 
 
