@@ -103,6 +103,28 @@ kasubbag_mapping = {
     }
 }
 
+# ================= CSS STREAMLIT =================
+st.markdown("""
+<style>
+
+/* Sembunyikan toolbar kanan atas */
+[data-testid="stToolbar"] {
+    display: none;
+}
+
+/* Tetap pertahankan tombol sidebar */
+[data-testid="stHeader"] {
+    display: block;
+}
+
+/* Hilangkan footer */
+footer {
+    display: none;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU KOTA BENGKULU",
