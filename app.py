@@ -143,6 +143,22 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+
+/* sembunyikan area kanan atas */
+[data-testid="stToolbar"] {
+    visibility: hidden;
+}
+
+/* hidupkan kembali tombol sidebar */
+button[kind="header"] {
+    visibility: visible !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # ================= CONFIG =================
 st.set_page_config(
     page_title="E-Kinerja KPU KOTA BENGKULU",
