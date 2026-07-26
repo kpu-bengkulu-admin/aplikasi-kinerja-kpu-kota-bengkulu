@@ -236,7 +236,7 @@ st.markdown(
         top: 0;
         right: 0;
         width: 100px;
-        height: 55px;
+        height: 20px;
         z-index: 999999;
         background: transparent;
         pointer-events: auto;
