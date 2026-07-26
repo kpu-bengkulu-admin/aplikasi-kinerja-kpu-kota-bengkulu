@@ -226,6 +226,45 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
+import streamlit as st
+
+st.markdown(
+    """
+    <style>
+
+    /* Jangan sentuh sidebar toggle */
+    
+    /* Blok area toolbar kanan atas */
+    [data-testid="stToolbar"] {
+        pointer-events: none;
+    }
+
+    /* Tetap izinkan tombol sidebar */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stSidebarExpandButton"],
+    [data-testid="stSidebarCollapseButton"] {
+        pointer-events: auto;
+    }
+
+    </style>
+
+    <script>
+    const disableToolbar = () => {
+        const toolbar = window.parent.document.querySelector(
+            '[data-testid="stToolbar"]'
+        );
+
+        if (toolbar) {
+            toolbar.style.pointerEvents = "none";
+        }
+    };
+
+    setTimeout(disableToolbar, 1000);
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
