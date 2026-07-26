@@ -226,41 +226,25 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-import streamlit as st
-
 st.markdown(
     """
     <style>
 
-    /* Jangan sentuh sidebar toggle */
-    
-    /* Blok area toolbar kanan atas */
-    [data-testid="stToolbar"] {
-        pointer-events: none;
-    }
-
-    /* Tetap izinkan tombol sidebar */
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="stSidebarExpandButton"],
-    [data-testid="stSidebarCollapseButton"] {
-        pointer-events: auto;
+    /* Overlay transparan hanya pojok kanan atas */
+    .block-toolbar-click {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 180px;
+        height: 55px;
+        z-index: 999999;
+        background: transparent;
     }
 
     </style>
 
-    <script>
-    const disableToolbar = () => {
-        const toolbar = window.parent.document.querySelector(
-            '[data-testid="stToolbar"]'
-        );
+    <div class="block-toolbar-click"></div>
 
-        if (toolbar) {
-            toolbar.style.pointerEvents = "none";
-        }
-    };
-
-    setTimeout(disableToolbar, 1000);
-    </script>
     """,
     unsafe_allow_html=True
 )
