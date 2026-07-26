@@ -103,23 +103,22 @@ kasubbag_mapping = {
     }
 }
 
-# ================= CSS STREAMLIT =================
 st.markdown("""
 <style>
 
-/* Sembunyikan toolbar kanan atas */
+/* Hilangkan menu kanan atas (GitHub, Fork, titik tiga) */
 [data-testid="stToolbar"] {
-    display: none;
+    visibility: hidden;
 }
 
-/* Tetap pertahankan tombol sidebar */
-[data-testid="stHeader"] {
-    display: block;
+/* Tetapi tetap pertahankan tombol sidebar */
+[data-testid="stSidebarCollapseButton"] {
+    visibility: visible;
 }
 
-/* Hilangkan footer */
+/* Hilangkan footer Streamlit */
 footer {
-    display: none;
+    visibility: hidden;
 }
 
 </style>
