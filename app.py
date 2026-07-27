@@ -981,27 +981,49 @@ def generate_pdf_izin(data, ttd=None):
     return pdf_file
 
 def cek_bentrok_kehadiran(
-    sheet,
+
+    df,
+
     nama,
+
     tgl_mulai,
+
     tgl_selesai
+
 ):
 
-    data = sheet.get_all_records()
+    nama = str(
 
-    nama = str(nama).strip().lower()
+        nama
 
-    for row in data:
+    ).strip().lower()
 
-        if str(row.get("Nama", "")).strip().lower() != nama:
+    for _, row in df.iterrows():
+
+        if str(
+
+            row.get(
+
+                "Nama",
+
+                ""
+
+            )
+
+        ).strip().lower() != nama:
+
             continue
 
         try:
+
             tgl = pd.to_datetime(
+
                 row["Tanggal"]
+
             ).date()
 
         except Exception:
+
             continue
 
         if tgl_mulai <= tgl <= tgl_selesai:
@@ -2209,7 +2231,7 @@ elif menu == "Input":
 
             bentrok = cek_bentrok_kehadiran(
 
-                sheet,
+                df,
 
                 st.session_state.nama,
 
@@ -2362,6 +2384,8 @@ elif menu == "Input":
 
                         st.session_state.izin_alasan = uraian
 
+
+
                         st.session_state.step_izin = 2
 
                         st.rerun()
@@ -2401,35 +2425,6 @@ elif menu == "Input":
                     st.session_state.step_izin = 1
 
                     st.rerun()
-
-                    # ================= CEK BENTROK =================
-
-                    bentrok = cek_bentrok_kehadiran(
-
-                        sheet,
-
-                        st.session_state.nama,
-
-                        st.session_state.izin_tgl,
-
-                        st.session_state.izin_tgl
-
-                    )
-
-                    if bentrok:
-
-                        st.error(
-
-                            f"""
-                            Tidak dapat mengajukan izin.
-
-                            Sudah terdapat data kinerja pada tanggal
-                            {bentrok.strftime('%d/%m/%Y')}.
-                            """
-
-                        )
-
-                        st.stop()
 
         # ==========================================
         # STEP 2 - TANDA TANGAN DIGITAL
@@ -3036,7 +3031,7 @@ Hormat saya,
 
                     bentrok = cek_bentrok_kehadiran(
 
-                        sheet,
+                        df,
 
                         st.session_state.nama,
 
