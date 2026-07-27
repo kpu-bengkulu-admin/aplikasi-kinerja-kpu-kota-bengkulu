@@ -42,7 +42,8 @@ def get_google_credentials():
 
         except Exception:
 
-            pass
+            st.exception(e)
+            raise
 
     if token_data is None:
 
