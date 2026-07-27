@@ -2410,9 +2410,9 @@ elif menu == "Input":
 
                         st.session_state.nama,
 
-                        st.session_state.tanggal_izin,
+                        st.session_state.izin_tgl,
 
-                        st.session_state.tanggal_izin
+                        st.session_state.izin_tgl
 
                     )
 
