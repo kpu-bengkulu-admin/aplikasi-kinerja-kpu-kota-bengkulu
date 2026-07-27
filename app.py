@@ -2929,7 +2929,7 @@ Hormat saya,
                 "Cuti Alasan Penting",
                 "Cuti di Luar Tanggungan Negara"
             ],
-            key=f"ket_cuti_{st.session_state.cuti_form_key}"
+            key=f"jenis_cuti_{st.session_state.cuti_form_key}"
         )
 
         keterangan = st.text_area(
