@@ -11,6 +11,7 @@ import mimetypes
 import numpy as np
 from reportlab.lib.pagesizes import A4
 from PIL import Image
+from zoneinfo import ZoneInfo
 
 from openpyxl.styles import Alignment
 
@@ -1984,7 +1985,7 @@ if menu == "Dashboard":
 
         st.markdown("## 📌 Monitoring Hari Ini")
 
-        sekarang = datetime.now()
+        sekarang = datetime.now(ZoneInfo("Asia/Jakarta"))
 
         if (
             sekarang.hour < 17
