@@ -1970,6 +1970,83 @@ if menu == "Dashboard":
             use_container_width=True
         )
 
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
+
+    # ================= MONITORING HARI INI =================
+    if (
+        st.session_state.role == "Admin"
+        or st.session_state.role == "Kasubbag"
+        or (
+            st.session_state.role == "Pimpinan"
+            and st.session_state.jabatan.upper() == "SEKRETARIS"
+        )
+    ):
+
+        st.markdown("## 📌 Monitoring Hari Ini")
+
+        sekarang = datetime.now()
+
+        if (
+            sekarang.hour < 17
+            or (
+                sekarang.hour == 17
+                and sekarang.minute < 30
+            )
+        ):
+
+            st.info(
+                "ℹ️ Monitoring pegawai yang belum mengupload laporan "
+                "akan ditampilkan setelah pukul 17.30 WIB."
+            )
+
+        else:
+
+            hari_ini = sekarang.strftime("%d/%m/%Y")
+
+            # NIP yang sudah upload hari ini
+            sudah_upload = (
+                df[df["Tanggal"] == hari_ini]["NIP"]
+                .drop_duplicates()
+                .tolist()
+            )
+
+            # Data seluruh pegawai
+            df_user = load_users()
+
+            # Pegawai yang wajib upload
+            belum_upload = df_user[
+                (~df_user["NIP"].isin(sudah_upload))
+                &
+                (~df_user["Jabatan"].str.upper().isin([
+                    "KETUA",
+                    "ANGGOTA"
+                ]))
+            ][[
+                "Nama",
+                "Jabatan"
+            ]]
+
+            if belum_upload.empty:
+
+                st.success(
+                    "✅ Seluruh pegawai telah mengupload laporan hari ini."
+                )
+
+            else:
+
+                st.warning(
+                    f"Masih ada {len(belum_upload)} pegawai yang belum mengupload laporan hari ini."
+                )
+
+                belum_upload.index += 1
+
+                st.dataframe(
+                    belum_upload,
+                    use_container_width=True
+                )
+
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
+
     # ================= RANKING =================
     if st.session_state.role in [
         "Admin",
