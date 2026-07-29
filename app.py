@@ -2014,6 +2014,13 @@ if menu == "Dashboard":
             # Data seluruh pegawai
             df_user = load_users()
 
+            # Kasubbag hanya melihat pegawai pada unitnya
+            if st.session_state.role == "Kasubbag":
+
+                df_user = df_user[
+                    df_user["Unit"] == st.session_state.unit
+                ]
+
             # Pegawai yang wajib upload
             belum_upload = df_user[
                 (~df_user["NIP"].isin(sudah_upload))
