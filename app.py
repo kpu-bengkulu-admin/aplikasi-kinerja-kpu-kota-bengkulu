@@ -2002,11 +2002,18 @@ if menu == "Dashboard":
 
         else:
 
-            hari_ini = sekarang.strftime("%d/%m/%Y")
+            # Samakan format tanggal
+            df["Tanggal"] = pd.to_datetime(
+                df["Tanggal"],
+                errors="coerce"
+            ).dt.date
 
-            # NIP yang sudah upload hari ini
+            hari_ini = sekarang.date()
+
             sudah_upload = (
                 df[df["Tanggal"] == hari_ini]["NIP"]
+                .astype(str)
+                .str.strip()
                 .drop_duplicates()
                 .tolist()
             )
