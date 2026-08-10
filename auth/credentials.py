@@ -14,9 +14,10 @@ def get_google_credentials():
 
     token_data = None
 
-    # ===============================
+    # ==========================================================
     # MODE LOCAL
-    # ===============================
+    # ==========================================================
+
     if os.path.exists(TOKEN_FILE):
 
         with open(
@@ -27,9 +28,10 @@ def get_google_credentials():
 
             token_data = json.load(f)
 
-    # ===============================
+    # ==========================================================
     # MODE STREAMLIT CLOUD
-    # ===============================
+    # ==========================================================
+
     else:
 
         try:
@@ -40,16 +42,29 @@ def get_google_credentials():
                     st.secrets["oauth_token"]
                 )
 
-        except Exception:
+        except Exception as e:
 
-            st.exception(e)
+            st.error(
+                f"❌ Gagal membaca Streamlit Secrets: {e}"
+            )
+
             raise
 
-    if token_data is None:
+    # ==========================================================
+    # TOKEN TIDAK DITEMUKAN
+    # ==========================================================
+
+    if not token_data:
 
         raise Exception(
-            "oauth_token.json tidak ditemukan."
+            "OAuth token tidak ditemukan. "
+            "Pastikan auth/oauth_token.json tersedia "
+            "atau [oauth_token] sudah diisi di Streamlit Secrets."
         )
+
+    # ==========================================================
+    # GOOGLE CREDENTIALS
+    # ==========================================================
 
     credentials = Credentials(
 
@@ -60,24 +75,41 @@ def get_google_credentials():
         ),
 
         token_uri=token_data.get(
-            "token_uri"
+            "token_uri",
+            "https://oauth2.googleapis.com/token"
         ),
 
-        client_id=token_data[
+        client_id=token_data.get(
             "client_id"
-        ],
+        ),
 
-        client_secret=token_data[
+        client_secret=token_data.get(
             "client_secret"
-        ],
+        ),
 
         scopes=tuple(
-            token_data["scopes"]
+            token_data.get("scopes", [])
         ),
+
     )
+
+    # ==========================================================
+    # VALIDASI CREDENTIALS
+    # ==========================================================
 
     if not credentials.valid:
 
-        credentials.refresh(Request())
+        if credentials.expired and credentials.refresh_token:
+
+            credentials.refresh(
+                Request()
+            )
+
+        else:
+
+            raise Exception(
+                "Google OAuth credentials tidak valid "
+                "dan tidak memiliki refresh token."
+            )
 
     return credentials
