@@ -2294,6 +2294,7 @@ elif menu == "Input":
 
                 st.rerun()
 
+    df = load_data()
     elif status_kehadiran == "Sakit":
 
         st.subheader("🩺 Form Sakit")
