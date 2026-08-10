@@ -2294,7 +2294,7 @@ elif menu == "Input":
 
                 st.rerun()
 
-    df = load_data()
+    
     elif status_kehadiran == "Sakit":
 
         st.subheader("🩺 Form Sakit")
@@ -2320,6 +2320,7 @@ elif menu == "Input":
             type="primary"
         ):
 
+            df = load_data()
             # ================= CEK BENTROK =================
 
             bentrok = cek_bentrok_kehadiran(
