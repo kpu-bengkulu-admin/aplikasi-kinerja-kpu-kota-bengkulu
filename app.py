@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import gspread
 from google.oauth2.service_account import Credentials
 import io
@@ -18,7 +18,6 @@ from openpyxl.styles import Alignment
 import streamlit as st
 import pandas as pd
 import io
-from datetime import date, datetime
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from streamlit_drawable_canvas import st_canvas
@@ -45,6 +44,82 @@ from reportlab.platypus import (
 import tempfile
 import os
 import time
+
+
+# ==========================================================
+# HARI LIBUR NASIONAL & CUTI BERSAMA TAHUN 2026
+# ==========================================================
+
+HARI_LIBUR_2026 = {
+
+    # LIBUR NASIONAL
+    date(2026, 1, 1),
+    date(2026, 1, 16),
+    date(2026, 2, 17),
+    date(2026, 3, 19),
+    date(2026, 3, 21),
+    date(2026, 3, 22),
+    date(2026, 4, 3),
+    date(2026, 4, 5),
+    date(2026, 5, 1),
+    date(2026, 5, 14),
+    date(2026, 5, 27),
+    date(2026, 5, 31),
+    date(2026, 6, 1),
+    date(2026, 6, 16),
+    date(2026, 8, 17),
+    date(2026, 8, 25),
+    date(2026, 12, 25),
+
+    # CUTI BERSAMA
+    date(2026, 2, 16),
+    date(2026, 3, 18),
+    date(2026, 3, 20),
+    date(2026, 3, 23),
+    date(2026, 3, 24),
+    date(2026, 5, 15),
+    date(2026, 5, 28),
+    date(2026, 12, 24),
+}
+
+
+# ==========================================================
+# CEK HARI KERJA
+# ==========================================================
+
+def adalah_hari_kerja(tanggal):
+
+    # Sabtu = 5
+    # Minggu = 6
+    if tanggal.weekday() >= 5:
+        return False
+
+    # Libur nasional / cuti bersama
+    if tanggal in HARI_LIBUR_2026:
+        return False
+
+    return True
+
+
+# ==========================================================
+# HITUNG JUMLAH HARI CUTI
+# ==========================================================
+
+def hitung_hari_cuti(tgl_mulai, tgl_selesai):
+
+    jumlah = 0
+    tanggal = tgl_mulai
+
+    while tanggal <= tgl_selesai:
+
+        if adalah_hari_kerja(tanggal):
+            jumlah += 1
+
+        tanggal += timedelta(days=1)
+
+    return jumlah
+
+
 
 # ==========================================================
 # HAK AKSES
@@ -2105,6 +2180,7 @@ elif menu == "Input":
         st.error("Anda tidak memiliki hak akses untuk menginput kinerja.")
         st.stop()
 
+    df = load_data()
     st.subheader("📍 Input Kinerja")
 
     status_kehadiran = st.selectbox(
@@ -3031,44 +3107,101 @@ Hormat saya,
 
         st.subheader("🏖️ Form Cuti")
 
+        # ==================================================
+        # TAMPILKAN ERROR DARI SESSION STATE
+        # ==================================================
+
         if "error_cuti" in st.session_state:
 
             st.error(
-
                 st.session_state.error_cuti
-
             )
 
             del st.session_state.error_cuti
+
+
+        # ==================================================
+        # TANGGAL MULAI
+        # ==================================================
 
         tgl_mulai = st.date_input(
             "Tanggal Mulai Cuti",
             key=f"mulai_cuti_{st.session_state.cuti_form_key}"
         )
 
+
+        # ==================================================
+        # TANGGAL SELESAI
+        # ==================================================
+
         tgl_selesai = st.date_input(
             "Tanggal Selesai Cuti",
             key=f"selesai_cuti_{st.session_state.cuti_form_key}"
         )
 
+
+        # ==================================================
+        # VALIDASI TANGGAL
+        # ==================================================
+
         if tgl_selesai < tgl_mulai:
 
             st.error(
-                "Tanggal selesai tidak boleh lebih kecil dari tanggal mulai."
+                "Tanggal selesai tidak boleh lebih kecil "
+                "dari tanggal mulai."
             )
 
             st.stop()
 
-        jumlah_hari = (
-            tgl_selesai - tgl_mulai
-        ).days + 1
 
-        st.info(
-            f"📅 Lama cuti : {jumlah_hari} hari"
+        # ==================================================
+        # HITUNG JUMLAH HARI CUTI EFEKTIF
+        #
+        # TIDAK MENGHITUNG:
+        # - Sabtu
+        # - Minggu
+        # - Libur Nasional
+        # - Cuti Bersama
+        # ==================================================
+
+        jumlah_hari = hitung_hari_cuti(
+            tgl_mulai,
+            tgl_selesai
         )
 
+
+        # ==================================================
+        # VALIDASI JIKA TIDAK ADA HARI KERJA
+        # ==================================================
+
+        if jumlah_hari == 0:
+
+            st.error(
+                "Periode cuti yang dipilih tidak memiliki "
+                "hari kerja. Sabtu, Minggu, hari libur "
+                "nasional, dan cuti bersama tidak dihitung."
+            )
+
+            st.stop()
+
+
+        # ==================================================
+        # TAMPILKAN JUMLAH HARI
+        # ==================================================
+
+        st.info(
+            f"📅 Lama cuti : {jumlah_hari} hari kerja"
+        )
+
+
+        # ==================================================
+        # JENIS CUTI
+        # ==================================================
+
         jenis_cuti = st.selectbox(
+
             "Jenis Cuti",
+
             [
                 "Cuti Tahunan",
                 "Cuti Besar",
@@ -3077,37 +3210,70 @@ Hormat saya,
                 "Cuti Alasan Penting",
                 "Cuti di Luar Tanggungan Negara"
             ],
+
             key=f"jenis_cuti_{st.session_state.cuti_form_key}"
         )
 
+
+        # ==================================================
+        # KETERANGAN
+        # ==================================================
+
         keterangan = st.text_area(
+
             "Keterangan",
+
             height=120,
+
             key=f"ket_cuti_{st.session_state.cuti_form_key}"
         )
 
+
+        # ==================================================
+        # UPLOAD SURAT CUTI
+        # ==================================================
+
         surat_cuti = st.file_uploader(
+
             "Upload Surat Cuti (Wajib)",
+
             type=[
                 "pdf",
                 "jpg",
                 "jpeg",
                 "png"
             ],
+
             key=f"surat_cuti_{st.session_state.cuti_form_key}"
         )
 
+
         st.markdown("")
 
+
+        # ==================================================
+        # TOMBOL
+        # ==================================================
+
         col1, col2 = st.columns(2)
+
 
         with col1:
 
             if st.button(
+
                 "💾 Simpan Data Cuti",
+
                 type="primary",
+
                 use_container_width=True
+
             ):
+
+
+                # ==========================================
+                # VALIDASI SURAT CUTI
+                # ==========================================
 
                 if surat_cuti is None:
 
@@ -3115,13 +3281,24 @@ Hormat saya,
                         "Silakan upload Surat Cuti terlebih dahulu."
                     )
 
+
+                # ==========================================
+                # VALIDASI KETERANGAN
+                # ==========================================
+
                 elif keterangan.strip() == "":
 
                     st.error(
                         "Keterangan cuti wajib diisi."
                     )
 
+
                 else:
+
+
+                    # ======================================
+                    # CEK BENTROK DATA KEHADIRAN
+                    # ======================================
 
                     bentrok = cek_bentrok_kehadiran(
 
@@ -3135,22 +3312,28 @@ Hormat saya,
 
                     )
 
+
                     if bentrok:
 
                         st.session_state.error_cuti = (
 
                             f"""
-                            Tidak dapat mengajukan cuti.
+Tidak dapat mengajukan cuti.
 
-                            Sudah terdapat data kinerja pada tanggal
-                            {bentrok.strftime('%d/%m/%Y')}.
-                            """
-
+Sudah terdapat data kinerja pada tanggal
+{bentrok.strftime('%d/%m/%Y')}.
+"""
                         )
 
                         st.rerun()
 
+
                     else:
+
+
+                        # ==================================
+                        # UPLOAD SURAT KE GOOGLE DRIVE
+                        # ==================================
 
                         with st.spinner(
 
@@ -3168,83 +3351,134 @@ Hormat saya,
 
                                     f"{safe(st.session_state.nama)}_"
 
-                                    f"{safe(tanggal_indonesia(tgl_mulai))}_"
+                                    f"{safe(
+                                        tanggal_indonesia(tgl_mulai)
+                                    )}_"
 
                                     f"s.d._"
 
-                                    f"{safe(tanggal_indonesia(tgl_selesai))}"
+                                    f"{safe(
+                                        tanggal_indonesia(tgl_selesai)
+                                    )}"
 
                                 )
 
                             )
 
+
+                        # ==================================
+                        # CEK HASIL UPLOAD
+                        # ==================================
+
                         if link_surat == "":
 
                             st.error(
-
                                 "Upload surat cuti gagal."
-
                             )
+
 
                         else:
 
-                            from datetime import timedelta
+
+                            # ==============================
+                            # SIMPAN DATA CUTI
+                            # ==============================
 
                             tanggal = tgl_mulai
 
+
                             while tanggal <= tgl_selesai:
 
-                                uid = str(uuid.uuid4())
 
-                                sheet.append_row([
+                                # ==================================
+                                # HANYA SIMPAN HARI KERJA
+                                #
+                                # Sabtu     -> dilewati
+                                # Minggu    -> dilewati
+                                # Libur     -> dilewati
+                                # Cuti bersama -> dilewati
+                                # ==================================
 
-                                    uid,
+                                if adalah_hari_kerja(tanggal):
 
-                                    safe(st.session_state.nama),
 
-                                    safe(str(st.session_state.nip)),
+                                    uid = str(uuid.uuid4())
 
-                                    safe(st.session_state.jabatan),
 
-                                    safe(st.session_state.unit),
+                                    sheet.append_row([
 
-                                    safe(
-                                        tanggal.strftime("%Y-%m-%d")
-                                    ),
+                                        uid,
 
-                                    "-",
+                                        safe(
+                                            st.session_state.nama
+                                        ),
 
-                                    "-",
+                                        safe(
+                                            str(
+                                                st.session_state.nip
+                                            )
+                                        ),
 
-                                    0,
+                                        safe(
+                                            st.session_state.jabatan
+                                        ),
 
-                                    safe(
-                                        f"{jenis_cuti} ({jumlah_hari} hari)"
-                                    ),
+                                        safe(
+                                            st.session_state.unit
+                                        ),
 
-                                    "-",
+                                        safe(
+                                            tanggal.strftime(
+                                                "%Y-%m-%d"
+                                            )
+                                        ),
 
-                                    "-",
+                                        "-",
 
-                                    "-",
+                                        "-",
 
-                                    "-",
+                                        0,
 
-                                    "-",
+                                        safe(
+                                            f"{jenis_cuti} "
+                                            f"({jumlah_hari} hari kerja)"
+                                        ),
 
-                                    "Cuti",
+                                        "-",
 
-                                    safe(keterangan),
+                                        "-",
 
-                                    safe(link_surat)
+                                        "-",
 
-                                ])
+                                        "-",
+
+                                        "-",
+
+                                        "Cuti",
+
+                                        safe(
+                                            keterangan
+                                        ),
+
+                                        safe(
+                                            link_surat
+                                        )
+
+                                    ])
+
+
+                                # ==============================
+                                # LANJUT KE TANGGAL BERIKUTNYA
+                                # ==============================
 
                                 tanggal += timedelta(
                                     days=1
                                 )
 
-                            # ================= RESET FORM CUTI =================
+
+                            # ==================================
+                            # RESET FORM CUTI
+                            # ==================================
 
                             for key in [
 
@@ -3268,11 +3502,31 @@ Hormat saya,
 
                                 )
 
+
+                            # ==================================
+                            # CLEAR CACHE DATA
+                            # ==================================
+
                             load_data.clear()
+
+
+                            # ==================================
+                            # SET TOAST
+                            # ==================================
 
                             st.session_state.show_toast = True
 
+
+                            # ==================================
+                            # NAIKKAN FORM KEY
+                            # ==================================
+
                             st.session_state.cuti_form_key += 1
+
+
+                            # ==================================
+                            # PESAN BERHASIL
+                            # ==================================
 
                             st.success(
 
@@ -3280,9 +3534,12 @@ Hormat saya,
 
                             )
 
+
                             st.balloons()
 
+
                             st.rerun()
+
 
 # ================= DATA =================
 elif menu == "Data Kinerja":
