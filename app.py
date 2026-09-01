@@ -2165,6 +2165,511 @@ if menu == "Dashboard":
             use_container_width=True
         )
 
+    # ================= REKAP KEHADIRAN PEGAWAI =================
+    if st.session_state.role in [
+        "Admin",
+        "Pimpinan",
+        "Kasubbag"
+    ]:
+
+        st.markdown("## 📋 Rekap Kehadiran Pegawai")
+
+        # ==================================================
+        # RANGE TANGGAL MENGIKUTI RANGE DASHBOARD
+        # ==================================================
+        if len(tgl) == 2:
+
+            tanggal_mulai = pd.to_datetime(
+                tgl[0]
+            ).date()
+
+            tanggal_selesai = pd.to_datetime(
+                tgl[1]
+            ).date()
+
+            # ==================================================
+            # DATA SELURUH PEGAWAI
+            # ==================================================
+            users_rekap = load_users().copy()
+
+            # ==================================================
+            # KASUBBAG HANYA MELIHAT UNITNYA
+            # ==================================================
+            if st.session_state.role == "Kasubbag":
+
+                users_rekap = users_rekap[
+                    users_rekap["Unit"]
+                    .astype(str)
+                    .str.strip()
+                    ==
+                    str(st.session_state.unit)
+                    .strip()
+                ]
+
+            users_rekap["NIP"] = (
+                users_rekap["NIP"]
+                .astype(str)
+                .str.strip()
+            )
+
+            users_rekap["Nama"] = (
+                users_rekap["Nama"]
+                .astype(str)
+                .str.strip()
+            )
+
+            # ==================================================
+            # DATA KINERJA
+            # ==================================================
+            df_rekap = load_data().copy()
+
+            if not df_rekap.empty:
+
+                df_rekap["NIP"] = (
+                    df_rekap["NIP"]
+                    .astype(str)
+                    .str.strip()
+                )
+
+                df_rekap["Tanggal"] = pd.to_datetime(
+                    df_rekap["Tanggal"],
+                    errors="coerce"
+                )
+
+                df_rekap["Durasi"] = pd.to_numeric(
+                    df_rekap["Durasi"]
+                    .astype(str)
+                    .str.replace(",", ".", regex=False),
+                    errors="coerce"
+                ).fillna(0)
+
+                # ==================================================
+                # STATUS KEHADIRAN
+                # Data kosong dianggap HADIR
+                # ==================================================
+                df_rekap["Status Kehadiran"] = (
+                    df_rekap["Status Kehadiran"]
+                    .fillna("Hadir")
+                    .astype(str)
+                    .str.strip()
+                )
+
+                df_rekap.loc[
+                    df_rekap["Status Kehadiran"] == "",
+                    "Status Kehadiran"
+                ] = "Hadir"
+
+                # ==================================================
+                # FILTER RANGE TANGGAL
+                # ==================================================
+                df_rekap = df_rekap[
+                    (df_rekap["Tanggal"].dt.date >= tanggal_mulai)
+                    &
+                    (df_rekap["Tanggal"].dt.date <= tanggal_selesai)
+                ].copy()
+
+                # ==================================================
+                # KASUBBAG HANYA MELIHAT DATA UNITNYA
+                # ==================================================
+                if st.session_state.role == "Kasubbag":
+
+                    df_rekap = df_rekap[
+                        df_rekap["Unit"]
+                        .astype(str)
+                        .str.strip()
+                        ==
+                        str(st.session_state.unit)
+                        .strip()
+                    ]
+
+                # ==================================================
+                # SATU DATA PER PEGAWAI PER TANGGAL
+                #
+                # Jika ada lebih dari satu data pada tanggal
+                # yang sama, gunakan data terakhir.
+                # ==================================================
+                if "row" in df_rekap.columns:
+
+                    df_rekap = df_rekap.sort_values(
+                        "row"
+                    )
+
+                df_rekap = df_rekap.drop_duplicates(
+                    subset=[
+                        "NIP",
+                        "Tanggal"
+                    ],
+                    keep="last"
+                )
+
+            # ==================================================
+            # HITUNG HARI KERJA EFEKTIF
+            #
+            # Fungsi hitung_hari_cuti() sudah digunakan oleh
+            # modul Cuti dan mengecualikan:
+            # - Sabtu
+            # - Minggu
+            # - Libur Nasional
+            # - Cuti Bersama
+            # ==================================================
+            jumlah_hari_kerja = hitung_hari_cuti(
+                tanggal_mulai,
+                tanggal_selesai
+            )
+
+            # ==================================================
+            # HITUNG REKAP SETIAP PEGAWAI
+            # ==================================================
+            hasil_rekap = []
+
+            for _, pegawai in users_rekap.iterrows():
+
+                nip = str(
+                    pegawai["NIP"]
+                ).strip()
+
+                nama = str(
+                    pegawai["Nama"]
+                ).strip()
+
+                # ==================================================
+                # AMBIL DATA PEGAWAI
+                # ==================================================
+                if df_rekap.empty:
+
+                    data_pegawai = pd.DataFrame()
+
+                else:
+
+                    data_pegawai = df_rekap[
+                        df_rekap["NIP"] == nip
+                    ].copy()
+
+                # ==================================================
+                # HITUNG STATUS
+                # ==================================================
+                if data_pegawai.empty:
+
+                    hadir = 0
+                    sakit = 0
+                    cuti = 0
+                    izin = 0
+
+                else:
+
+                    status = (
+                        data_pegawai[
+                            "Status Kehadiran"
+                        ]
+                        .astype(str)
+                        .str.strip()
+                        .str.upper()
+                    )
+
+                    hadir = int(
+                        (status == "HADIR").sum()
+                    )
+
+                    sakit = int(
+                        (status == "SAKIT").sum()
+                    )
+
+                    cuti = int(
+                        (status == "CUTI").sum()
+                    )
+
+                    izin = int(
+                        (status == "IZIN").sum()
+                    )
+
+                # ==================================================
+                # PERSENTASE KEHADIRAN
+                #
+                # Hadir / Hari Kerja Efektif x 100
+                # ==================================================
+                if jumlah_hari_kerja > 0:
+
+                    persentase = (
+                        hadir
+                        /
+                        jumlah_hari_kerja
+                    ) * 100
+
+                else:
+
+                    persentase = 0
+
+                hasil_rekap.append({
+                    "Nama Pegawai": nama,
+                    "Hadir": hadir,
+                    "Sakit": sakit,
+                    "Cuti": cuti,
+                    "Izin": izin,
+                    "% Kehadiran": persentase
+                })
+
+            # ==================================================
+            # BUAT DATAFRAME REKAP
+            # ==================================================
+            rekap_kehadiran = pd.DataFrame(
+                hasil_rekap
+            )
+
+            # ==================================================
+            # URUTKAN BERDASARKAN % KEHADIRAN
+            # ==================================================
+            rekap_kehadiran = (
+                rekap_kehadiran
+                .sort_values(
+                    by="% Kehadiran",
+                    ascending=False
+                )
+                .reset_index(drop=True)
+            )
+
+            # ==================================================
+            # NOMOR URUT
+            # ==================================================
+            rekap_kehadiran.insert(
+                0,
+                "No",
+                range(
+                    1,
+                    len(
+                        rekap_kehadiran
+                    ) + 1
+                )
+            )
+
+            # ==================================================
+            # FORMAT PERSENTASE
+            # ==================================================
+            rekap_tampil = (
+                rekap_kehadiran.copy()
+            )
+
+            rekap_tampil[
+                "% Kehadiran"
+            ] = (
+                rekap_tampil[
+                    "% Kehadiran"
+                ]
+                .map(
+                    lambda x:
+                    f"{x:.2f}%"
+                )
+            )
+
+            # ==================================================
+            # INFORMASI PERIODE
+            # ==================================================
+            st.caption(
+                f"📅 Periode: "
+                f"{indo_date(tanggal_mulai)} "
+                f"s/d "
+                f"{indo_date(tanggal_selesai)} "
+                f"| Hari kerja efektif: "
+                f"{jumlah_hari_kerja} hari"
+            )
+
+            # ==================================================
+            # TABEL REKAP
+            # ==================================================
+            st.dataframe(
+                rekap_tampil,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            # ==================================================
+            # DOWNLOAD REKAP KEHADIRAN
+            # ==================================================
+            import io
+
+            output_excel = io.BytesIO()
+
+            # Gunakan rekap_tampil agar isi Excel
+            # sama seperti tabel yang tampil di aplikasi
+            data_download = rekap_tampil.copy()
+
+            with pd.ExcelWriter(
+                output_excel,
+                engine="openpyxl"
+            ) as writer:
+
+                # ==============================
+                # JUDUL
+                # ==============================
+                data_download.to_excel(
+                    writer,
+                    index=False,
+                    sheet_name="Rekap Kehadiran",
+                    startrow=3
+                )
+
+                workbook = writer.book
+                worksheet = writer.sheets[
+                    "Rekap Kehadiran"
+                ]
+
+                # ==============================
+                # JUDUL LAPORAN
+                # ==============================
+                worksheet["A1"] = (
+                    "REKAP KEHADIRAN PEGAWAI"
+                )
+
+                worksheet["A2"] = (
+                    f"Periode: "
+                    f"{indo_date(tanggal_mulai)} "
+                    f"s/d "
+                    f"{indo_date(tanggal_selesai)}"
+                )
+
+                # ==============================
+                # FORMAT HEADER
+                # ==============================
+                from openpyxl.styles import (
+                    Font,
+                    Alignment,
+                    Border,
+                    Side
+                )
+
+                header_row = 4
+
+                for cell in worksheet[
+                    header_row
+                ]:
+
+                    cell.font = Font(
+                        bold=True
+                    )
+
+                    cell.alignment = Alignment(
+                        horizontal="center",
+                        vertical="center"
+                    )
+
+                # ==============================
+                # FORMAT ISI TABEL
+                # ==============================
+                for row in worksheet.iter_rows(
+                    min_row=5,
+                    max_row=worksheet.max_row,
+                    min_col=1,
+                    max_col=worksheet.max_column
+                ):
+
+                    for cell in row:
+
+                        cell.alignment = Alignment(
+                            vertical="center"
+                        )
+
+                # ==============================
+                # RATA TENGAH KOLOM ANGKA
+                # ==============================
+                for row in worksheet.iter_rows(
+                    min_row=5,
+                    max_row=worksheet.max_row
+                ):
+
+                    for cell in row:
+
+                        if cell.column in [
+                            1, 3, 4, 5, 6, 7
+                        ]:
+
+                            cell.alignment = Alignment(
+                                horizontal="center",
+                                vertical="center"
+                            )
+
+                # ==============================
+                # LEBAR KOLOM
+                # ==============================
+                worksheet.column_dimensions[
+                    "A"
+                ].width = 8
+
+                worksheet.column_dimensions[
+                    "B"
+                ].width = 30
+
+                worksheet.column_dimensions[
+                    "C"
+                ].width = 12
+
+                worksheet.column_dimensions[
+                    "D"
+                ].width = 12
+
+                worksheet.column_dimensions[
+                    "E"
+                ].width = 12
+
+                worksheet.column_dimensions[
+                    "F"
+                ].width = 12
+
+                worksheet.column_dimensions[
+                    "G"
+                ].width = 18
+
+                # ==============================
+                # TINGGI BARIS HEADER
+                # ==============================
+                worksheet.row_dimensions[
+                    header_row
+                ].height = 25
+
+                # ==============================
+                # BORDER TABEL
+                # ==============================
+                thin_border = Border(
+                    left=Side(style="thin"),
+                    right=Side(style="thin"),
+                    top=Side(style="thin"),
+                    bottom=Side(style="thin")
+                )
+
+                for row in worksheet.iter_rows(
+                    min_row=header_row,
+                    max_row=worksheet.max_row,
+                    min_col=1,
+                    max_col=7
+                ):
+
+                    for cell in row:
+                        cell.border = thin_border
+
+            output_excel.seek(0)
+
+            # ==============================
+            # NAMA FILE
+            # ==============================
+            nama_file = (
+                "Rekap_Kehadiran_"
+                f"{tanggal_mulai.strftime('%Y%m%d')}_"
+                f"{tanggal_selesai.strftime('%Y%m%d')}"
+                ".xlsx"
+            )
+
+            # ==============================
+            # TOMBOL DOWNLOAD
+            # ==============================
+            st.download_button(
+                label="📥 Download Rekap Kehadiran",
+                data=output_excel,
+                file_name=nama_file,
+                mime=(
+                    "application/vnd.openxmlformats-officedocument."
+                    "spreadsheetml.sheet"
+                ),
+                use_container_width=True
+            )
+
     # ================= FOOTER =================
     st.markdown("""
     <hr>
