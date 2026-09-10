@@ -2704,7 +2704,8 @@ elif menu == "Input":
             "Lokasi",
             [
                 "Kantor",
-                "Rumah",
+                "Rumah (WFH)",
+                "Work From Anywhere (WFA)",
                 "Dinas Luar / SPT"
             ]
         )
@@ -2712,9 +2713,12 @@ elif menu == "Input":
         foto = None
         koordinat = ""
         waktu_absen = "-"
+        jam_absen = ""
 
-        # ================= KHUSUS WFH =================
-        if lokasi == "Rumah":
+        # ==========================================================
+        # KHUSUS RUMAH (WFH)
+        # ==========================================================
+        if lokasi == "Rumah (WFH)":
 
             waktu_absen = st.selectbox(
                 "Waktu Absen",
@@ -2725,10 +2729,11 @@ elif menu == "Input":
                 ]
             )
 
-            st.markdown("### 📸 Verifikasi WFH")
+            st.markdown("### 📸 Verifikasi Rumah (WFH)")
 
             foto = st.camera_input(
-                "Ambil Foto Langsung"
+                "Ambil Foto Langsung",
+                key="kamera_wfh"
             )
 
             from streamlit_js_eval import get_geolocation
@@ -2736,7 +2741,6 @@ elif menu == "Input":
             loc = get_geolocation()
 
             if loc:
-
                 koordinat = (
                     f"{loc['coords']['latitude']}, "
                     f"{loc['coords']['longitude']}"
@@ -2747,7 +2751,6 @@ elif menu == "Input":
                 )
 
             else:
-
                 st.warning(
                     "📡 Menunggu GPS..."
                 )
@@ -2755,33 +2758,105 @@ elif menu == "Input":
             st.text_input(
                 "Koordinat GPS",
                 value=koordinat,
-                disabled=True
+                disabled=True,
+                key="gps_wfh"
             )
 
             st.divider()
 
-        # ================= FORM UTAMA =================
-        # INI HARUS DI LUAR IF RUMAH
+        # ==========================================================
+        # KHUSUS WFA
+        # ==========================================================
+        elif lokasi == "Work From Anywhere (WFA)":
 
-        # ================= RESET FORM =================
+            st.markdown("### 🌐 Verifikasi Work From Anywhere (WFA)")
+
+            st.info(
+                "📌 WFA wajib menggunakan foto langsung dari kamera "
+                "dan GPS sebagai bukti lokasi pelaksanaan pekerjaan."
+            )
+
+            # ------------------------------------------------------
+            # FOTO LANGSUNG
+            # ------------------------------------------------------
+            foto = st.camera_input(
+                "📸 Ambil Foto Langsung",
+                key="kamera_wfa"
+            )
+
+            # ------------------------------------------------------
+            # GPS
+            # ------------------------------------------------------
+            from streamlit_js_eval import get_geolocation
+
+            loc = get_geolocation()
+
+            if loc:
+                koordinat = (
+                    f"{loc['coords']['latitude']}, "
+                    f"{loc['coords']['longitude']}"
+                )
+
+                st.success(
+                    f"📍 GPS Terdeteksi: {koordinat}"
+                )
+
+            else:
+                st.warning(
+                    "📡 Menunggu GPS..."
+                )
+
+            st.text_input(
+                "Koordinat GPS",
+                value=koordinat,
+                disabled=True,
+                key="gps_wfa"
+            )
+
+            st.divider()
+
+        # ==========================================================
+        # RESET FORM
+        # ==========================================================
         if "form_id" not in st.session_state:
             st.session_state.form_id = 0
 
-        form_key = str(st.session_state.form_id)
+        form_key = str(
+            st.session_state.form_id
+        )
 
-        # ================= FORM INPUT =================
+        # ==========================================================
+        # TANGGAL
+        # ==========================================================
         tgl = st.date_input(
             "Tanggal",
+            format="DD/MM/YYYY",
             key="tgl_" + form_key
         )
 
-        if lokasi == "Rumah":
+        # ==========================================================
+        # JAM
+        # ==========================================================
+        if lokasi in [
+            "Rumah (WFH)",
+            "Work From Anywhere (WFA)"
+        ]:
 
-            jam_absen = st.text_input(
-                "Jam Absen WFH",
-                placeholder="Contoh: 07:45",
-                key="jam_absen_" + form_key
-            )
+            if lokasi == "Rumah (WFH)":
+
+                jam_absen = st.text_input(
+                    "Jam Absen WFH",
+                    placeholder="Contoh: 07:45",
+                    key="jam_absen_" + form_key
+                )
+
+            elif lokasi == "Work From Anywhere (WFA)":
+
+                jam_absen = st.text_input(
+                    "Jam Absen WFA",
+                    placeholder="Contoh: 07:45",
+                    key="jam_absen_" + form_key
+                )
 
         else:
 
@@ -2797,72 +2872,195 @@ elif menu == "Input":
                 key="keluar_" + form_key
             )
 
+        # ==========================================================
+        # URAIAN
+        # ==========================================================
         uraian = st.text_area(
             "Uraian Kegiatan",
             key="uraian_" + form_key
         )
 
+        # ==========================================================
+        # OUTPUT
+        # ==========================================================
         output = st.text_area(
             "Output/Hasil",
             key="output_" + form_key
         )
 
-        # ================= TOMBOL SIMPAN =================
-        if st.button("Simpan Data", type="primary"):
+        # ==========================================================
+        # TOMBOL SIMPAN
+        # ==========================================================
+        if st.button(
+            "Simpan Data",
+            type="primary"
+        ):
 
-            uid = str(uuid.uuid4())
+            uid = str(
+                uuid.uuid4()
+            )
 
-            if lokasi == "Rumah":
+            # ======================================================
+            # WFH
+            # ======================================================
+            if lokasi == "Rumah (WFH)":
 
                 masuk = jam_absen
                 keluar = "-"
 
                 if waktu_absen == "Pagi":
+
                     dur = 2.5
 
                 elif waktu_absen == "Siang":
+
                     dur = 2.5
 
                 elif waktu_absen == "Sore":
+
                     dur = 3
 
                 else:
+
                     dur = 0
 
+            # ======================================================
+            # WFA
+            # ======================================================
+            elif lokasi == "Work From Anywhere (WFA)":
+
+                masuk = jam_absen
+                keluar = "-"
+
+                # WFA menggunakan jam absen sebagai
+                # bukti kehadiran.
+                #
+                # Durasi belum dihitung sebagai jam kerja
+                # karena WFA hanya memiliki satu jam absen.
+                dur = 0
+
+            # ======================================================
+            # KANTOR / DINAS
+            # ======================================================
             else:
 
-                dur = hitung_durasi(masuk, keluar)
+                dur = hitung_durasi(
+                    masuk,
+                    keluar
+                )
 
+            # ======================================================
+            # VALIDASI URAIAN DAN OUTPUT
+            # ======================================================
             if not uraian or not output:
-                st.error("⚠️ Uraian dan Output wajib diisi!")
 
-            elif lokasi != "Rumah" and dur == 0:
-                st.error("⚠️ Jam tidak valid!")
+                st.error(
+                    "⚠️ Uraian dan Output wajib diisi!"
+                )
 
-            elif lokasi == "Rumah" and (foto is None or koordinat == ""):
-                st.error("⚠️ Untuk Rumah, Foto dan GPS wajib ada!")
+            # ======================================================
+            # VALIDASI JAM KANTOR / DINAS
+            # ======================================================
+            elif (
+                lokasi not in [
+                    "Rumah (WFH)",
+                    "Work From Anywhere (WFA)"
+                ]
+                and dur == 0
+            ):
 
+                st.error(
+                    "⚠️ Jam tidak valid!"
+                )
+
+            # ======================================================
+            # VALIDASI WFH
+            # ======================================================
+            elif lokasi == "Rumah (WFH)" and (
+                foto is None
+                or koordinat == ""
+                or jam_absen.strip() == ""
+            ):
+
+                st.error(
+                    "⚠️ Untuk Rumah (WFH), "
+                    "Foto, GPS, dan Jam Absen wajib ada!"
+                )
+
+            # ======================================================
+            # VALIDASI WFA
+            # ======================================================
+            elif lokasi == "Work From Anywhere (WFA)" and (
+                foto is None
+                or koordinat == ""
+                or jam_absen.strip() == ""
+            ):
+
+                st.error(
+                    "⚠️ Untuk WFA, Foto langsung, "
+                    "GPS, dan Jam Absen wajib ada!"
+                )
+
+            # ======================================================
+            # SIMPAN
+            # ======================================================
             else:
 
                 link_foto = ""
 
-                if lokasi == "Rumah":
-                    link_foto = upload_foto(foto)
+                # --------------------------------------------------
+                # FOTO WFH
+                # --------------------------------------------------
+                if lokasi == "Rumah (WFH)":
 
+                    link_foto = upload_foto(
+                        foto
+                    )
+
+                # --------------------------------------------------
+                # FOTO WFA
+                # --------------------------------------------------
+                elif lokasi == "Work From Anywhere (WFA)":
+
+                    link_foto = upload_foto(
+                        foto
+                    )
+
+                # --------------------------------------------------
+                # GOOGLE SHEETS
+                # --------------------------------------------------
                 sheet.append_row([
                     uid,
-                    safe(st.session_state.nama),
-                    safe(str(st.session_state.nip)),
-                    safe(st.session_state.jabatan),
-                    safe(st.session_state.unit),
-                    safe(tgl.strftime("%Y-%m-%d")),
+                    safe(
+                        st.session_state.nama
+                    ),
+                    safe(
+                        str(
+                            st.session_state.nip
+                        )
+                    ),
+                    safe(
+                        st.session_state.jabatan
+                    ),
+                    safe(
+                        st.session_state.unit
+                    ),
+                    safe(
+                        tgl.strftime(
+                            "%Y-%m-%d"
+                        )
+                    ),
                     safe(masuk),
                     safe(keluar),
                     dur,
                     safe(uraian),
                     safe(output),
                     safe(lokasi),
-                    safe(waktu_absen if lokasi == "Rumah" else "-"),
+                    safe(
+                        waktu_absen
+                        if lokasi == "Rumah (WFH)"
+                        else "-"
+                    ),
                     safe(koordinat),
                     safe(link_foto)
                 ])
@@ -2870,7 +3068,9 @@ elif menu == "Input":
                 load_data.clear()
 
                 st.session_state.show_toast = True
+
                 st.session_state.form_id += 1
+
                 st.session_state.gps = ""
 
                 st.rerun()
