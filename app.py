@@ -254,7 +254,7 @@ footer {
 
 # ================= CONFIG =================
 st.set_page_config(
-    page_title="E-Kinerja KPU KOTA BENGKULU",
+    page_title="SIM-K KPU KOTA BENGKULU",
     page_icon="logo_kpu.png",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -1368,7 +1368,7 @@ except Exception as e:
     st.stop()
 
 if not st.session_state.login:
-    st.title("🔐 Login E-Kinerja KPU KOTA BENGKULU")
+    st.title("🔐 Login SIM-K KPU KOTA BENGKULU")
 
     nip = st.text_input("NIP")
     pw = st.text_input("Password", type="password")
@@ -1425,7 +1425,7 @@ if (
         <h1>🛠️ Maintenance</h1>
 
         <h3>
-        Aplikasi E-Kinerja KPU Kota Bengkulu
+        Aplikasi SIM-K KPU Kota Bengkulu
         Sedang Dalam Pemeliharaan
         </h3>
 
@@ -1709,10 +1709,10 @@ if menu == "Dashboard":
     # ================= HERO =================
     st.markdown(f"""
     <div class="hero">
-        <h1>📊 E-Kinerja KPU Kota Bengkulu</h1>
+        <h1>📊 SIM-K KPU Kota Bengkulu</h1>
         <h4>Selamat Datang, {st.session_state.nama}</h4>
         <p style="opacity:0.8;">
-        Sistem Monitoring & Evaluasi Kinerja Pegawai
+        Sistem Informasi & Monitoring Kinerja Pegawai KPU Kota Bengkulu
         </p>
         <p>
             {datetime.now().strftime("%A, %d %B %Y")}
@@ -1724,7 +1724,7 @@ if menu == "Dashboard":
     """, unsafe_allow_html=True)
 
     # ================= PETUNJUK INSTALL =================
-    with st.expander("📲 Cara Instal E-Kinerja di HP dan Laptop"):
+    with st.expander("📲 Cara Instal SIM-K di HP dan Laptop"):
         st.markdown("""
         ### 📱 Android
         1. Buka aplikasi menggunakan **Google Chrome**
@@ -2674,7 +2674,7 @@ if menu == "Dashboard":
     st.markdown("""
     <hr>
     <center>
-    ©by.es 2025 KPU Kota Bengkulu | Sistem E-Kinerja Digital
+    ©by.es 2025 KPU Kota Bengkulu | SIM-K Digital
     </center>
     """, unsafe_allow_html=True)
 
