@@ -2937,7 +2937,7 @@ elif menu == "Input":
                 #
                 # Durasi belum dihitung sebagai jam kerja
                 # karena WFA hanya memiliki satu jam absen.
-                dur = 0
+                dur = 8.5
 
             # ======================================================
             # KANTOR / DINAS
