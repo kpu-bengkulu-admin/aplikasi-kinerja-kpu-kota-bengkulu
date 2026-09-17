@@ -3550,6 +3550,10 @@ elif menu == "Input":
                 unsafe_allow_html=True
             )
 
+            # ==========================================
+            # CANVAS TANDA TANGAN
+            # ==========================================
+
             canvas_result = st_canvas(
 
                 fill_color="rgba(255,255,255,0)",
@@ -3565,6 +3569,9 @@ elif menu == "Input":
                 height=220,
 
                 drawing_mode="freedraw",
+
+                # WAJIB agar image_data tersedia
+                return_image_data=True,
 
                 key="ttd_canvas"
 
@@ -3584,7 +3591,15 @@ elif menu == "Input":
                 unsafe_allow_html=True
             )
 
+            # ==========================================
+            # TOMBOL NAVIGASI
+            # ==========================================
+
             col1, col2, col3 = st.columns(3)
+
+            # ==========================================
+            # TOMBOL KEMBALI
+            # ==========================================
 
             with col1:
 
@@ -3597,6 +3612,10 @@ elif menu == "Input":
 
                     st.rerun()
 
+            # ==========================================
+            # TOMBOL BERSIHKAN
+            # ==========================================
+
             with col2:
 
                 if st.button(
@@ -3604,11 +3623,21 @@ elif menu == "Input":
                     use_container_width=True
                 ):
 
+                    # Hapus tanda tangan yang tersimpan
                     if "ttd_izin" in st.session_state:
 
                         del st.session_state["ttd_izin"]
 
+                    # Hapus canvas lama
+                    if "ttd_canvas" in st.session_state:
+
+                        del st.session_state["ttd_canvas"]
+
                     st.rerun()
+
+            # ==========================================
+            # TOMBOL LANJUT PREVIEW
+            # ==========================================
 
             with col3:
 
@@ -3617,6 +3646,78 @@ elif menu == "Input":
                     type="primary",
                     use_container_width=True
                 ):
+
+                    # ==========================================
+                    # AMBIL IMAGE DATA DENGAN AMAN
+                    # ==========================================
+
+                    image_data = None
+
+                    try:
+
+                        image_data = canvas_result.image_data
+
+                    except RuntimeError:
+
+                        image_data = None
+
+                    # ==========================================
+                    # VALIDASI TANDA TANGAN
+                    # ==========================================
+
+                    if image_data is None:
+
+                        st.error(
+                            "Silakan tanda tangani terlebih dahulu."
+                        )
+
+                    else:
+
+                        # ==========================================
+                        # VALIDASI ISI GAMBAR
+                        # ==========================================
+
+                        try:
+
+                            import numpy as np
+
+                            # Pastikan image_data benar-benar
+                            # memiliki isi
+                            if (
+                                not isinstance(
+                                    image_data,
+                                    np.ndarray
+                                )
+                                or image_data.size == 0
+                            ):
+
+                                st.error(
+                                    "Tanda tangan belum terdeteksi. "
+                                    "Silakan buat tanda tangan terlebih dahulu."
+                                )
+
+                            else:
+
+                                # ==========================================
+                                # SIMPAN TANDA TANGAN
+                                # ==========================================
+
+                                st.session_state.ttd_izin = image_data
+
+                                # ==========================================
+                                # LANJUT KE PREVIEW
+                                # ==========================================
+
+                                st.session_state.step_izin = 3
+
+                                st.rerun()
+
+                        except Exception as e:
+
+                            st.error(
+                                "Tanda tangan tidak dapat diproses. "
+                                "Silakan hapus dan buat tanda tangan kembali."
+                            )
 
                     # ==========================================
                     # CEK HASIL TANDA TANGAN SECARA AMAN
