@@ -1508,41 +1508,257 @@ else:
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
-# --- BAGIAN EDIT (TAMBAHKAN DI SINI AGAR MUNCUL DI SIDEBAR) ---
+# --- BAGIAN EDIT DATA KINERJA ---
 if "edit" in st.session_state:
+
     ed = st.session_state.edit
-    
+
     st.sidebar.divider()
     st.sidebar.subheader("✏️ Edit Data")
-    st.sidebar.info(f"Mengedit data baris: {ed['row']}")
+    st.sidebar.info(
+        f"Mengedit data baris: {ed['row']}"
+    )
 
-    # Gunakan kunci (key) unik agar Streamlit tidak bingung
-    new_masuk = st.sidebar.text_input("Jam Masuk", ed["Jam Masuk"], key="edit_masuk")
-    new_keluar = st.sidebar.text_input("Jam Keluar", ed["Jam Keluar"], key="edit_keluar")
-    new_uraian = st.sidebar.text_area("Uraian", ed["Uraian"], key="edit_uraian", height=150)
-    new_output = st.sidebar.text_area("Output", ed["Output"], key="edit_output", height=150)
+    # ==========================================================
+    # AMBIL DATA LOKASI
+    # ==========================================================
+    lokasi_edit = str(
+        ed.get("Lokasi", "")
+    ).strip()
 
+    # ==========================================================
+    # AMBIL DATA WAKTU ABSEN
+    # ==========================================================
+    waktu_absen_edit = str(
+        ed.get("Waktu Absen", "")
+    ).strip()
+
+    # ==========================================================
+    # JAM MASUK
+    # ==========================================================
+    new_masuk = st.sidebar.text_input(
+        "Jam Masuk",
+        str(ed.get("Jam Masuk", "")),
+        key="edit_masuk"
+    )
+
+    # ==========================================================
+    # JAM KELUAR
+    # ==========================================================
+    if lokasi_edit in [
+        "Rumah (WFH)",
+        "Work From Anywhere (WFA)"
+    ]:
+
+        new_keluar = "-"
+
+        st.sidebar.text_input(
+            "Jam Keluar",
+            "-",
+            disabled=True,
+            key="edit_keluar"
+        )
+
+    else:
+
+        new_keluar = st.sidebar.text_input(
+            "Jam Keluar",
+            str(ed.get("Jam Keluar", "")),
+            key="edit_keluar"
+        )
+
+    # ==========================================================
+    # URAIAN
+    # ==========================================================
+    new_uraian = st.sidebar.text_area(
+        "Uraian",
+        str(ed.get("Uraian", "")),
+        key="edit_uraian",
+        height=150
+    )
+
+    # ==========================================================
+    # OUTPUT
+    # ==========================================================
+    new_output = st.sidebar.text_area(
+        "Output",
+        str(ed.get("Output", "")),
+        key="edit_output",
+        height=150
+    )
+
+    # ==========================================================
+    # INFORMASI DURASI
+    # ==========================================================
+    if lokasi_edit == "Rumah (WFH)":
+
+        if waktu_absen_edit == "Pagi":
+            durasi_edit = 2.5
+
+        elif waktu_absen_edit == "Siang":
+            durasi_edit = 2.5
+
+        elif waktu_absen_edit == "Sore":
+            durasi_edit = 3
+
+        else:
+            # Jika data lama tidak memiliki Waktu Absen,
+            # pertahankan durasi yang sudah ada.
+            try:
+                durasi_edit = float(
+                    ed.get("Durasi", 0)
+                )
+            except:
+                durasi_edit = 0
+
+        st.sidebar.info(
+            f"🏠 WFH {waktu_absen_edit}: "
+            f"{durasi_edit} jam"
+        )
+
+    elif lokasi_edit == "Work From Anywhere (WFA)":
+
+        durasi_edit = 8.5
+
+        st.sidebar.info(
+            "🌐 WFA: 8,5 jam"
+        )
+
+    else:
+
+        durasi_edit = None
+
+    # ==========================================================
+    # TOMBOL
+    # ==========================================================
     col1, col2 = st.sidebar.columns(2)
-    
-    if col1.button("Update ✅", key="update_final"):
-        dur = hitung_durasi(new_masuk, new_keluar)
-        # Update ke Google Sheets (Kolom E sampai J)
-        try:
-            row_idx = int(ed['row'])
-            sheet.update(
-                f"G{row_idx}:L{row_idx}",
-                [[new_masuk, new_keluar, dur, new_uraian, new_output, ed["Lokasi"]]]
+
+    # ==========================================================
+    # UPDATE
+    # ==========================================================
+    if col1.button(
+        "Update ✅",
+        key="update_final"
+    ):
+
+        # ------------------------------------------------------
+        # VALIDASI URAIAN DAN OUTPUT
+        # ------------------------------------------------------
+        if not new_uraian.strip():
+
+            st.sidebar.error(
+                "⚠️ Uraian wajib diisi!"
             )
-            load_data.clear()
 
-            st.sidebar.success("Data Berhasil Diperbarui!")
-            del st.session_state.edit
-            st.rerun()
-        except Exception as e:
-            st.sidebar.error(f"Error: {e}")
+        elif not new_output.strip():
 
-    if col2.button("Batal ❌", key="btn_batal"):
+            st.sidebar.error(
+                "⚠️ Output wajib diisi!"
+            )
+
+        else:
+
+            try:
+
+                # ==================================================
+                # TENTUKAN DURASI
+                # ==================================================
+
+                if lokasi_edit == "Rumah (WFH)":
+
+                    if waktu_absen_edit == "Pagi":
+                        dur = 2.5
+
+                    elif waktu_absen_edit == "Siang":
+                        dur = 2.5
+
+                    elif waktu_absen_edit == "Sore":
+                        dur = 3
+
+                    else:
+
+                        try:
+                            dur = float(
+                                ed.get(
+                                    "Durasi",
+                                    0
+                                )
+                            )
+                        except:
+                            dur = 0
+
+                elif lokasi_edit == "Work From Anywhere (WFA)":
+
+                    dur = 8.5
+
+                else:
+
+                    dur = hitung_durasi(
+                        new_masuk,
+                        new_keluar
+                    )
+
+                # ==================================================
+                # AMBIL NOMOR BARIS GOOGLE SHEETS
+                # ==================================================
+                row_idx = int(
+                    ed["row"]
+                )
+
+                # ==================================================
+                # UPDATE GOOGLE SHEETS
+                # Kolom:
+                # G = Jam Masuk
+                # H = Jam Keluar
+                # I = Durasi
+                # J = Uraian
+                # K = Output
+                # L = Lokasi
+                # ==================================================
+                sheet.update(
+                    f"G{row_idx}:L{row_idx}",
+                    [[
+                        new_masuk,
+                        new_keluar,
+                        dur,
+                        new_uraian,
+                        new_output,
+                        lokasi_edit
+                    ]]
+                )
+
+                # ==================================================
+                # REFRESH DATA
+                # ==================================================
+                load_data.clear()
+
+                st.sidebar.success(
+                    "✅ Data Berhasil Diperbarui!"
+                )
+
+                # ==================================================
+                # HAPUS MODE EDIT
+                # ==================================================
+                del st.session_state.edit
+
+                st.rerun()
+
+            except Exception as e:
+
+                st.sidebar.error(
+                    f"❌ Error: {e}"
+                )
+
+    # ==========================================================
+    # BATAL
+    # ==========================================================
+    if col2.button(
+        "Batal ❌",
+        key="btn_batal"
+    ):
+
         del st.session_state.edit
+
         st.rerun()
 
 # ================= DASHBOARD =================
@@ -3301,6 +3517,7 @@ elif menu == "Input":
 
                     st.rerun()
 
+
         # ==========================================
         # STEP 2 - TANDA TANGAN DIGITAL
         # ==========================================
@@ -3401,7 +3618,25 @@ elif menu == "Input":
                     use_container_width=True
                 ):
 
-                    if canvas_result.image_data is None:
+                    # ==========================================
+                    # CEK HASIL TANDA TANGAN SECARA AMAN
+                    # ==========================================
+
+                    image_data = None
+
+                    try:
+
+                        image_data = canvas_result.image_data
+
+                    except RuntimeError:
+
+                        image_data = None
+
+                    # ==========================================
+                    # VALIDASI TANDA TANGAN
+                    # ==========================================
+
+                    if image_data is None:
 
                         st.error(
                             "Silakan tanda tangani terlebih dahulu."
@@ -3409,9 +3644,7 @@ elif menu == "Input":
 
                     else:
 
-                        st.session_state.ttd_izin = (
-                            canvas_result.image_data
-                        )
+                        st.session_state.ttd_izin = image_data
 
                         st.session_state.step_izin = 3
 
