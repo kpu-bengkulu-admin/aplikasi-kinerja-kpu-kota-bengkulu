@@ -1466,9 +1466,31 @@ if st.session_state.show_toast:
 
 role = st.session_state.role
 
-jabatan = str(st.session_state.jabatan).strip().upper()
+jabatan = str(
+    st.session_state.jabatan
+).strip().upper()
 
-if role == "Admin":
+unit_login = str(
+    st.session_state.get("unit", "")
+).strip().upper()
+
+# ==========================================================
+# AKSES ADMIN
+# Admin + Kasubbag PARHUBMAS DAN SDM
+# ==========================================================
+akses_admin = (
+    role == "Admin"
+    or (
+        role == "Kasubbag"
+        and unit_login == "PARHUBMAS DAN SDM"
+    )
+)
+
+# ==========================================================
+# MENU BERDASARKAN ROLE
+# ==========================================================
+
+if akses_admin:
 
     menu = st.sidebar.radio(
         "Menu",
@@ -1495,7 +1517,7 @@ elif role == "Kasubbag":
 
     menu = st.sidebar.radio(
         "Menu",
-        ["Dashboard", "Input", "Data Kinerja", "Admin"]
+        ["Dashboard", "Input", "Data Kinerja"]
     )
 
 else:
@@ -1508,13 +1530,18 @@ else:
 if st.sidebar.button("Logout"):
     st.session_state.clear()
     st.rerun()
-# --- BAGIAN EDIT DATA KINERJA ---
+
+# ==========================================================
+# BAGIAN EDIT DATA KINERJA
+# ==========================================================
+
 if "edit" in st.session_state:
 
     ed = st.session_state.edit
 
     st.sidebar.divider()
     st.sidebar.subheader("✏️ Edit Data")
+
     st.sidebar.info(
         f"Mengedit data baris: {ed['row']}"
     )
@@ -2017,7 +2044,7 @@ if menu == "Dashboard":
 
     # ================= ROLE =================
 
-    if st.session_state.role == "Admin":
+    if akses_admin:
 
         pass
 
@@ -2029,14 +2056,21 @@ if menu == "Dashboard":
 
         df = df[
             df["Unit"]
-            == st.session_state.unit
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            ==
+            str(st.session_state.unit)
+            .strip()
+            .upper()
         ]
 
     else:
 
         df = df[
             df["NIP"].astype(str)
-            == st.session_state.nip
+            ==
+            st.session_state.nip
         ]
 
     # ================= FILTER =================
@@ -2266,7 +2300,7 @@ if menu == "Dashboard":
 
     # ================= MONITORING HARI INI =================
     if (
-        st.session_state.role == "Admin"
+        akses_admin
         or st.session_state.role == "Kasubbag"
         or (
             st.session_state.role == "Pimpinan"
@@ -2312,18 +2346,32 @@ if menu == "Dashboard":
             # Data seluruh pegawai
             df_user = load_users()
 
-            # Kasubbag hanya melihat pegawai pada unitnya
-            if st.session_state.role == "Kasubbag":
+            # ==================================================
+            # FILTER PEGAWAI UNTUK MONITORING
+            # Admin dan Kasubbag SDM melihat seluruh pegawai
+            # Kasubbag lainnya hanya melihat unitnya
+            # ==================================================
+            if (
+                st.session_state.role == "Kasubbag"
+                and not akses_admin
+            ):
 
                 df_user = df_user[
-                    df_user["Unit"] == st.session_state.unit
+                    df_user["Unit"]
+                    .astype(str)
+                    .str.strip()
+                    .str.upper()
+                    ==
+                    str(st.session_state.unit)
+                    .strip()
+                    .upper()
                 ]
 
             # Pegawai yang wajib upload
             belum_upload = df_user[
-                (~df_user["NIP"].isin(sudah_upload))
+                (~df_user["NIP"].astype(str).str.strip().isin(sudah_upload))
                 &
-                (~df_user["Jabatan"].str.upper().isin([
+                (~df_user["Jabatan"].astype(str).str.upper().isin([
                     "KETUA",
                     "ANGGOTA"
                 ]))
@@ -2341,9 +2389,11 @@ if menu == "Dashboard":
             else:
 
                 st.warning(
-                    f"Masih ada {len(belum_upload)} pegawai yang belum mengupload laporan hari ini."
+                    f"Masih ada {len(belum_upload)} pegawai "
+                    "yang belum mengupload laporan hari ini."
                 )
 
+                belum_upload = belum_upload.reset_index(drop=True)
                 belum_upload.index += 1
 
                 st.dataframe(
@@ -2382,11 +2432,13 @@ if menu == "Dashboard":
         )
 
     # ================= REKAP KEHADIRAN PEGAWAI =================
-    if st.session_state.role in [
-        "Admin",
-        "Pimpinan",
-        "Kasubbag"
-    ]:
+    if (
+        akses_admin
+        or st.session_state.role in [
+            "Pimpinan",
+            "Kasubbag"
+        ]
+    ):
 
         st.markdown("## 📋 Rekap Kehadiran Pegawai")
 
@@ -2409,17 +2461,23 @@ if menu == "Dashboard":
             users_rekap = load_users().copy()
 
             # ==================================================
-            # KASUBBAG HANYA MELIHAT UNITNYA
+            # KASUBBAG BIASA HANYA MELIHAT UNITNYA
+            # KASUBBAG PARHUBMAS DAN SDM MELIHAT SEMUA
             # ==================================================
-            if st.session_state.role == "Kasubbag":
+            if (
+                st.session_state.role == "Kasubbag"
+                and not akses_admin
+            ):
 
                 users_rekap = users_rekap[
                     users_rekap["Unit"]
                     .astype(str)
                     .str.strip()
+                    .str.upper()
                     ==
                     str(st.session_state.unit)
                     .strip()
+                    .upper()
                 ]
 
             users_rekap["NIP"] = (
@@ -2485,22 +2543,27 @@ if menu == "Dashboard":
                 ].copy()
 
                 # ==================================================
-                # KASUBBAG HANYA MELIHAT DATA UNITNYA
+                # KASUBBAG BIASA HANYA MELIHAT DATA UNITNYA
+                # KASUBBAG PARHUBMAS DAN SDM MELIHAT SEMUA DATA
                 # ==================================================
-                if st.session_state.role == "Kasubbag":
+                if (
+                    st.session_state.role == "Kasubbag"
+                    and not akses_admin
+                ):
 
                     df_rekap = df_rekap[
                         df_rekap["Unit"]
                         .astype(str)
                         .str.strip()
+                        .str.upper()
                         ==
                         str(st.session_state.unit)
                         .strip()
+                        .upper()
                     ]
 
                 # ==================================================
                 # SATU DATA PER PEGAWAI PER TANGGAL
-                #
                 # Jika ada lebih dari satu data pada tanggal
                 # yang sama, gunakan data terakhir.
                 # ==================================================
@@ -2520,13 +2583,6 @@ if menu == "Dashboard":
 
             # ==================================================
             # HITUNG HARI KERJA EFEKTIF
-            #
-            # Fungsi hitung_hari_cuti() sudah digunakan oleh
-            # modul Cuti dan mengecualikan:
-            # - Sabtu
-            # - Minggu
-            # - Libur Nasional
-            # - Cuti Bersama
             # ==================================================
             jumlah_hari_kerja = hitung_hari_cuti(
                 tanggal_mulai,
@@ -2549,7 +2605,7 @@ if menu == "Dashboard":
                 ).strip()
 
                 # ==================================================
-                # AMBIL DATA PEGAWAI
+                # AMBIL DATA PEGAWAI BERDASARKAN NIP
                 # ==================================================
                 if df_rekap.empty:
 
@@ -2600,8 +2656,6 @@ if menu == "Dashboard":
 
                 # ==================================================
                 # PERSENTASE KEHADIRAN
-                #
-                # Hadir / Hari Kerja Efektif x 100
                 # ==================================================
                 if jumlah_hari_kerja > 0:
 
@@ -2704,8 +2758,6 @@ if menu == "Dashboard":
 
             output_excel = io.BytesIO()
 
-            # Gunakan rekap_tampil agar isi Excel
-            # sama seperti tabel yang tampil di aplikasi
             data_download = rekap_tampil.copy()
 
             with pd.ExcelWriter(
@@ -2713,9 +2765,6 @@ if menu == "Dashboard":
                 engine="openpyxl"
             ) as writer:
 
-                # ==============================
-                # JUDUL
-                # ==============================
                 data_download.to_excel(
                     writer,
                     index=False,
@@ -2728,9 +2777,6 @@ if menu == "Dashboard":
                     "Rekap Kehadiran"
                 ]
 
-                # ==============================
-                # JUDUL LAPORAN
-                # ==============================
                 worksheet["A1"] = (
                     "REKAP KEHADIRAN PEGAWAI"
                 )
@@ -2742,9 +2788,6 @@ if menu == "Dashboard":
                     f"{indo_date(tanggal_selesai)}"
                 )
 
-                # ==============================
-                # FORMAT HEADER
-                # ==============================
                 from openpyxl.styles import (
                     Font,
                     Alignment,
@@ -2767,9 +2810,6 @@ if menu == "Dashboard":
                         vertical="center"
                     )
 
-                # ==============================
-                # FORMAT ISI TABEL
-                # ==============================
                 for row in worksheet.iter_rows(
                     min_row=5,
                     max_row=worksheet.max_row,
@@ -2783,9 +2823,6 @@ if menu == "Dashboard":
                             vertical="center"
                         )
 
-                # ==============================
-                # RATA TENGAH KOLOM ANGKA
-                # ==============================
                 for row in worksheet.iter_rows(
                     min_row=5,
                     max_row=worksheet.max_row
@@ -2802,9 +2839,6 @@ if menu == "Dashboard":
                                 vertical="center"
                             )
 
-                # ==============================
-                # LEBAR KOLOM
-                # ==============================
                 worksheet.column_dimensions[
                     "A"
                 ].width = 8
@@ -2833,16 +2867,10 @@ if menu == "Dashboard":
                     "G"
                 ].width = 18
 
-                # ==============================
-                # TINGGI BARIS HEADER
-                # ==============================
                 worksheet.row_dimensions[
                     header_row
                 ].height = 25
 
-                # ==============================
-                # BORDER TABEL
-                # ==============================
                 thin_border = Border(
                     left=Side(style="thin"),
                     right=Side(style="thin"),
@@ -2862,9 +2890,6 @@ if menu == "Dashboard":
 
             output_excel.seek(0)
 
-            # ==============================
-            # NAMA FILE
-            # ==============================
             nama_file = (
                 "Rekap_Kehadiran_"
                 f"{tanggal_mulai.strftime('%Y%m%d')}_"
@@ -2872,9 +2897,6 @@ if menu == "Dashboard":
                 ".xlsx"
             )
 
-            # ==============================
-            # TOMBOL DOWNLOAD
-            # ==============================
             st.download_button(
                 label="📥 Download Rekap Kehadiran",
                 data=output_excel,
@@ -5514,13 +5536,31 @@ elif menu == "Data Kinerja":
 elif menu == "Admin":
     role = st.session_state.role
     jabatan = str(st.session_state.jabatan).strip().upper()
+
+    unit_login = str(
+        st.session_state.get("unit", "")
+    ).strip().upper()
+
     read_only_pimpinan = (
-    role == "Pimpinan"
+        role == "Pimpinan"
         and jabatan in ["KETUA", "ANGGOTA"]
     )
 
-    # Hanya admin yang boleh akses
-    if st.session_state.role not in ["Admin", "Pimpinan"]:
+    # ==========================================================
+    # AKSES ADMIN
+    # Admin + Kasubbag PARHUBMAS DAN SDM
+    # Pimpinan tetap dapat melihat secara read-only
+    # ==========================================================
+    akses_admin = (
+        role == "Admin"
+        or (
+            role == "Kasubbag"
+            and unit_login == "PARHUBMAS DAN SDM"
+        )
+        or role == "Pimpinan"
+    )
+
+    if not akses_admin:
         st.error("❌ Anda tidak memiliki akses.")
         st.stop()
 
